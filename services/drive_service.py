@@ -58,10 +58,10 @@ def get_drive_service():
                 
                 print(f"CRITICAL: {CLIENT_SECRET_FILE} not found. Please provide OAuth credentials.")
                 return None
-                
-            flow = InstalledAppFlow.from_client_secrets_file(
-                CLIENT_SECRET_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    CLIENT_SECRET_FILE, SCOPES)
+                creds = flow.run_local_server(port=0)
         
         # Save the credentials for the next run (only locally)
         try:
