@@ -51,14 +51,14 @@ def get_drive_service():
     if not creds:
         # 3. Interactive flow (Local Dev only)
         if not os.path.exists(CLIENT_SECRET_FILE):
-                # If we are in cloud and no service account worked, this is a critical error
-                if os.getenv('K_SERVICE'): # Variable that exists in Cloud Run
-                    print("CRITICAL: Running in Cloud Run but no valid credentials found.")
-                    return None
-                
-                print(f"CRITICAL: {CLIENT_SECRET_FILE} not found. Please provide OAuth credentials.")
+            # If we are in cloud and no service account worked, this is a critical error
+            if os.getenv('K_SERVICE'): # Variable that exists in Cloud Run
+                print("CRITICAL: Running in Cloud Run but no valid credentials found.")
                 return None
-            else:
+            
+            print(f"CRITICAL: {CLIENT_SECRET_FILE} not found. Please provide OAuth credentials.")
+            return None
+        else:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     CLIENT_SECRET_FILE, SCOPES)
                 creds = flow.run_local_server(port=0)
