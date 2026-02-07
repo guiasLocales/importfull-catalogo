@@ -21,9 +21,14 @@ def get_drive_service():
     
     # 1. Priorities: Local/User OAuth (token.json)
     # This is required for Drive Uploads to use the User's Limit, not the Service Account (0 bytes)
+    print(f"DEBUG: Checking for token.json at {os.path.abspath(TOKEN_FILE)}")
     if os.path.exists(TOKEN_FILE):
+        print("DEBUG: token.json FOUND. Attempting to load...")
         try:
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+            if creds:
+                print(f"DEBUG: Credentials loaded. Valid={creds.valid}, Expired={creds.expired}, HasRefresh={bool(creds.refresh_token)}")
+            
             if creds and creds.valid:
                 print("Using User Credentials from token.json")
                 return build('drive', 'v3', credentials=creds)
@@ -35,7 +40,9 @@ def get_drive_service():
                     token.write(creds.to_json())
                 return build('drive', 'v3', credentials=creds)
         except Exception as e:
-            print(f"Error loading token.json: {e}")
+            print(f"ERROR loading token.json: {e}")
+    else:
+        print("DEBUG: token.json NOT FOUND in container.")
 
     # 2. Service Account (Cloud Run Default)
     service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
