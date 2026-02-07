@@ -19,6 +19,20 @@ def get_drive_service():
     """Builds and returns the Drive service."""
     creds = None
     
+    # 0. Decode token.b64 if present and token.json is missing
+    if not os.path.exists(TOKEN_FILE) and os.path.exists('token.b64'):
+        print("DEBUG: Found token.b64, decoding to token.json...", flush=True)
+        try:
+            import base64
+            with open('token.b64', 'r') as f:
+                encoded_data = f.read()
+                decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+            with open(TOKEN_FILE, 'w') as f:
+                f.write(decoded_data)
+            print("DEBUG: Successfully created token.json from base64", flush=True)
+        except Exception as e:
+            print(f"ERROR decoding token.b64: {e}", flush=True)
+
     # 1. Priorities: Local/User OAuth (token.json)
     # This is required for Drive Uploads to use the User's Limit, not the Service Account (0 bytes)
     print(f"DEBUG: Checking for token.json at {os.path.abspath(TOKEN_FILE)}", flush=True)

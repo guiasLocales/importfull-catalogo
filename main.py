@@ -90,9 +90,21 @@ def health_check():
 @app.on_event("startup")
 def create_default_user():
     """Create default admin user on startup if it doesn't exist"""
+    """Create default admin user on startup if it doesn't exist"""
     # SKIP Startup DB interaction to prevent timeouts
-    print("Startup: Skipping default user check to speed up boot.")
-    pass
+    # print("Startup: Skipping default user check to speed up boot.")
+    # pass
+    try:
+        db = SessionLocal()
+        user = crud.get_user_by_username(db, username="admin")
+        if not user:
+            print("Creating default user 'admin'...")
+            crud.create_user(db, schemas.UserCreate(username="admin", password="admin123"))
+        else:
+            print("Default user 'admin' already exists.")
+        db.close()
+    except Exception as e:
+        print(f"Error creating default user: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
