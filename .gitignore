@@ -53,7 +53,7 @@ inventory.db
 # Google Cloud credentials (NUNCA SUBIR ESTOS)
 credentials.json
 client_secret.json
-token.json
+# token.json
 analytical-rain-*.json
 *.json
 
