@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Credentials
+*.json
+.env
+
+# Database
+*.db
+*.sqlite
+
+# Tests and scripts
+test_*.py
+check_*.py
+debug_*.py
+diagnose_*.py
+verify_*.py
+migrate_*.py
+backup*/

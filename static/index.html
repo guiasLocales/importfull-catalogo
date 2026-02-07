@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#1a1b1e',
+                            surface: '#25262b',
+                            border: '#2c2e33',
+                            text: '#c1c2c5',
+                            textMuted: '#909296'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom scrollbar for table container */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Dark mode for select dropdowns */
+        .dark select {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark select option {
+            background-color: #374151;
+            color: #f3f4f6;
+        }
+
+        /* Dark mode for inputs */
+        .dark input[type="text"],
+        .dark input[type="search"],
+        .dark input[type="password"] {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #f3f4f6 !important;
+        }
+
+        .dark input::placeholder {
+            color: #9ca3af !important;
+        }
+
+        /* Dark mode for table */
+        .dark table {
+            background-color: #1f2937;
+        }
+
+        .dark thead {
+            background-color: #374151;
+        }
+
+        .dark th {
+            color: #d1d5db !important;
+            border-color: #4b5563 !important;
+        }
+
+        .dark td {
+            border-color: #374151 !important;
+        }
+
+        .dark tbody tr:hover {
+            background-color: #374151 !important;
+        }
+
+        /* Dark mode for pagination footer */
+        .dark .bg-gray-50 {
+            background-color: #1f2937 !important;
+        }
+
+        /* Dark mode for cards and panels */
+        .dark .bg-white {
+            background-color: #1f2937 !important;
+        }
+
+        /* Dark mode text colors for all elements */
+        .dark .text-slate-800,
+        .dark .text-gray-800,
+        .dark .text-gray-900 {
+            color: #f3f4f6 !important;
+        }
+
+        .dark .text-gray-700 {
+            color: #d1d5db !important;
+        }
+
+        .dark .text-gray-600 {
+            color: #9ca3af !important;
+        }
+
+        .dark .text-gray-500 {
+            color: #9ca3af !important;
+        }
+
+        /* Dark mode for table cell text - exclude colored badges */
+        .dark td,
+        .dark td div,
+        .dark td p,
+        .dark td a {
+            color: #e5e7eb !important;
+        }
+
+        /* Dark mode for general spans - but NOT colored badges */
+        .dark td>span:not([class*="bg-"]):not([class*="text-green"]):not([class*="text-orange"]):not([class*="text-gray-800"]):not([class*="text-gray-600"]) {
+            color: #e5e7eb !important;
+        }
+
+        /* Dark mode for product names */
+        .dark .font-semibold:not([class*="bg-"]),
+        .dark .font-medium:not([class*="bg-"]) {
+            color: #f3f4f6 !important;
+        }
+
+        /* Dark mode for sidebar text */
+        .dark .text-gray-700.hover\:bg-gray-50 {
+            color: #d1d5db !important;
+        }
+
+        .dark .text-gray-700.hover\:bg-gray-50:hover {
+            background-color: #374151 !important;
+        }
+
+        /* Fix for main content area */
+        .dark main {
+            background-color: #111827;
+        }
+
+        /* Dark mode for table rows */
+        .dark .bg-white {
+            background-color: #1f2937 !important;
+        }
+
+        .dark .hover\:bg-blue-50\/50:hover {
+            background-color: #374151 !important;
+        }
+
+        /* Dark mode for publication status */
+        .dark .text-green-600,
+        .dark .text-green-700 {
+            color: #10b981 !important;
+        }
+
+        .dark .text-red-600,
+        .dark .text-red-700 {
+            color: #ef4444 !important;
+        }
+
+        /* Dark mode for action buttons */
+        .dark button.text-blue-600 {
+            color: #60a5fa !important;
+        }
+
+        .dark button.text-green-600 {
+            color: #34d399 !important;
+        }
+
+        .dark button.text-red-600 {
+            color: #f87171 !important;
+        }
+
+        /* Fix buttons with borders */
+        .dark .border-gray-300 {
+            border-color: #4b5563 !important;
+        }
+
+        .dark .border-green-500 {
+            border-color: #10b981 !important;
+        }
+
+        .dark .border-red-500 {
+            border-color: #ef4444 !important;
+        }
+
+        /* Fix for action button text */
+        .dark td button {
+            color: #e5e7eb !important;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gray-50 dark:bg-gray-900 text-slate-800 dark:text-gray-100 h-screen flex flex-col overflow-hidden transition-colors duration-200">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside
+            class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-none z-20 transition-colors duration-200">
+            <!-- Logo Area -->
+            <div class="h-28 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
+                <div id="logoContainer" class="flex items-center justify-center w-full">
+                    <!-- Default icon + text (shows when no logo) -->
+                    <div id="defaultLogoArea" class="flex items-center space-x-2">
+                        <div
+                            class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+                            I
+                        </div>
+                        <span
+                            class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                            Inventario
+                        </span>
+                    </div>
+                    <!-- Logo for light mode (hidden by default) -->
+                    <img id="sidebarLogoLight" src="" alt="Logo" class="h-24 max-w-[220px] object-contain hidden">
+                    <!-- Logo for dark mode (hidden by default) -->
+                    <img id="sidebarLogoDark" src="" alt="Logo" class="h-24 max-w-[220px] object-contain hidden">
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto py-4">
+                <ul class="space-y-1 px-3">
+                    <li>
+                        <button onclick="switchView('inventory')" id="navInventory"
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700">
+                            <i data-lucide="box" class="h-5 w-5 mr-3"></i>
+                            Inventario
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('settings')" id="navSettings"
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="settings" class="h-5 w-5 mr-3"></i>
+                            Configuración
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- User / Theme Toggle -->
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <button id="themeToggle"
+                    class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors mb-2">
+                    <i data-lucide="moon" class="h-5 w-5 mr-3"></i>
+                    Modo Oscuro
+                </button>
+                <div class="flex items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs"
+                        id="userAvatar">A</div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white" id="userName">Admin</p>
+                        <p class="text-xs text-gray-500 cursor-pointer hover:text-red-600 transition-colors"
+                            onclick="logout()">Cerrar Sesión</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden relative">
+
+            <!-- Top Header (Simplified, mostly for mobile menu trigger if needed later) -->
+            <!-- <header class="bg-white border-b border-gray-200 shadow-sm z-10 flex-none h-16 flex items-center px-8 justify-between lg:hidden">
+                 Mobile menu button placeholder 
+            </header> -->
+
+            <!-- Content Views -->
+            <main class="flex-1 overflow-hidden relative w-full h-full">
+
+                <!-- Inventory View (Existing Content Wrapped) -->
+                <div id="inventoryView" class="h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
+
+                    <!-- Action Bar -->
+                    <div class="flex flex-col gap-4 mb-6 flex-none">
+                        <!-- Row 1: Search + Bulk Actions -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <!-- Search -->
+                            <div class="relative w-full sm:max-w-xs">
+                                <div class="relative">
+                                    <input type="text" id="searchInput" placeholder="Buscar por nombre, código..."
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow duration-200 shadow-sm text-sm">
+                                    <i data-lucide="search" class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"></i>
+                                </div>
+                            </div>
+
+                            <!-- Bulk Action Buttons (aligned right) -->
+                            <div class="flex items-center space-x-3 flex-shrink-0">
+                                <button id="btnBulkPublish"
+                                    class="hidden flex-row items-center h-[42px] px-4 gap-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium border border-green-200 text-sm">
+                                    <i data-lucide="check-circle" class="h-4 w-4"></i>
+                                    <span class="flex items-center gap-1">Publicar <span id="selectedCountPublish"
+                                            class="ml-0.5 text-xs bg-green-200 px-1.5 py-0.5 rounded-full">0</span></span>
+                                </button>
+                                <button id="btnBulkUnpublish"
+                                    class="hidden flex-row items-center h-[42px] px-4 gap-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium border border-orange-200 text-sm">
+                                    <i data-lucide="x-circle" class="h-4 w-4"></i>
+                                    <span class="flex items-center gap-1">Pausar <span id="selectedCountUnpublish"
+                                            class="ml-0.5 text-xs bg-orange-200 px-1.5 py-0.5 rounded-full">0</span></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Filters -->
+                        <div class="flex flex-wrap items-center gap-3">
+
+                            <!-- Category Filter -->
+                            <div class="w-full sm:w-auto min-w-[140px]">
+                                <select id="filterCategory"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                    <option value="">Todas las categorías</option>
+                                    <!-- Dynamically populated -->
+                                </select>
+                            </div>
+
+                            <!-- Branch Filter -->
+                            <div class="w-full sm:w-auto min-w-[140px]">
+                                <select id="filterBrand"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                    <option value="">Todas las marcas</option>
+                                    <!-- Dynamically populated -->
+                                </select>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="w-full sm:w-auto min-w-[130px]">
+                                <select id="filterStatus"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                    <option value="">Todos los estados</option>
+                                    <option value="Publicado">Publicado</option>
+                                    <option value="Despublicado">No Publicado</option>
+                                </select>
+                            </div>
+
+                            <!-- Stock Filter -->
+                            <div class="w-full sm:w-auto min-w-[120px]">
+                                <select id="filterStock"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                    <option value="">Todo el stock</option>
+                                    <option value="with_stock">Con stock</option>
+                                    <option value="no_stock">Sin stock</option>
+                                </select>
+                            </div>
+
+                            <!-- Clear Filters -->
+                            <button id="btnClearFilters"
+                                class="hidden items-center px-3 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 font-medium">
+                                <i data-lucide="x" class="h-4 w-4 mr-1.5"></i>
+                                Limpiar filtros
+                            </button>
+
+                        </div>
+                    </div>
+
+
+                    <!-- Table / Grid Container -->
+                    <div
+                        class="bg-white rounded-xl shadow border border-gray-200 flex-1 flex flex-col overflow-hidden relative">
+
+                        <!-- Loading Overlay -->
+                        <div id="loadingOverlay"
+                            class="absolute inset-0 bg-white/80 z-20 flex items-center justify-center backdrop-blur-sm hidden">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState"
+                            class="absolute inset-0 flex flex-col items-center justify-center hidden z-10">
+                            <div class="bg-gray-50 p-6 rounded-full mb-4">
+                                <i data-lucide="package-search" class="h-12 w-12 text-gray-400"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-900">No se encontraron productos</h3>
+                            <p class="text-gray-500 mt-1">Intenta con otros filtros o agrega un nuevo producto.</p>
+                        </div>
+
+                        <!-- Header (Desktop) -->
+                        <div
+                            class="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex-none">
+                            <div class="col-span-1 flex items-center justify-center">
+                                <input type="checkbox" id="checkAll"
+                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer">
+                            </div>
+                            <div class="col-span-2 cursor-pointer hover:text-gray-700 flex items-center group sortable"
+                                data-sort="id">
+                                ID <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div class="col-span-4 cursor-pointer hover:text-gray-700 flex items-center group sortable"
+                                data-sort="product_name">
+                                Producto <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div class="col-span-1 cursor-pointer hover:text-gray-700 flex items-center group sortable"
+                                data-sort="branch">
+                                Marca <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div class="col-span-1 cursor-pointer hover:text-gray-700 flex items-center group sortable"
+                                data-sort="stock">
+                                Stock <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div class="col-span-1 cursor-pointer hover:text-gray-700 flex items-center group sortable"
+                                data-sort="price">
+                                Precio <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <div class="col-span-1 flex items-center justify-center text-center">Publicación</div>
+                            <div class="col-span-1 flex items-center justify-end text-right">Acción</div>
+
+                        </div>
+
+                        <!-- Scrollable Content -->
+                        <div class="overflow-y-auto flex-1 p-0 md:p-0 bg-gray-50 md:bg-white" id="productsContainer">
+                            <!-- Products will be injected here (Rows for desktop, Cards for mobile) -->
+                        </div>
+
+                        <!-- Pagination Footer -->
+                        <!-- Footer -->
+                        <div
+                            class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between flex-none">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <span class="mr-4" id="totalItems">Cargando...</span>
+                                <div class="flex items-center space-x-2">
+                                    <span>Mostrar:</span>
+                                    <select id="limitSelector"
+                                        class="bg-white border border-gray-300 text-gray-700 text-xs rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 p-1">
+                                        <option value="25">25</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="100">100</option>
+                                        <option value="200">200</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="btnPrev"
+                                    class="p-2 rounded-lg hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 text-gray-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                                    <i data-lucide="chevron-left" class="h-5 w-5"></i>
+                                </button>
+                                <span class="text-sm font-medium text-gray-700">
+                                    <span id="pageStart">0</span> - <span id="pageEnd">0</span>
+                                </span>
+                                <button id="btnNext"
+                                    class="p-2 rounded-lg hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 text-gray-500 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                                    <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div> <!-- End Inventory View -->
+
+                <!-- Settings View -->
+                <div id="settingsView"
+                    class="hidden h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configuración</h2>
+
+                    <!-- Credentials Section -->
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <i data-lucide="user" class="h-5 w-5 mr-2 text-blue-600"></i>
+                            Credenciales de Acceso
+                        </h3>
+                        <div class="space-y-4 max-w-md">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Usuario</label>
+                                <input type="text" id="settingsUsername"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña
+                                    Actual</label>
+                                <input type="password" id="settingsCurrentPassword"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nueva
+                                    Contraseña</label>
+                                <input type="password" id="settingsNewPassword"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar
+                                    Nueva Contraseña</label>
+                                <input type="password" id="settingsConfirmPassword"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                            </div>
+                            <button id="btnSaveCredentials"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm">
+                                Guardar Credenciales
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logo Customization Section -->
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <i data-lucide="image" class="h-5 w-5 mr-2 text-blue-600"></i>
+                            Personalización de Logos
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Light Mode Logo -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <i data-lucide="sun" class="h-4 w-4 inline mr-1"></i>
+                                    Logo Modo Claro
+                                </label>
+                                <div class="flex items-center space-x-4">
+                                    <div
+                                        class="h-20 w-20 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
+                                        <img id="settingsLogoLightPreview" src="" alt="Logo Claro"
+                                            class="h-full w-full object-contain hidden">
+                                        <span id="settingsLogoLightPlaceholder"
+                                            class="text-gray-400 dark:text-gray-500 text-xs text-center">Sin
+                                            Logo</span>
+                                    </div>
+                                    <label
+                                        class="cursor-pointer bg-white dark:bg-gray-700 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <span>Subir</span>
+                                        <input id="settingsLogoLightInput" type="file" class="sr-only" accept="image/*">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Dark Mode Logo -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <i data-lucide="moon" class="h-4 w-4 inline mr-1"></i>
+                                    Logo Modo Oscuro
+                                </label>
+                                <div class="flex items-center space-x-4">
+                                    <div
+                                        class="h-20 w-20 bg-gray-800 dark:bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden border border-gray-600 dark:border-gray-500">
+                                        <img id="settingsLogoDarkPreview" src="" alt="Logo Oscuro"
+                                            class="h-full w-full object-contain hidden">
+                                        <span id="settingsLogoDarkPlaceholder"
+                                            class="text-gray-400 text-xs text-center">Sin Logo</span>
+                                    </div>
+                                    <label
+                                        class="cursor-pointer bg-white dark:bg-gray-700 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <span>Subir</span>
+                                        <input id="settingsLogoDarkInput" type="file" class="sr-only" accept="image/*">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                            Sube versiones de tu logo optimizadas para cada modo. El logo claro se usará en fondos
+                            claros y el oscuro en fondos oscuros.
+                        </p>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Login View (Overlay) -->
+    <div id="loginView" class="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-200">
+            <div class="flex items-center justify-center mb-8">
+                <div
+                    class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3">
+                    I</div>
+                <h1 class="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
+            </div>
+
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="loginUsername" class="block text-sm font-medium text-gray-700">Usuario</label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="loginUsername" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="admin">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <div class="mt-1 relative">
+                        <input type="password" id="loginPassword" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            placeholder="••••••••">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="loginError" class="text-red-600 text-sm hidden">Usuario o contraseña incorrectos.</div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Ingresar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Template (Hidden by default) -->
+    <div id="modalBackdrop"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modalContent"
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden">
+            <!-- Dynamic Content -->
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/app.js"></script>
+
+
+</body>
+
+</html>

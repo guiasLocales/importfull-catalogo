@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Credentials (IMPORTANTE: nunca subir a Docker)
+credentials.json
+client_secret.json
+token.json
+analytical-rain-*.json
+*.json
+
+# Test files
+test_*.py
+check_*.py
+debug_*.py
+diagnose_*.py
+verify_*.py
+migrate_*.py
+seed_*.py
+list_*.py
+add_*.py
+describe_*.py
+reset_*.py
+generate_*.py
+
+# Backups
+backup*/

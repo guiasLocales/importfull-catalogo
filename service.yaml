@@ -1,0 +1,43 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: inventory-app
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '3'
+    spec:
+      containers:
+      - image: us-central1-docker.pkg.dev/analytical-rain-485717-r5/cloud-run-source-deploy/inventory-app
+        env:
+        - name: DB_USER
+          value: leandro_guias
+        - name: DB_PASSWORD
+          value: '!39o.129mAacasu1048x$.'
+        - name: DB_NAME
+          value: app_import
+        - name: DB_HOST
+          value: 34.133.83.104
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/credentials.json
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /secrets
+          name: google-credentials
+      volumes:
+      - name: google-credentials
+        secret:
+          items:
+          - key: latest
+            path: credentials.json
+          secretName: GOOGLE_CREDENTIALS

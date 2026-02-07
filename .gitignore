@@ -1,0 +1,80 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+inventory.db
+
+# Logs
+*.log
+
+# Google Cloud credentials (NUNCA SUBIR ESTOS)
+credentials.json
+client_secret.json
+token.json
+analytical-rain-*.json
+*.json
+
+# Test and utility scripts
+test_*.py
+check_*.py
+debug_*.py
+diagnose_*.py
+verify_*.py
+migrate_*.py
+seed_*.py
+list_*.py
+add_*.py
+describe_*.py
+reset_*.py
+generate_*.py
+
+# Backups
+backup*/
+backup_v*/
+
+# OS files
+Thumbs.db
+.DS_Store
