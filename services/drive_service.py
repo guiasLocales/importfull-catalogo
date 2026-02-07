@@ -21,28 +21,28 @@ def get_drive_service():
     
     # 1. Priorities: Local/User OAuth (token.json)
     # This is required for Drive Uploads to use the User's Limit, not the Service Account (0 bytes)
-    print(f"DEBUG: Checking for token.json at {os.path.abspath(TOKEN_FILE)}")
+    print(f"DEBUG: Checking for token.json at {os.path.abspath(TOKEN_FILE)}", flush=True)
     if os.path.exists(TOKEN_FILE):
-        print("DEBUG: token.json FOUND. Attempting to load...")
+        print("DEBUG: token.json FOUND. Attempting to load...", flush=True)
         try:
             creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
             if creds:
-                print(f"DEBUG: Credentials loaded. Valid={creds.valid}, Expired={creds.expired}, HasRefresh={bool(creds.refresh_token)}")
+                print(f"DEBUG: Credentials loaded. Valid={creds.valid}, Expired={creds.expired}, HasRefresh={bool(creds.refresh_token)}", flush=True)
             
             if creds and creds.valid:
-                print("Using User Credentials from token.json")
+                print("Using User Credentials from token.json", flush=True)
                 return build('drive', 'v3', credentials=creds)
             elif creds and creds.expired and creds.refresh_token:
-                print("Refreshing expired user token...")
+                print("Refreshing expired user token...", flush=True)
                 creds.refresh(Request())
                 # Save refreshed token
                 with open(TOKEN_FILE, 'w') as token:
                     token.write(creds.to_json())
                 return build('drive', 'v3', credentials=creds)
         except Exception as e:
-            print(f"ERROR loading token.json: {e}")
+            print(f"ERROR loading token.json: {e}", flush=True)
     else:
-        print("DEBUG: token.json NOT FOUND in container.")
+        print("DEBUG: token.json NOT FOUND in container.", flush=True)
 
     # 2. Service Account (Cloud Run Default)
     service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
