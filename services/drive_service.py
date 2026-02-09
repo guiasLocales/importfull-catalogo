@@ -19,44 +19,59 @@ def get_drive_service():
     """Builds and returns the Drive service."""
     creds = None
     
-    # 0. Decode token.b64 if present and token.json is missing
-    if not os.path.exists(TOKEN_FILE) and os.path.exists('token.b64'):
-        print("DEBUG: Found token.b64, decoding to token.json...", flush=True)
-        try:
-            import base64
-            with open('token.b64', 'r') as f:
-                encoded_data = f.read()
-                decoded_data = base64.b64decode(encoded_data).decode('utf-8')
-            with open(TOKEN_FILE, 'w') as f:
-                f.write(decoded_data)
-            print("DEBUG: Successfully created token.json from base64", flush=True)
-        except Exception as e:
-            print(f"ERROR decoding token.b64: {e}", flush=True)
-
     # 1. Priorities: Local/User OAuth (token.json)
-    # This is required for Drive Uploads to use the User's Limit, not the Service Account (0 bytes)
-    print(f"DEBUG: Checking for token.json at {os.path.abspath(TOKEN_FILE)}", flush=True)
-    if os.path.exists(TOKEN_FILE):
-        print("DEBUG: token.json FOUND. Attempting to load...", flush=True)
+    # Use /tmp for token storage in Cloud Run as the app directory might be read-only
+    RUNTIME_TOKEN_FILE = '/tmp/token.json'
+    
+    # Copy/Decode token to runtime location
+    if not os.path.exists(RUNTIME_TOKEN_FILE):
+        if os.path.exists(TOKEN_FILE):
+            import shutil
+            shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
+            print(f"DEBUG: Copied {TOKEN_FILE} to {RUNTIME_TOKEN_FILE}", flush=True)
+        elif os.path.exists('token.b64'):
+            print("DEBUG: Found token.b64, decoding to /tmp/token.json...", flush=True)
+            try:
+                import base64
+                with open('token.b64', 'r') as f:
+                    encoded_data = f.read()
+                    decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+                with open(RUNTIME_TOKEN_FILE, 'w') as f:
+                    f.write(decoded_data)
+                print("DEBUG: Successfully created /tmp/token.json from base64", flush=True)
+            except Exception as e:
+                print(f"ERROR decoding token.b64: {e}", flush=True)
+
+    print(f"DEBUG: Checking for token at {RUNTIME_TOKEN_FILE}", flush=True)
+    if os.path.exists(RUNTIME_TOKEN_FILE):
+        print("DEBUG: Runtime token file FOUND. Attempting to load...", flush=True)
         try:
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+            creds = Credentials.from_authorized_user_file(RUNTIME_TOKEN_FILE, SCOPES)
             if creds:
                 print(f"DEBUG: Credentials loaded. Valid={creds.valid}, Expired={creds.expired}, HasRefresh={bool(creds.refresh_token)}", flush=True)
             
+            if creds and creds.expired and creds.refresh_token:
+                print("DEBUG: Token expired, attempting refresh...", flush=True)
+                try:
+                    creds.refresh(Request())
+                    print("DEBUG: Token refresh SUCCESSFUL", flush=True)
+                    # Save refreshed token
+                    with open(RUNTIME_TOKEN_FILE, 'w') as token:
+                        token.write(creds.to_json())
+                except Exception as refresh_err:
+                    print(f"ERROR refreshing token: {refresh_err}", flush=True)
+                    # Don't return here, maybe the expired token still works for some reason? No, it won't.
+            
             if creds and creds.valid:
-                print("Using User Credentials from token.json", flush=True)
+                print("Using User Credentials from runtime token", flush=True)
                 return build('drive', 'v3', credentials=creds)
-            elif creds and creds.expired and creds.refresh_token:
-                print("Refreshing expired user token...", flush=True)
-                creds.refresh(Request())
-                # Save refreshed token
-                with open(TOKEN_FILE, 'w') as token:
-                    token.write(creds.to_json())
-                return build('drive', 'v3', credentials=creds)
+            else:
+                 print("DEBUG: Credentials invalid even after refresh attempt.", flush=True)
+
         except Exception as e:
-            print(f"ERROR loading token.json: {e}", flush=True)
+            print(f"ERROR loading/using runtime token: {e}", flush=True)
     else:
-        print("DEBUG: token.json NOT FOUND in container.", flush=True)
+        print("DEBUG: Runtime token.json NOT FOUND.", flush=True)
 
     # 2. Service Account (Cloud Run Default)
     service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
