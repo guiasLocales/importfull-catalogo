@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -152,7 +152,7 @@ def _delete_old_logos(service, logo_type, folder_id):
 @router.post("/upload-logo")
 async def upload_logo(
     file: UploadFile = File(...), 
-    logo_type: str = "light",
+    logo_type: str = Form("light"),
     current_user: models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
