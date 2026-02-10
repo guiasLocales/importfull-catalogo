@@ -118,76 +118,45 @@ async def upload_logo(
         from services import drive_service
         from services.settings_service import settings_manager
         
-        # Get Drive service
-        service = drive_service.get_drive_service()
-        if not service:
-            raise HTTPException(status_code=500, detail="Could not connect to Google Drive")
-        
-        # We'll use the root folder or a specific logos folder
-        # For simplicity, use same root folder as products
-        logos_folder_id = drive_service.ROOT_FOLDER_ID
-        
         # Read file content
         file_content = await file.read()
         
-        # Upload to Drive
-        # Use a consistent filename to overwrite or easy identify
-        # e.g. "logo_light.png" - this prevents clutter
-        extension = file.filename.split('.')[-1]
-        filename = f"logo_{logo_type}_app.{extension}"
+        # Check file size (limit to 5MB to avoid huge JSON files)
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Image too large. Please use an image under 5MB.")
+            
+        # Convert to Base64 Data URI
+        import base64
+        b64_str = base64.b64encode(file_content).decode('utf-8')
+        mime_type = file.content_type or 'image/png'
+        # Fallback for empty content types
+        if not mime_type:
+            if filename.endswith('.png'): mime_type = 'image/png'
+            elif filename.endswith('.jpg') or filename.endswith('.jpeg'): mime_type = 'image/jpeg'
+            elif filename.endswith('.svg'): mime_type = 'image/svg+xml'
+            elif filename.endswith('.ico'): mime_type = 'image/x-icon'
+            
+        logo_data_uri = f"data:{mime_type};base64,{b64_str}"
         
-        # Ideally, we should check if file exists and update content, 
-        # but creating new file works too (Drive allows duplicate names)
-        # To avoid duplicates, we could search first. For now, create new.
-        
-        uploaded_file = drive_service.upload_file(
-            service=service,
-            file_content=file_content,
-            file_name=filename,
-            folder_id=logos_folder_id,
-            content_type=file.content_type or 'image/png',
-            make_public=True
-        )
-        
-        if not uploaded_file:
-            raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
-        
-        # Strategy for robust image hosting:
-        # 1. Try thumbnailLink (content server) and resize to large
-        # 2. Fallback to direct download link (uc?export=view)
-        
-        file_id = uploaded_file.get('id')
-        thumbnail_link = uploaded_file.get('thumbnailLink')
-        
-        if thumbnail_link:
-            # Modify size param to get full resolution (typical format is ...=s220)
-            # replacing with =s2048 gets a large version
-            if '=s' in thumbnail_link:
-                logo_url = thumbnail_link.rsplit('=', 1)[0] + '=s2048'
-            else:
-                logo_url = thumbnail_link
-        else:
-            # Fallback for non-image types (like .ico sometimes)
-            logo_url = f"https://drive.google.com/uc?export=view&id={file_id}"
-        
-        # Save to Settings Service (Drive JSON)
-        # Bypassing DB updates completely
+        # Save DIRECTLY to Settings Service (Drive JSON)
+        # We store the image data inside the JSON settings file
         if logo_type == "light":
-            settings_manager.update_setting("logo_light_url", logo_url)
+            settings_manager.update_setting("logo_light_url", logo_data_uri)
         elif logo_type == "dark":
-            settings_manager.update_setting("logo_dark_url", logo_url)
+            settings_manager.update_setting("logo_dark_url", logo_data_uri)
         elif logo_type == "favicon":
-            settings_manager.update_setting("favicon_url", logo_url)
+            settings_manager.update_setting("favicon_url", logo_data_uri)
         
         return {
-            "logo_url": logo_url,
-            "logo_type": logo_type,
-            "drive_file_id": uploaded_file.get('id')
+            "logo_url": logo_data_uri, # Return the data URI for immediate preview
+            "logo_type": logo_type
         }
         
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        print(f"Error uploading logo: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
+        print(f"Error processing logo: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process logo: {str(e)}")
 
 @router.get("/settings")
 async def get_settings(current_user: models.User = Depends(get_current_user)):
