@@ -14,6 +14,7 @@ class SettingsService:
         self.settings = {
             "logo_light_url": None,
             "logo_dark_url": None,
+            "favicon_url": None,
             "theme_pref": "light"
         }
         self.file_id = None
@@ -21,11 +22,14 @@ class SettingsService:
 
     def _get_service(self):
         if not self.service:
-            self.service = drive_service.get_drive_service()
+            # Import here to avoid circular dependencies if any
+            from services.drive_service import get_drive_service
+            self.service = get_drive_service()
         return self.service
 
     def load_settings(self):
         """Load settings from Google Drive file"""
+        print(f"DEBUG: Loading settings from Drive...")
         try:
             service = self._get_service()
             if not service:
@@ -41,16 +45,32 @@ class SettingsService:
 
             if files:
                 self.file_id = files[0]['id']
+                print(f"DEBUG: Settings file found (ID: {self.file_id})")
+                
                 # Download content
                 content = service.files().get_media(fileId=self.file_id).execute()
-                self.settings = json.loads(content.decode('utf-8'))
-                print(f"Settings loaded from Drive: {self.settings}")
+                loaded_json = content.decode('utf-8')
+                
+                if not loaded_json.strip():
+                    print("WARNING: Settings file is empty")
+                    loaded_settings = {}
+                else:
+                    loaded_settings = json.loads(loaded_json)
+                
+                # Merge with existing settings (don't overwrite self.settings completely)
+                # This preserves any in-memory updates that might be pending
+                for k, v in loaded_settings.items():
+                    self.settings[k] = v
+                    
+                print(f"DEBUG: Active Settings: {self.settings}")
             else:
-                print("Settings file not found on Drive. Using defaults.")
-                self.save_settings() # Create it
+                print("DEBUG: Settings file not found on Drive. Creating new.")
+                self.save_settings() # Create empty file
 
         except Exception as e:
-            print(f"Error loading settings: {e}")
+            print(f"ERROR loading settings: {e}")
+            import traceback
+            traceback.print_exc()
         
         return self.settings
 
@@ -71,46 +91,56 @@ class SettingsService:
             from googleapiclient.http import MediaIoBaseUpload
             import io
             
+            json_content = json.dumps(self.settings, indent=2)
             media = MediaIoBaseUpload(
-                io.BytesIO(json.dumps(self.settings).encode('utf-8')),
+                io.BytesIO(json_content.encode('utf-8')),
                 mimetype='application/json',
                 resumable=True
             )
 
             if self.file_id:
                 # Update existing file
+                print(f"DEBUG: Updating existing settings file {self.file_id}")
                 service.files().update(
                     fileId=self.file_id,
                     media_body=media
                 ).execute()
-                print("Settings updated on Drive")
             else:
                 # Create new file
+                print(f"DEBUG: Creating NEW settings file")
                 file = service.files().create(
                     body=file_metadata,
                     media_body=media,
                     fields='id'
                 ).execute()
                 self.file_id = file.get('id')
-                print(f"Settings file created on Drive (ID: {self.file_id})")
                 
+            print(f"DEBUG: Settings saved successfully")
             return True
 
         except Exception as e:
-            print(f"Error saving settings: {e}")
+            print(f"ERROR saving settings: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def update_setting(self, key, value):
-        # Always reload from Drive to ensure we have the latest state
-        # preventing overwrites if multiple instances are running
-        current_settings = self.load_settings()
+        print(f"DEBUG: REQUEST UPDATE setting '{key}' = '{value}'")
         
-        # Update and save
+        # 1. Reload first to get latest state from Drive
+        # This is CRITICAL to avoid overwriting other keys
+        self.load_settings()
+        
+        # 2. Update local state
         self.settings[key] = value
+        
+        # 3. Save everything back
+        print(f"DEBUG: Saving full settings object: {self.settings}")
         return self.save_settings()
 
     def get_setting(self, key, default=None):
-        if not self.settings.get(key):
+        # Refresh if empty
+        if not self.settings.get(key) and not self.file_id:
             self.load_settings()
         return self.settings.get(key, default)
 
