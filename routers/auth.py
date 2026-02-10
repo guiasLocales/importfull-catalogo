@@ -274,3 +274,39 @@ async def get_public_settings():
 async def get_settings(current_user: models.User = Depends(get_current_user)):
     """Get application settings (same as public-settings but authenticated)."""
     return await get_public_settings()
+
+@router.get("/debug-drive")
+async def debug_drive():
+    """List ALL files in root folder to debug logo issues."""
+    try:
+        from services import drive_service
+        service = drive_service.get_drive_service()
+        if not service:
+            return {"error": "No Drive service"}
+        
+        folder_id = drive_service.ROOT_FOLDER_ID
+        
+        # List ALL files (not just logos)
+        query = f"'{folder_id}' in parents and trashed = false"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, mimeType, size, modifiedTime)",
+            pageSize=50
+        ).execute()
+        
+        files = results.get('files', [])
+        
+        # Also check what _find_logo_file returns for each type
+        search_results = {}
+        for t in ["light", "dark", "favicon"]:
+            found = _find_logo_file(service, t, folder_id)
+            search_results[t] = found
+        
+        return {
+            "folder_id": folder_id,
+            "total_files": len(files),
+            "files": [{"name": f["name"], "id": f["id"], "mime": f.get("mimeType"), "modified": f.get("modifiedTime")} for f in files],
+            "logo_search_results": search_results
+        }
+    except Exception as e:
+        return {"error": str(e)}
