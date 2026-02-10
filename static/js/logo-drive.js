@@ -131,10 +131,55 @@
         }
     }
 
+    async function updateLoginScreenLogo() {
+        const loginContainer = document.getElementById('loginLogoContainer');
+        const loginImg = document.getElementById('loginLogoImg');
+        const loginInitial = document.getElementById('loginDefaultInitial');
+
+        if (!loginContainer || !loginImg || !loginInitial) return;
+
+        // 1. Try localStorage first (fastest)
+        let logoUrl = localStorage.getItem('logoLight');
+
+        // 2. If not found, fetch from public API
+        if (!logoUrl) {
+            try {
+                const response = await fetch('/public-settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings.logo_light_url) {
+                        logoUrl = settings.logo_light_url;
+                        // Save for next time
+                        localStorage.setItem('logoLight', logoUrl);
+                        if (settings.logo_dark_url) {
+                            localStorage.setItem('logoDark', settings.logo_dark_url);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Could not load public settings:", e);
+            }
+        }
+
+        // Apply if we found a logo
+        if (logoUrl) {
+            loginImg.src = logoUrl;
+            loginImg.classList.remove('hidden');
+            loginInitial.classList.add('hidden');
+            // Remove blue background/white text for logo
+            loginContainer.classList.remove('bg-blue-600', 'text-white');
+            loginContainer.classList.add('bg-transparent');
+        }
+    }
+
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDriveLogoHandlers);
+        document.addEventListener('DOMContentLoaded', () => {
+            initDriveLogoHandlers();
+            updateLoginScreenLogo();
+        });
     } else {
         initDriveLogoHandlers();
+        updateLoginScreenLogo();
     }
 })();

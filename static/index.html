@@ -570,9 +570,11 @@
     <div id="loginView" class="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-200">
             <div class="flex items-center justify-center mb-8">
-                <div
-                    class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3">
-                    I</div>
+                <div id="loginLogoContainer"
+                    class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3 overflow-hidden">
+                    <span id="loginDefaultInitial">I</span>
+                    <img id="loginLogoImg" class="w-full h-full object-contain hidden" alt="Logo">
+                </div>
                 <h1 class="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
             </div>
 

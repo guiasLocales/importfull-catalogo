@@ -177,4 +177,15 @@ async def get_settings(current_user: models.User = Depends(get_current_user)):
     from services.settings_service import settings_manager
     return settings_manager.load_settings()
 
+@router.get("/public-settings")
+async def get_public_settings():
+    """Get public settings (logos) without authentication"""
+    from services.settings_service import settings_manager
+    settings = settings_manager.load_settings()
+    # Filter to only return safe public info
+    return {
+        "logo_light_url": settings.get("logo_light_url"),
+        "logo_dark_url": settings.get("logo_dark_url")
+    }
+
 
