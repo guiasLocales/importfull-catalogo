@@ -130,7 +130,25 @@ def create_folder(service, folder_name, parent_id=None):
         print(f'An error occurred creating folder: {e}')
         return None
 
-def upload_file(service, file_content, file_name, folder_id, content_type='image/jpeg'):
+def make_file_public(service, file_id):
+    """Make a file publicly readable."""
+    try:
+        permission = {
+            'type': 'anyone',
+            'role': 'reader',
+        }
+        service.permissions().create(
+            fileId=file_id,
+            body=permission,
+            fields='id',
+        ).execute()
+        print(f"File {file_id} is now public.")
+        return True
+    except Exception as e:
+        print(f"Error making file public: {e}")
+        return False
+
+def upload_file(service, file_content, file_name, folder_id, content_type='image/jpeg', make_public=False):
     """Upload a file to a specific folder."""
     file_metadata = {
         'name': file_name,
@@ -142,9 +160,13 @@ def upload_file(service, file_content, file_name, folder_id, content_type='image
         file = service.files().create(
             body=file_metadata,
             media_body=media,
-            fields='id, webViewLink, thumbnailLink'
+            fields='id, webViewLink, thumbnailLink, webContentLink'
         ).execute()
         print(f'File ID: "{file.get("id")}".')
+        
+        if make_public:
+            make_file_public(service, file.get('id'))
+            
         return file
     except Exception as e:
         print(f'An error occurred uploading file: {e}')

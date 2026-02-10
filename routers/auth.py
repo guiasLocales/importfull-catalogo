@@ -145,14 +145,17 @@ async def upload_logo(
             file_content=file_content,
             file_name=filename,
             folder_id=logos_folder_id,
-            content_type=file.content_type or 'image/png'
+            content_type=file.content_type or 'image/png',
+            make_public=True
         )
         
         if not uploaded_file:
             raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
         
-        # Get the Drive URL
-        logo_url = uploaded_file.get('thumbnailLink') or uploaded_file.get('webViewLink')
+        # Construct direct view URL for public file
+        # This is more reliable for embedding than webViewLink
+        file_id = uploaded_file.get('id')
+        logo_url = f"https://drive.google.com/uc?export=view&id={file_id}"
         
         # Save to Settings Service (Drive JSON)
         # Bypassing DB updates completely
