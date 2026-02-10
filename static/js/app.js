@@ -70,20 +70,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // --- Authenticated Fetch Helper ---
+    function getAuthHeaders(extraHeaders = {}) {
+        const token = localStorage.getItem('token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            ...extraHeaders
+        };
+    }
+
     async function authFetch(url, options = {}) {
         const token = localStorage.getItem('token');
         if (!token) {
             if (window.logout) window.logout();
-            throw new Error('No auth token');
+            return new Response(null, { status: 401 });
         }
-        const headers = options.headers || {};
-        headers['Authorization'] = `Bearer ${token}`;
-        options.headers = headers;
 
-        const response = await fetch(url, options);
+        // Merge auth header with any existing headers
+        const mergedHeaders = {
+            ...(options.headers || {}),
+            'Authorization': `Bearer ${token}`
+        };
+
+        const response = await fetch(url, {
+            ...options,
+            headers: mergedHeaders
+        });
+
         if (response.status === 401) {
             if (window.logout) window.logout();
-            throw new Error('Session expired');
         }
         return response;
     }
