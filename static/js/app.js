@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             ${files.map(file => `
                                 <button onclick="document.getElementById('main-product-image').src='${file.largeImageLink || file.thumbnailLink}'" 
                                         class="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border border-gray-300 hover:border-blue-500 transition-all relative group">
-                                    <img src="${file.thumbnailLink}" alt="${file.name}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64?text=Error'">
+                                    <img src="${file.thumbnailLink || file.largeImageLink}" alt="${file.name}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTA5MDkwIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0yMSAxNXY0YTIgMiAwIDAgMS0yIDJIMUM1YTIgMiAwIDAgMS0yLTJ2LTRtMTQtMmwtLTQtNHYxMm00LQhMNyA5Ii8+PC9zdmc+';this.style.padding='10px';">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                                 </button>
                             `).join('')}
@@ -615,8 +615,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${product.meli_id ? `
                     <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-700/30">
                         <div class="flex items-center gap-3">
-                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-16 object-contain dark:hidden">
-                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-16 object-contain hidden dark:block">
+                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-20 object-contain dark:hidden">
+                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-20 object-contain hidden dark:block">
                             <div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">ID en MercadoLibre</p>
                                 <a href="${product.permalink || 'https://www.mercadolibre.com.ar/p/' + product.meli_id}" 
