@@ -163,12 +163,21 @@
 
         // Apply if we found a logo
         if (logoUrl) {
+            const loginTitle = document.getElementById('loginTitle');
+
+            // Show image, Hide initial
             loginImg.src = logoUrl;
             loginImg.classList.remove('hidden');
             loginInitial.classList.add('hidden');
-            // Remove blue background/white text for logo
-            loginContainer.classList.remove('bg-blue-600', 'text-white');
-            loginContainer.classList.add('bg-transparent');
+
+            // Remove blue background and maximize container
+            loginContainer.classList.remove('bg-blue-600', 'text-white', 'w-10', 'h-10', 'rounded-lg', 'mr-3');
+            loginContainer.classList.add('bg-transparent', 'w-full', 'h-32', 'mb-2'); // Maximize width, make height 32 (128px)
+
+            // Hide "Iniciar Sesión" text
+            if (loginTitle) {
+                loginTitle.classList.add('hidden');
+            }
         }
     }
 
