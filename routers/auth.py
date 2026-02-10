@@ -118,45 +118,99 @@ async def upload_logo(
         from services import drive_service
         from services.settings_service import settings_manager
         
+        # Get Drive service
+        service = drive_service.get_drive_service()
+        if not service:
+            raise HTTPException(status_code=500, detail="Could not connect to Google Drive")
+        
+        # Folder ID
+        logos_folder_id = drive_service.ROOT_FOLDER_ID
+        
         # Read file content
         file_content = await file.read()
         
-        # Check file size (limit to 5MB to avoid huge JSON files)
-        if len(file_content) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Image too large. Please use an image under 5MB.")
-            
-        # Convert to Base64 Data URI
-        import base64
-        b64_str = base64.b64encode(file_content).decode('utf-8')
-        mime_type = file.content_type or 'image/png'
-        # Fallback for empty content types
-        if not mime_type:
-            if filename.endswith('.png'): mime_type = 'image/png'
-            elif filename.endswith('.jpg') or filename.endswith('.jpeg'): mime_type = 'image/jpeg'
-            elif filename.endswith('.svg'): mime_type = 'image/svg+xml'
-            elif filename.endswith('.ico'): mime_type = 'image/x-icon'
-            
-        logo_data_uri = f"data:{mime_type};base64,{b64_str}"
+        # Generate filename
+        extension = file.filename.split('.')[-1]
+        filename = f"logo_{logo_type}_app.{extension}"
         
-        # Save DIRECTLY to Settings Service (Drive JSON)
-        # We store the image data inside the JSON settings file
-        if logo_type == "light":
-            settings_manager.update_setting("logo_light_url", logo_data_uri)
-        elif logo_type == "dark":
-            settings_manager.update_setting("logo_dark_url", logo_data_uri)
-        elif logo_type == "favicon":
-            settings_manager.update_setting("favicon_url", logo_data_uri)
+        # Upload to Drive (Make public not strictly necessary if we proxy, but good fallback)
+        uploaded_file = drive_service.upload_file(
+            service=service,
+            file_content=file_content,
+            file_name=filename,
+            folder_id=logos_folder_id,
+            content_type=file.content_type or 'image/png',
+            make_public=True 
+        )
+        
+        if not uploaded_file:
+            raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
+        
+        file_id = uploaded_file.get('id')
+        
+        # PROXY URL: We serve the image through our own backend
+        # This bypasses all Drive permission/cookie issues
+        proxy_url = f"/logo/{logo_type}"
+        
+        # Save ID and Proxy URL to settings
+        settings_key_url = f"logo_{logo_type}_url" if logo_type != "favicon" else "favicon_url"
+        settings_key_id = f"logo_{logo_type}_id" if logo_type != "favicon" else "favicon_id"
+        
+        # Update settings (one by one to be safe)
+        settings_manager.update_setting(settings_key_id, file_id)
+        settings_manager.update_setting(settings_key_url, proxy_url)
         
         return {
-            "logo_url": logo_data_uri, # Return the data URI for immediate preview
-            "logo_type": logo_type
+            "logo_url": proxy_url,
+            "logo_type": logo_type,
+            "drive_file_id": file_id
         }
         
-    except HTTPException as he:
-        raise he
     except Exception as e:
         print(f"Error processing logo: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to process logo: {str(e)}")
+
+@router.get("/logo/{logo_type}")
+async def get_logo_content(logo_type: str):
+    """Proxy endpoint to serve logo images from Drive through backend"""
+    try:
+        from services import drive_service
+        from services.settings_service import settings_manager
+        from fastapi.responses import Response
+        
+        # Load settings to find the file ID
+        settings = settings_manager.load_settings()
+        
+        # Map logo_type to ID key
+        if logo_type == "light": key = "logo_light_id"
+        elif logo_type == "dark": key = "logo_dark_id"
+        elif logo_type == "favicon": key = "favicon_id"
+        else: return Response(status_code=404)
+        
+        file_id = settings.get(key)
+        if not file_id:
+            return Response(status_code=404)
+            
+        # Get Drive service
+        service = drive_service.get_drive_service()
+        if not service:
+            return Response(status_code=500)
+            
+        # Download file content
+        # usage: service.files().get_media(fileId=file_id)
+        request = service.files().get_media(fileId=file_id)
+        file_content = request.execute()
+        
+        # Determine content type (simple guess, or store it in settings too)
+        # For now assume png/ico/jpeg based on magic bytes or just generic
+        return Response(content=file_content, media_type="image/png")
+        
+    except Exception as e:
+        print(f"Error serving logo proxy {logo_type}: {e}")
+        # Return a 404 or transparent pixel on error
+        return Response(status_code=404)
+
+@router.get("/settings")
 
 @router.get("/settings")
 async def get_settings(current_user: models.User = Depends(get_current_user)):
