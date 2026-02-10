@@ -156,9 +156,14 @@ async def upload_logo(
         settings_key_url = f"logo_{logo_type}_url" if logo_type != "favicon" else "favicon_url"
         settings_key_id = f"logo_{logo_type}_id" if logo_type != "favicon" else "favicon_id"
         
-        # Update settings (one by one to be safe)
-        settings_manager.update_setting(settings_key_id, file_id)
-        settings_manager.update_setting(settings_key_url, proxy_url)
+        # Update settings ATOMICALLY (prevent race conditions)
+        success = settings_manager.update_settings({
+            settings_key_id: file_id,
+            settings_key_url: proxy_url
+        })
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to save settings to Drive")
         
         return {
             "logo_url": proxy_url,

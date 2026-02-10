@@ -125,14 +125,18 @@ class SettingsService:
             return False
 
     def update_setting(self, key, value):
-        print(f"DEBUG: REQUEST UPDATE setting '{key}' = '{value}'")
+        return self.update_settings({key: value})
+
+    def update_settings(self, updates):
+        """Update multiple settings at once to avoid race conditions"""
+        print(f"DEBUG: REQUEST UPDATE settings: {updates.keys()}")
         
         # 1. Reload first to get latest state from Drive
-        # This is CRITICAL to avoid overwriting other keys
         self.load_settings()
         
-        # 2. Update local state
-        self.settings[key] = value
+        # 2. Update local state with all updates
+        for k, v in updates.items():
+            self.settings[k] = v
         
         # 3. Save everything back
         print(f"DEBUG: Saving full settings object: {self.settings}")
