@@ -152,10 +152,23 @@ async def upload_logo(
         if not uploaded_file:
             raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
         
-        # Construct direct view URL for public file
-        # This is more reliable for embedding than webViewLink
+        # Strategy for robust image hosting:
+        # 1. Try thumbnailLink (content server) and resize to large
+        # 2. Fallback to direct download link (uc?export=view)
+        
         file_id = uploaded_file.get('id')
-        logo_url = f"https://drive.google.com/uc?export=view&id={file_id}"
+        thumbnail_link = uploaded_file.get('thumbnailLink')
+        
+        if thumbnail_link:
+            # Modify size param to get full resolution (typical format is ...=s220)
+            # replacing with =s2048 gets a large version
+            if '=s' in thumbnail_link:
+                logo_url = thumbnail_link.rsplit('=', 1)[0] + '=s2048'
+            else:
+                logo_url = thumbnail_link
+        else:
+            # Fallback for non-image types (like .ico sometimes)
+            logo_url = f"https://drive.google.com/uc?export=view&id={file_id}"
         
         # Save to Settings Service (Drive JSON)
         # Bypassing DB updates completely
