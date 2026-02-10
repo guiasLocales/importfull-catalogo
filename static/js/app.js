@@ -69,6 +69,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+    // --- Authenticated Fetch Helper ---
+    async function authFetch(url, options = {}) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            if (window.logout) window.logout();
+            throw new Error('No auth token');
+        }
+        const headers = options.headers || {};
+        headers['Authorization'] = `Bearer ${token}`;
+        options.headers = headers;
+
+        const response = await fetch(url, options);
+        if (response.status === 401) {
+            if (window.logout) window.logout();
+            throw new Error('Session expired');
+        }
+        return response;
+    }
 
     // --- API ---
 
@@ -141,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function deleteProductApi(id) {
-        const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        const response = await authFetch(`/api/products/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Error deleting product');
         return true;
     }
@@ -386,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            const response = await fetch(`/api/products/${id}/publish`, {
+            const response = await authFetch(`/api/products/${id}/publish`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: newStatus === 'Publicado' ? 'publish' : 'pause' })
@@ -428,8 +446,8 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             // Always fetch fresh data for detail view
             const [resProduct, resFiles] = await Promise.all([
-                fetch(`/api/products/${productId}`),
-                fetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] }))
+                authFetch(`/api/products/${productId}`),
+                authFetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] }))
             ]);
 
             if (!resProduct.ok) throw new Error('Error fetching product details');
@@ -770,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (newUrl === null) return; // Cancelled
 
         try {
-            const response = await fetch(`/api/products/${productId}`, {
+            const response = await authFetch(`/api/products/${productId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ drive_url: newUrl })
@@ -826,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function () {
         formData.append('file', file);
 
         try {
-            const response = await fetch(`/api/products/${productId}/upload`, {
+            const response = await authFetch(`/api/products/${productId}/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -875,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            const response = await fetch(`/api/products/${productId}/publish`, {
+            const response = await authFetch(`/api/products/${productId}/publish`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: newStatus === 'Publicado' ? 'publish' : 'pause' })
@@ -910,7 +928,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.disabled = true;
 
         try {
-            const response = await fetch(`/api/products/${productId}/notify`, {
+            const response = await authFetch(`/api/products/${productId}/notify`, {
                 method: 'POST'
             });
 
@@ -955,8 +973,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const [catRes, brandRes] = await Promise.all([
-                fetch('/api/categories'),
-                fetch('/api/brands')
+                authFetch('/api/categories'),
+                authFetch('/api/brands')
             ]);
 
             if (catRes.ok) {
@@ -1032,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function () {
             title = 'Editar Producto';
             try {
                 setLoading(true);
-                const res = await fetch(`/api/products/${productId}`);
+                const res = await authFetch(`/api/products/${productId}`);
                 if (!res.ok) throw new Error('Error fetching product');
                 product = await res.json();
                 // Ensure nulls are handled for inputs
@@ -1311,7 +1329,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Update database for all products
             const apiPromises = ids.map(id =>
-                fetch(`/api/products/${id}/publish`, {
+                authFetch(`/api/products/${id}/publish`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: newStatus === 'Publicado' ? 'publish' : 'pause' })
@@ -1510,7 +1528,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!token) return;
 
         try {
-            const response = await fetch('/users/me', {
+            const response = await authFetch('/users/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -1565,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (password) payload.password = password;
 
             try {
-                const response = await fetch('/users/me', {
+                const response = await authFetch('/users/me', {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${token}`,
