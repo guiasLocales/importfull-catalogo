@@ -196,19 +196,49 @@ async def get_logo_content(logo_type: str):
         if not service:
             return Response(status_code=500)
             
-        # Download file content
-        # usage: service.files().get_media(fileId=file_id)
+        # 1. Get Metadata first to know the Mime Type (Crucial for rendering)
+        try:
+            meta = service.files().get(fileId=file_id, fields='mimeType, size').execute()
+            mime_type = meta.get('mimeType', 'image/png')
+        except Exception as e:
+            print(f"Error getting metadata for {file_id}: {e}")
+            mime_type = 'image/png' # Fallback
+            
+        # 2. Download content
         request = service.files().get_media(fileId=file_id)
         file_content = request.execute()
         
-        # Determine content type (simple guess, or store it in settings too)
-        # For now assume png/ico/jpeg based on magic bytes or just generic
-        return Response(content=file_content, media_type="image/png")
+        # Cache-Control: Cache for 1 hour to speed up subsequent loads
+        headers = {"Cache-Control": "public, max-age=3600"}
+        
+        return Response(content=file_content, media_type=mime_type, headers=headers)
         
     except Exception as e:
         print(f"Error serving logo proxy {logo_type}: {e}")
-        # Return a 404 or transparent pixel on error
         return Response(status_code=404)
+
+@router.get("/debug-settings")
+async def debug_settings_endpoint():
+    """Helper to check what is actually stored in Drive settings"""
+    try:
+        from services.settings_service import settings_manager
+        # Force reload
+        settings_manager.load_settings()
+        settings = settings_manager.settings
+        
+        # Mask clean urls for security but show IDs
+        safe_view = {}
+        for k, v in settings.items():
+            if 'id' in k:
+                safe_view[k] = v # Show IDs clearly
+            elif 'url' in k:
+                safe_view[k] = str(v)[:50] + "..." if v else "None"
+            else:
+                safe_view[k] = v
+                
+        return safe_view
+    except Exception as e:
+        return {"error": str(e)}
 
 @router.get("/settings")
 
