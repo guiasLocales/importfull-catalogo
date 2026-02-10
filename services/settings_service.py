@@ -101,10 +101,17 @@ class SettingsService:
             return False
 
     def update_setting(self, key, value):
+        # Always reload from Drive to ensure we have the latest state
+        # preventing overwrites if multiple instances are running
+        current_settings = self.load_settings()
+        
+        # Update and save
         self.settings[key] = value
         return self.save_settings()
 
     def get_setting(self, key, default=None):
+        if not self.settings.get(key):
+            self.load_settings()
         return self.settings.get(key, default)
 
 # Singleton instance
