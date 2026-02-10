@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="col-span-1 flex items-center justify-center text-center">
                     ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-8 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-8 object-contain hidden dark:block" title="Activo en MercadoLibre">'
+                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-12 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-12 object-contain hidden dark:block" title="Activo en MercadoLibre">'
                     : ''}
                 </div>
                 <div class="col-span-1 flex items-center justify-end">
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'Sin Cat'}</span>
                     </div>
                     ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-6 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-6 object-contain hidden dark:block" title="Activo en MercadoLibre">'
+                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-8 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-8 object-contain hidden dark:block" title="Activo en MercadoLibre">'
                     : ''}
                 </div>
             </div>
@@ -501,11 +501,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <!-- Left: Huge Image -->
                 <div class="w-full md:w-1/2 bg-gray-100 flex flex-col p-4 min-h-[300px]">
-                    <div class="flex-1 flex items-center justify-center mb-4">
+                    <div class="flex-1 flex items-center justify-center mb-4 relative min-h-[300px] bg-gray-50 rounded-lg">
                         <img id="main-product-image" 
-                             src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=No+Image'}" 
+                             src="${product.product_image_b_format_url || (files && files.length > 0 ? files[0].largeImageLink : 'https://via.placeholder.com/400?text=Sin+Imagen')}" 
                              alt="${product.product_name}" 
-                             class="max-h-[400px] max-w-full object-contain rounded-lg shadow-sm">
+                             onerror="this.onerror=null;this.src='https://via.placeholder.com/400?text=Error+Carga';this.classList.add('opacity-50');"
+                             class="max-h-[400px] max-w-full object-contain rounded-lg shadow-sm transition-opacity duration-300">
                     </div>
 
                     ${files && files.length > 0 ? `
@@ -614,8 +615,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${product.meli_id ? `
                     <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-700/30">
                         <div class="flex items-center gap-3">
-                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-10 object-contain dark:hidden">
-                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-10 object-contain hidden dark:block">
+                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-16 object-contain dark:hidden">
+                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-16 object-contain hidden dark:block">
                             <div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">ID en MercadoLibre</p>
                                 <a href="${product.permalink || 'https://www.mercadolibre.com.ar/p/' + product.meli_id}" 
