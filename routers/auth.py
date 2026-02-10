@@ -158,8 +158,10 @@ async def upload_logo(
         # Bypassing DB updates completely
         if logo_type == "light":
             settings_manager.update_setting("logo_light_url", logo_url)
-        else:
+        elif logo_type == "dark":
             settings_manager.update_setting("logo_dark_url", logo_url)
+        elif logo_type == "favicon":
+            settings_manager.update_setting("favicon_url", logo_url)
         
         return {
             "logo_url": logo_url,
@@ -185,7 +187,8 @@ async def get_public_settings():
     # Filter to only return safe public info
     return {
         "logo_light_url": settings.get("logo_light_url"),
-        "logo_dark_url": settings.get("logo_dark_url")
+        "logo_dark_url": settings.get("logo_dark_url"),
+        "favicon_url": settings.get("favicon_url")
     }
 
 

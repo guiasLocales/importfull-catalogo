@@ -20,6 +20,14 @@
             });
         }
 
+        // Favicon handler
+        const faviconInput = document.getElementById('settingsFaviconInput');
+        if (faviconInput) {
+            faviconInput.addEventListener('change', async (e) => {
+                await uploadLogoToDrive(e.target.files[0], 'favicon');
+            });
+        }
+
         // Load saved logos from settings
         loadLogosFromSettings();
     }
@@ -27,8 +35,21 @@
     async function uploadLogoToDrive(file, logoType) {
         if (!file) return;
 
-        const preview = document.getElementById(`settingsLogo${logoType === 'light' ? 'Light' : 'Dark'}Preview`);
-        const placeholder = document.getElementById(`settingsLogo${logoType === 'light' ? 'Light' : 'Dark'}Placeholder`);
+        let previewId, placeholderId;
+
+        if (logoType === 'light') {
+            previewId = 'settingsLogoLightPreview';
+            placeholderId = 'settingsLogoLightPlaceholder';
+        } else if (logoType === 'dark') {
+            previewId = 'settingsLogoDarkPreview';
+            placeholderId = 'settingsLogoDarkPlaceholder';
+        } else if (logoType === 'favicon') {
+            previewId = 'settingsFaviconPreview';
+            placeholderId = 'settingsFaviconPlaceholder';
+        }
+
+        const preview = document.getElementById(previewId);
+        const placeholder = document.getElementById(placeholderId);
 
         try {
             if (placeholder) {
@@ -64,70 +85,89 @@
             }
 
             // Save to localStorage as backup
-            localStorage.setItem(logoType === 'light' ? 'logoLight' : 'logoDark', logoUrl);
+            if (logoType === 'light') localStorage.setItem('logoLight', logoUrl);
+            else if (logoType === 'dark') localStorage.setItem('logoDark', logoUrl);
+            else if (logoType === 'favicon') localStorage.setItem('faviconUrl', logoUrl);
 
-            // Update sidebar logo
-            if (typeof updateSidebarLogo === 'function') {
-                updateSidebarLogo();
+            // Update UI immediately
+            if (logoType === 'favicon') {
+                updateAppFavicon(logoUrl);
+            } else {
+                if (typeof updateSidebarLogo === 'function') {
+                    updateSidebarLogo();
+                }
+                updateLoginScreenLogo(); // Also update login screen if light logo changed
             }
 
-            alert('Logo subido exitosamente a Google Drive ✓');
+            alert('Imagen subida exitosamente a Google Drive ✓');
         } catch (error) {
             console.error('Error uploading logo:', error);
-            alert('Error al subir logo: ' + error.message);
+            alert('Error al subir imagen: ' + error.message);
             if (placeholder) {
-                placeholder.textContent = 'Sin Logo';
+                placeholder.textContent = 'Error';
             }
         }
     }
 
+    function updateAppFavicon(url) {
+        if (!url) return;
+
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+        }
+        link.href = url;
+    }
+
     async function loadLogosFromSettings() {
         try {
-            // Fetch from new Settings API (Drive JSON backed) instead of User Profile (DB backed)
-            const response = await fetch('/settings', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            // First try public settings for speed and unauth access (login screen)
+            const response = await fetch('/public-settings');
 
             if (response.ok) {
                 const settings = await response.json();
 
                 // Load light logo
                 if (settings.logo_light_url) {
-                    const lightPreview = document.getElementById('settingsLogoLightPreview');
-                    const lightPlaceholder = document.getElementById('settingsLogoLightPlaceholder');
-                    if (lightPreview) {
-                        lightPreview.src = settings.logo_light_url;
-                        lightPreview.classList.remove('hidden');
-                    }
-                    if (lightPlaceholder) {
-                        lightPlaceholder.classList.add('hidden');
-                    }
+                    updatePreview('settingsLogoLightPreview', 'settingsLogoLightPlaceholder', settings.logo_light_url);
                     localStorage.setItem('logoLight', settings.logo_light_url);
                 }
 
                 // Load dark logo
                 if (settings.logo_dark_url) {
-                    const darkPreview = document.getElementById('settingsLogoDarkPreview');
-                    const darkPlaceholder = document.getElementById('settingsLogoDarkPlaceholder');
-                    if (darkPreview) {
-                        darkPreview.src = settings.logo_dark_url;
-                        darkPreview.classList.remove('hidden');
-                    }
-                    if (darkPlaceholder) {
-                        darkPlaceholder.classList.add('hidden');
-                    }
+                    updatePreview('settingsLogoDarkPreview', 'settingsLogoDarkPlaceholder', settings.logo_dark_url);
                     localStorage.setItem('logoDark', settings.logo_dark_url);
                 }
 
-                // Update sidebar
+                // Load favicon
+                if (settings.favicon_url) {
+                    updatePreview('settingsFaviconPreview', 'settingsFaviconPlaceholder', settings.favicon_url);
+                    localStorage.setItem('faviconUrl', settings.favicon_url);
+                    updateAppFavicon(settings.favicon_url);
+                }
+
+                // Update UI
                 if (typeof updateSidebarLogo === 'function') {
                     updateSidebarLogo();
                 }
+                updateLoginScreenLogo();
             }
         } catch (error) {
-            console.error('Error loading logos from settings:', error);
+            console.error('Error loading settings:', error);
+        }
+    }
+
+    function updatePreview(previewId, placeholderId, url) {
+        const preview = document.getElementById(previewId);
+        const placeholder = document.getElementById(placeholderId);
+        if (preview) {
+            preview.src = url;
+            preview.classList.remove('hidden');
+        }
+        if (placeholder) {
+            placeholder.classList.add('hidden');
         }
     }
 
@@ -141,25 +181,7 @@
         // 1. Try localStorage first (fastest)
         let logoUrl = localStorage.getItem('logoLight');
 
-        // 2. If not found, fetch from public API
-        if (!logoUrl) {
-            try {
-                const response = await fetch('/public-settings');
-                if (response.ok) {
-                    const settings = await response.json();
-                    if (settings.logo_light_url) {
-                        logoUrl = settings.logo_light_url;
-                        // Save for next time
-                        localStorage.setItem('logoLight', logoUrl);
-                        if (settings.logo_dark_url) {
-                            localStorage.setItem('logoDark', settings.logo_dark_url);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error("Could not load public settings:", e);
-            }
-        }
+        // 2. Fallback to settings fetch (already done in loadLogosFromSettings but good as backup)
 
         // Apply if we found a logo
         if (logoUrl) {
@@ -185,10 +207,13 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             initDriveLogoHandlers();
+            // Apply cached favicon immediately if available
+            updateAppFavicon(localStorage.getItem('faviconUrl'));
             updateLoginScreenLogo();
         });
     } else {
         initDriveLogoHandlers();
+        updateAppFavicon(localStorage.getItem('faviconUrl'));
         updateLoginScreenLogo();
     }
 })();

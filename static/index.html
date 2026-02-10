@@ -533,7 +533,6 @@
                                 </div>
                             </div>
 
-                            <!-- Dark Mode Logo -->
                             <div class="space-y-3">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     <i data-lucide="moon" class="h-4 w-4 inline mr-1"></i>
@@ -551,6 +550,28 @@
                                         class="cursor-pointer bg-white dark:bg-gray-700 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
                                         <span>Subir</span>
                                         <input id="settingsLogoDarkInput" type="file" class="sr-only" accept="image/*">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Favicon -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <i data-lucide="image" class="h-4 w-4 inline mr-1"></i>
+                                    Favicon (Icono Pestaña)
+                                </label>
+                                <div class="flex items-center space-x-4">
+                                    <div
+                                        class="h-20 w-20 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-600">
+                                        <img id="settingsFaviconPreview" src="" alt="Favicon"
+                                            class="w-8 h-8 object-contain hidden">
+                                        <span id="settingsFaviconPlaceholder"
+                                            class="text-gray-400 dark:text-gray-500 text-xs text-center">Sin<br>Icono</span>
+                                    </div>
+                                    <label
+                                        class="cursor-pointer bg-white dark:bg-gray-700 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                        <span>Subir</span>
+                                        <input id="settingsFaviconInput" type="file" class="sr-only" accept="image/*">
                                     </label>
                                 </div>
                             </div>
