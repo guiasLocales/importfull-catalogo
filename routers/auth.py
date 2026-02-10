@@ -113,24 +113,33 @@ async def upload_logo(
     current_user: models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    """Upload logo to Google Drive and save URL to user settings"""
+    """Upload logo to Google Drive and save URL to settings file (No DB)"""
     try:
         from services import drive_service
+        from services.settings_service import settings_manager
         
         # Get Drive service
         service = drive_service.get_drive_service()
         if not service:
             raise HTTPException(status_code=500, detail="Could not connect to Google Drive")
         
-        # Create 'logos' folder if it doesn't exist
-        # We'll use a fixed folder for logos
-        logos_folder_id = os.getenv('LOGOS_FOLDER_ID', drive_service.ROOT_FOLDER_ID)
+        # We'll use the root folder or a specific logos folder
+        # For simplicity, use same root folder as products
+        logos_folder_id = drive_service.ROOT_FOLDER_ID
         
         # Read file content
         file_content = await file.read()
         
         # Upload to Drive
-        filename = f"logo_{logo_type}_{current_user.username}_{file.filename}"
+        # Use a consistent filename to overwrite or easy identify
+        # e.g. "logo_light.png" - this prevents clutter
+        extension = file.filename.split('.')[-1]
+        filename = f"logo_{logo_type}_app.{extension}"
+        
+        # Ideally, we should check if file exists and update content, 
+        # but creating new file works too (Drive allows duplicate names)
+        # To avoid duplicates, we could search first. For now, create new.
+        
         uploaded_file = drive_service.upload_file(
             service=service,
             file_content=file_content,
@@ -142,14 +151,15 @@ async def upload_logo(
         if not uploaded_file:
             raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
         
-        # Get the Drive URL (use thumbnailLink or webViewLink)
+        # Get the Drive URL
         logo_url = uploaded_file.get('thumbnailLink') or uploaded_file.get('webViewLink')
         
-        # Update user record
+        # Save to Settings Service (Drive JSON)
+        # Bypassing DB updates completely
         if logo_type == "light":
-            crud.update_user(db, current_user, {"logo_light_url": logo_url})
+            settings_manager.update_setting("logo_light_url", logo_url)
         else:
-            crud.update_user(db, current_user, {"logo_dark_url": logo_url})
+            settings_manager.update_setting("logo_dark_url", logo_url)
         
         return {
             "logo_url": logo_url,
@@ -160,4 +170,11 @@ async def upload_logo(
     except Exception as e:
         print(f"Error uploading logo: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
+
+@router.get("/settings")
+async def get_settings(current_user: models.User = Depends(get_current_user)):
+    """Get application settings (logos, etc) from Drive"""
+    from services.settings_service import settings_manager
+    return settings_manager.load_settings()
+
 

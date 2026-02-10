@@ -1,5 +1,5 @@
 // Logo management - Google Drive integration
-// This file handles logo uploads to Google Drive
+// This file handles logo uploads to Google Drive via JSON settings (Serverless)
 
 (function () {
     // Update logo upload handlers to use Drive
@@ -20,8 +20,8 @@
             });
         }
 
-        // Load saved logos from user profile
-        loadLogosFromProfile();
+        // Load saved logos from settings
+        loadLogosFromSettings();
     }
 
     async function uploadLogoToDrive(file, logoType) {
@@ -39,7 +39,7 @@
             formData.append('file', file);
             formData.append('logo_type', logoType);
 
-            const response = await fetch('/upload-logo', {
+            const response = await fetch('/upload-logo', { // This endpoint now talks to Drive JSON
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -81,43 +81,44 @@
         }
     }
 
-    async function loadLogosFromProfile() {
+    async function loadLogosFromSettings() {
         try {
-            const response = await fetch('/users/me', {
+            // Fetch from new Settings API (Drive JSON backed) instead of User Profile (DB backed)
+            const response = await fetch('/settings', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
             if (response.ok) {
-                const user = await response.json();
+                const settings = await response.json();
 
                 // Load light logo
-                if (user.logo_light_url) {
+                if (settings.logo_light_url) {
                     const lightPreview = document.getElementById('settingsLogoLightPreview');
                     const lightPlaceholder = document.getElementById('settingsLogoLightPlaceholder');
                     if (lightPreview) {
-                        lightPreview.src = user.logo_light_url;
+                        lightPreview.src = settings.logo_light_url;
                         lightPreview.classList.remove('hidden');
                     }
                     if (lightPlaceholder) {
                         lightPlaceholder.classList.add('hidden');
                     }
-                    localStorage.setItem('logoLight', user.logo_light_url);
+                    localStorage.setItem('logoLight', settings.logo_light_url);
                 }
 
                 // Load dark logo
-                if (user.logo_dark_url) {
+                if (settings.logo_dark_url) {
                     const darkPreview = document.getElementById('settingsLogoDarkPreview');
                     const darkPlaceholder = document.getElementById('settingsLogoDarkPlaceholder');
                     if (darkPreview) {
-                        darkPreview.src = user.logo_dark_url;
+                        darkPreview.src = settings.logo_dark_url;
                         darkPreview.classList.remove('hidden');
                     }
                     if (darkPlaceholder) {
                         darkPlaceholder.classList.add('hidden');
                     }
-                    localStorage.setItem('logoDark', user.logo_dark_url);
+                    localStorage.setItem('logoDark', settings.logo_dark_url);
                 }
 
                 // Update sidebar
@@ -126,7 +127,7 @@
                 }
             }
         } catch (error) {
-            console.error('Error loading logos from profile:', error);
+            console.error('Error loading logos from settings:', error);
         }
     }
 

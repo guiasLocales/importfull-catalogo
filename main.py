@@ -90,13 +90,6 @@ def health_check():
 @app.on_event("startup")
 def create_default_user():
     """Create default admin user on startup if it doesn't exist"""
-    # Run database migrations first
-    try:
-        import auto_migrate
-        auto_migrate.run_migrations()
-    except Exception as e:
-        print(f"Migration warning: {e}")
-    
     # Create default user
     try:
         db = SessionLocal()
