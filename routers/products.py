@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
 from schemas import ProductResponse, PublishRequest, ProductUpdate
+from routers.auth import get_current_user
 import crud
 import httpx
 import asyncio
@@ -10,7 +11,8 @@ from services import drive_service
 
 router = APIRouter(
     prefix="/api/products",
-    tags=["products"]
+    tags=["products"],
+    dependencies=[Depends(get_current_user)]  # ALL routes require auth
 )
 
 # Webhook configuration

@@ -67,12 +67,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    // Debug: Log any null elements
-    console.log("DOM Elements check:", {
-        btnNewProduct: elements.btnNewProduct,
-        container: elements.container,
-        searchInput: elements.searchInput
-    });
+
+
 
     // --- API ---
 
@@ -106,12 +102,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.append('sort_order', state.sortOrder);
             }
 
-            const response = await fetch(`${url}?${params.toString()}`);
+            const authToken = localStorage.getItem('token');
+            if (!authToken) { setLoading(false); return; }
 
+            const response = await fetch(`${url}?${params.toString()}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            if (response.status === 401) { window.logout(); return; }
             if (!response.ok) throw new Error('Error fetching products');
 
             const data = await response.json();
-            console.log("Fetch products data received:", data);
+            // Data loaded successfully
 
 
             if (Array.isArray(data)) {
@@ -1797,9 +1799,13 @@ document.addEventListener('DOMContentLoaded', function () {
     loadSavedLogos();
 
 
-    // Initial load
-    fetchMetadata();
-    fetchProducts();
+    // Initial load - check auth FIRST, only load data if authenticated
+    checkAuth();
+
+    const token = localStorage.getItem('token');
+    if (token) {
+        fetchProducts();
+    }
 
 }); // End DOMContentLoaded
 
