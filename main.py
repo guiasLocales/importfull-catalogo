@@ -90,10 +90,14 @@ def health_check():
 @app.on_event("startup")
 def create_default_user():
     """Create default admin user on startup if it doesn't exist"""
-    """Create default admin user on startup if it doesn't exist"""
-    # SKIP Startup DB interaction to prevent timeouts
-    # print("Startup: Skipping default user check to speed up boot.")
-    # pass
+    # Run database migrations first
+    try:
+        import auto_migrate
+        auto_migrate.run_migrations()
+    except Exception as e:
+        print(f"Migration warning: {e}")
+    
+    # Create default user
     try:
         db = SessionLocal()
         user = crud.get_user_by_username(db, username="admin")
