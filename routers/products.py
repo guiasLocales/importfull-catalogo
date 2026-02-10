@@ -56,6 +56,23 @@ def read_products(
     )
     return products
 
+@router.get("/meli")
+def read_meli_products(
+    skip: int = 0,
+    limit: int = 500,
+    status: Optional[str] = None,
+    q: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Get all products published on MercadoLibre"""
+    result = crud.get_meli_products(db, skip=skip, limit=limit, status=status, search=q)
+    return {
+        "products": [ProductResponse.model_validate(p) for p in result["products"]],
+        "total": result["total"],
+        "active_count": result["active_count"],
+        "paused_count": result["paused_count"]
+    }
+
 @router.get("/search", response_model=List[ProductResponse])
 def search_products(
     q: str = Query(..., min_length=1),

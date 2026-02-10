@@ -46,6 +46,47 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
         
     return query.offset(skip).limit(limit).all()
 
+def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
+                      status: str = None, search: str = None):
+    """Get products that have a MercadoLibre ID (published on ML)"""
+    query = db.query(Product).filter(
+        Product.meli_id != None,
+        Product.meli_id != ''
+    )
+    
+    if status:
+        query = query.filter(Product.status == status)
+    
+    if search:
+        search_conditions = [
+            Product.product_name.ilike(f"%{search}%"),
+            Product.meli_id.ilike(f"%{search}%"),
+            Product.product_code.ilike(f"%{search}%")
+        ]
+        if search.isdigit():
+            search_conditions.append(Product.id == int(search))
+        query = query.filter(or_(*search_conditions))
+    
+    total = query.count()
+    products = query.order_by(desc(Product.id)).offset(skip).limit(limit).all()
+    
+    # Count by status
+    active_count = db.query(Product).filter(
+        Product.meli_id != None, Product.meli_id != '',
+        Product.status == 'active'
+    ).count()
+    paused_count = db.query(Product).filter(
+        Product.meli_id != None, Product.meli_id != '',
+        Product.status == 'paused'
+    ).count()
+    
+    return {
+        "products": products,
+        "total": total,
+        "active_count": active_count,
+        "paused_count": paused_count
+    }
+
 def search_products(db: Session, query_str: str, skip: int = 0, limit: int = 50):
     search_conditions = [
         Product.product_name.ilike(f"%{query_str}%"),

@@ -180,41 +180,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Navigation Logic ---
     window.switchView = (viewName) => {
-        console.log('switchView called with:', viewName);
+        const views = {
+            inventory: document.getElementById('inventoryView'),
+            mercadolibre: document.getElementById('meliView'),
+            settings: document.getElementById('settingsView')
+        };
+        const navButtons = {
+            inventory: document.getElementById('navInventory'),
+            mercadolibre: document.getElementById('navMeli'),
+            settings: document.getElementById('navSettings')
+        };
 
-        const inventoryView = document.getElementById('inventoryView');
-        const settingsView = document.getElementById('settingsView');
-        const navInventory = document.getElementById('navInventory');
-        const navSettings = document.getElementById('navSettings');
+        // Hide all views, deactivate all nav buttons
+        Object.values(views).forEach(v => { if (v) v.classList.add('hidden'); });
+        Object.values(navButtons).forEach(b => {
+            if (b) {
+                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700');
+                b.classList.add('text-gray-700', 'hover:bg-gray-50');
+            }
+        });
 
-        console.log('inventoryView found:', !!inventoryView);
-        console.log('settingsView found:', !!settingsView);
+        // Show selected view
+        if (views[viewName]) views[viewName].classList.remove('hidden');
 
-        if (viewName === 'inventory') {
-            inventoryView.classList.remove('hidden');
-            settingsView.classList.add('hidden');
-
-            navInventory.classList.remove('text-gray-700', 'hover:bg-gray-50');
-            navInventory.classList.add('bg-blue-50', 'text-blue-700');
-
-            navSettings.classList.add('text-gray-700', 'hover:bg-gray-50');
-            navSettings.classList.remove('bg-blue-50', 'text-blue-700');
-        } else if (viewName === 'settings') {
-            inventoryView.classList.add('hidden');
-            settingsView.classList.remove('hidden');
-
-            navSettings.classList.remove('text-gray-700', 'hover:bg-gray-50');
-            navSettings.classList.add('bg-blue-50', 'text-blue-700');
-
-            navInventory.classList.add('text-gray-700', 'hover:bg-gray-50');
-            navInventory.classList.remove('bg-blue-50', 'text-blue-700');
-
-            // Refresh lucide icons in settings view
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+        // Highlight active nav button
+        if (navButtons[viewName]) {
+            navButtons[viewName].classList.remove('text-gray-700', 'hover:bg-gray-50');
+            if (viewName === 'mercadolibre') {
+                navButtons[viewName].classList.add('bg-yellow-50', 'text-yellow-700');
+            } else {
+                navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
             }
         }
-        console.log('switchView completed');
+
+        // Load data for the view
+        if (viewName === 'mercadolibre') {
+            loadMeliProducts();
+        }
+
+        // Refresh icons
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
     // --- Render ---
@@ -1830,6 +1835,141 @@ document.addEventListener('DOMContentLoaded', function () {
     // Load saved logos on page load
     loadSavedLogos();
 
+    // === MercadoLibre View Logic ===
+    let meliDebounceTimer = null;
+
+    async function loadMeliProducts() {
+        const loading = document.getElementById('meliLoadingOverlay');
+        const tableBody = document.getElementById('meliTableBody');
+        const emptyState = document.getElementById('meliEmptyState');
+
+        if (!tableBody) return;
+
+        if (loading) loading.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+
+        try {
+            const searchInput = document.getElementById('meliSearchInput');
+            const statusFilter = document.getElementById('meliStatusFilter');
+
+            let params = new URLSearchParams();
+            if (searchInput && searchInput.value.trim()) params.append('q', searchInput.value.trim());
+            if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
+
+            const response = await authFetch(`/api/products/meli?${params.toString()}`);
+            if (!response.ok) throw new Error('Error loading ML products');
+
+            const data = await response.json();
+            const products = data.products || [];
+
+            // Update counters
+            const activeCount = document.getElementById('meliActiveCount');
+            const pausedCount = document.getElementById('meliPausedCount');
+            const totalCount = document.getElementById('meliTotalCount');
+            const showingCount = document.getElementById('meliShowing');
+
+            if (activeCount) activeCount.textContent = data.active_count || 0;
+            if (pausedCount) pausedCount.textContent = data.paused_count || 0;
+            if (totalCount) totalCount.textContent = data.total || 0;
+            if (showingCount) showingCount.textContent = products.length;
+
+            // Render table
+            if (products.length === 0) {
+                tableBody.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+            } else {
+                tableBody.innerHTML = products.map(p => {
+                    const statusClass = getMLStatusClass(p.status);
+                    const statusLabel = getMLStatusLabel(p.status);
+                    const price = p.price ? `$ ${Number(p.price).toLocaleString('es-AR')}` : '-';
+                    const stockBadge = getStockBadge(p.stock);
+                    const imgSrc = p.product_image_b_format_url || '';
+                    const imgHtml = imgSrc
+                        ? `<img src="${imgSrc}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600 flex-shrink-0" onerror="this.style.display='none'">`
+                        : `<div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+
+                    const permalink = p.permalink;
+                    const linkHtml = permalink
+                        ? `<a href="${permalink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-xs font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            Ver
+                           </a>`
+                        : `<span class="text-gray-400 text-xs">Sin link</span>`;
+
+                    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="openProductDetail(${p.id})">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                ${imgHtml}
+                                <div class="min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[250px]">${p.product_name || 'Sin nombre'}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">${p.product_code || ''} · ${p.brand || ''}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-sm font-mono text-gray-600 dark:text-gray-400">${p.meli_id || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="${statusClass}">${statusLabel}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">${price}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">${stockBadge}</td>
+                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">${linkHtml}</td>
+                    </tr>`;
+                }).join('');
+            }
+        } catch (e) {
+            console.error('Error loading MercadoLibre products:', e);
+            tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Error al cargar productos de MercadoLibre</td></tr>`;
+        } finally {
+            if (loading) loading.classList.add('hidden');
+        }
+    }
+
+    function getMLStatusClass(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'active') return 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
+        if (s === 'paused') return 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400';
+        if (s === 'closed') return 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400';
+        if (s === 'under_review') return 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400';
+        return 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+    }
+
+    function getMLStatusLabel(status) {
+        const s = (status || '').toLowerCase();
+        const dot = '<span class="w-1.5 h-1.5 rounded-full"></span>';
+        if (s === 'active') return `<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Activo`;
+        if (s === 'paused') return `<span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Pausado`;
+        if (s === 'closed') return `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Cerrado`;
+        if (s === 'under_review') return `<span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> En revisión`;
+        return `<span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> ${status || 'Desconocido'}`;
+    }
+
+    function getStockBadge(stock) {
+        if (stock === null || stock === undefined) return '<span class="text-gray-400 text-sm">-</span>';
+        if (stock === 0) return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">Sin stock</span>';
+        if (stock <= 3) return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400">${stock}</span>`;
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">${stock}</span>`;
+    }
+
+    // MercadoLibre event listeners
+    const meliSearchInput = document.getElementById('meliSearchInput');
+    const meliStatusFilter = document.getElementById('meliStatusFilter');
+
+    if (meliSearchInput) {
+        meliSearchInput.addEventListener('input', () => {
+            clearTimeout(meliDebounceTimer);
+            meliDebounceTimer = setTimeout(loadMeliProducts, 300);
+        });
+    }
+
+    if (meliStatusFilter) {
+        meliStatusFilter.addEventListener('change', loadMeliProducts);
+    }
+
+    // === End MercadoLibre ===
 
     // Initial load - check auth FIRST, only load data if authenticated
     checkAuth();
