@@ -35,4 +35,6 @@ class User(Base):
     hashed_password = Column(String(255))
     role = Column(String(50), default="admin")
     logo_url = Column(String(255), nullable=True) # For settings
+    logo_light_url = Column(String(255), nullable=True) # Logo for light mode
+    logo_dark_url = Column(String(255), nullable=True) # Logo for dark mode
     theme_pref = Column(String(20), default="light") # For settings

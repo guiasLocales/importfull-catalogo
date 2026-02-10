@@ -47,6 +47,8 @@ class User(UserBase):
     id: int
     role: str
     logo_url: Optional[str] = None
+    logo_light_url: Optional[str] = None
+    logo_dark_url: Optional[str] = None
     theme_pref: Optional[str] = None
     
     class Config:
@@ -55,6 +57,8 @@ class User(UserBase):
 class UserUpdate(BaseModel):
     password: Optional[str] = None
     logo_url: Optional[str] = None
+    logo_light_url: Optional[str] = None
+    logo_dark_url: Optional[str] = None
     theme_pref: Optional[str] = None
 
 class Token(BaseModel):

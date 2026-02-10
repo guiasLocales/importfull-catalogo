@@ -107,17 +107,57 @@ async def update_user_me(user_update: schemas.UserUpdate, current_user: models.U
     return crud.update_user(db, current_user, update_data)
 
 @router.post("/upload-logo")
-async def upload_logo(file: UploadFile = File(...), current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    upload_dir = "static/uploads"
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
+async def upload_logo(
+    file: UploadFile = File(...), 
+    logo_type: str = "light",  # "light" or "dark"
+    current_user: models.User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    """Upload logo to Google Drive and save URL to user settings"""
+    try:
+        from services import drive_service
         
-    file_path = f"{upload_dir}/{file.filename}"
-    
-    with open(file_path, "wb+") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        # Get Drive service
+        service = drive_service.get_drive_service()
+        if not service:
+            raise HTTPException(status_code=500, detail="Could not connect to Google Drive")
         
-    logo_url = f"/static/uploads/{file.filename}"
-    crud.update_user(db, current_user, {"logo_url": logo_url})
-    
-    return {"logo_url": logo_url}
+        # Create 'logos' folder if it doesn't exist
+        # We'll use a fixed folder for logos
+        logos_folder_id = os.getenv('LOGOS_FOLDER_ID', drive_service.ROOT_FOLDER_ID)
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Upload to Drive
+        filename = f"logo_{logo_type}_{current_user.username}_{file.filename}"
+        uploaded_file = drive_service.upload_file(
+            service=service,
+            file_content=file_content,
+            file_name=filename,
+            folder_id=logos_folder_id,
+            content_type=file.content_type or 'image/png'
+        )
+        
+        if not uploaded_file:
+            raise HTTPException(status_code=500, detail="Failed to upload logo to Drive")
+        
+        # Get the Drive URL (use thumbnailLink or webViewLink)
+        logo_url = uploaded_file.get('thumbnailLink') or uploaded_file.get('webViewLink')
+        
+        # Update user record
+        if logo_type == "light":
+            crud.update_user(db, current_user, {"logo_light_url": logo_url})
+        else:
+            crud.update_user(db, current_user, {"logo_dark_url": logo_url})
+        
+        return {
+            "logo_url": logo_url,
+            "logo_type": logo_type,
+            "drive_file_id": uploaded_file.get('id')
+        }
+        
+    except Exception as e:
+        print(f"Error uploading logo: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload logo: {str(e)}")
+
