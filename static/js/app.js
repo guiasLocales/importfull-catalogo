@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="col-span-1 flex items-center justify-center text-center">
                     ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-4 dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-4 hidden dark:block" title="Activo en MercadoLibre">'
+                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-4 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-4 object-contain hidden dark:block" title="Activo en MercadoLibre">'
                     : ''}
                 </div>
                 <div class="col-span-1 flex items-center justify-end">
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'Sin Cat'}</span>
                     </div>
                     ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-3 dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-3 hidden dark:block" title="Activo en MercadoLibre">'
+                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-3 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-3 object-contain hidden dark:block" title="Activo en MercadoLibre">'
                     : ''}
                 </div>
             </div>
@@ -614,8 +614,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${product.meli_id ? `
                     <div class="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-700/30">
                         <div class="flex items-center gap-3">
-                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-6 dark:hidden">
-                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-6 hidden dark:block">
+                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-6 object-contain dark:hidden">
+                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-6 object-contain hidden dark:block">
                             <div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">ID en MercadoLibre</p>
                                 <a href="${product.permalink || 'https://www.mercadolibre.com.ar/p/' + product.meli_id}" 
