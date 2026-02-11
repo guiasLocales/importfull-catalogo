@@ -42,9 +42,9 @@ class ScrappedCompetence(Base):
     __tablename__ = "scrapped_competence"
     __table_args__ = {'schema': 'mercadolibre'}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Removed id column to match existing DB
+    url = Column(Text, primary_key=True)  # Using url as logical PK
     meli_id = Column(String(50), index=True)
-    url = Column(Text)  # Only field filled by the user
     title = Column(String(500))
     price = Column(Numeric(10, 2))
     competitor = Column(String(255))

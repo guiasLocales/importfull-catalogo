@@ -90,8 +90,8 @@ class CompetenceCreate(BaseModel):
     product_name: Optional[str] = None
 
 class CompetenceResponse(CompetenceBase):
-    id: int
     timestamp: Optional[str] = None
+    # No id field in DB
 
     class Config:
         from_attributes = True

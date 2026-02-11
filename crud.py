@@ -185,7 +185,8 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
         query = query.filter(or_(*search_conditions))
     
     total = query.count()
-    items = query.order_by(desc(ScrappedCompetence.id)).offset(skip).limit(limit).all()
+    items = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+
     
     # Counts by status
     pending_count = db.query(ScrappedCompetence).filter(
@@ -206,11 +207,16 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
         "error_count": error_count
     }
 
-def get_competence_item(db: Session, item_id: int):
-    return db.query(ScrappedCompetence).filter(ScrappedCompetence.id == item_id).first()
+def get_competence_item(db: Session, item_url: str):
+    return db.query(ScrappedCompetence).filter(ScrappedCompetence.url == item_url).first()
 
 def create_competence_item(db: Session, url: str, product_code: str = None, product_name: str = None):
     """Create a new competence scraping entry with just the URL."""
+    # Check if url exits
+    existing = get_competence_item(db, url)
+    if existing:
+        return existing
+        
     item = ScrappedCompetence(
         url=url,
         product_code=product_code,
@@ -222,19 +228,8 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     db.refresh(item)
     return item
 
-def update_competence_item(db: Session, item_id: int, updates: dict):
-    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.id == item_id).first()
-    if not item:
-        return None
-    for key, value in updates.items():
-        if hasattr(item, key) and value is not None:
-            setattr(item, key, value)
-    db.commit()
-    db.refresh(item)
-    return item
-
-def delete_competence_item(db: Session, item_id: int):
-    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.id == item_id).first()
+def delete_competence_item(db: Session, item_url: str):
+    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.url == item_url).first()
     if not item:
         return False
     db.delete(item)

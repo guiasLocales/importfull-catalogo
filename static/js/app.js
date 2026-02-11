@@ -2043,7 +2043,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3">${imgHtml}</td>
                         <td class="px-4 py-3">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]">${item.title || item.product_name || 'Pendiente de scraping...'}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]">${item.title || item.product_name || 'Pendiente...'}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">${item.product_code || ''} ${item.meli_id ? '· ' + item.meli_id : ''}</p>
                             </div>
                         </td>
@@ -2059,7 +2059,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3 text-center">${statusBadge}</td>
                         <td class="px-4 py-3 text-center">${linkHtml}</td>
                         <td class="px-4 py-3 text-center">
-                            <button onclick="deleteCompetenceItem(${item.id})" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
+                            <button onclick="deleteCompetenceItem(this.dataset.url)" data-url="${item.url}" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                         </td>
@@ -2068,36 +2068,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (e) {
             console.error('Error loading competence data:', e);
-
-            // Auto-diagnose schema
-            let schemaMsg = '';
-            try {
-                const schemaResp = await authFetch('/api/competence/debug-schema');
-                const schemaData = await schemaResp.json();
-                if (schemaData.status === 'success') {
-                    const cols = schemaData.columns.map(c => c.Field).join(', ');
-                    schemaMsg = `<div class="mt-2 text-xs text-left bg-gray-100 p-2 rounded border border-gray-300">
-                        <strong>Columnas detectadas en BD (${schemaData.columns.length}):</strong><br>
-                        ${cols}
-                    </div>`;
-                } else {
-                    schemaMsg = `<div class="mt-2 text-xs text-red-600">No se pudo leer el esquema de la tabla: ${schemaData.message}</div>`;
-                }
-            } catch (err) {
-                schemaMsg = `<div class="mt-2 text-xs text-red-600">Error diagnosticando esquema.</div>`;
-            }
-
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                        <div class="flex flex-col items-center gap-2">
-                            <p class="font-medium text-red-600">Error de compatibilidad con la base de datos.</p>
-                            <p class="text-sm">La tabla existe pero las columnas no coinciden con el código.</p>
-                            ${schemaMsg}
-                            <p class="text-xs text-gray-400 mt-2">Por favor comparte esta lista de columnas con el soporte.</p>
-                        </div>
-                    </td>
-                </tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Error al cargar datos de competencia: ${e.message}</td></tr>`;
         } finally {
             if (loading) loading.classList.add('hidden');
         }
@@ -2174,11 +2145,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.deleteCompetenceItem = async function (itemId) {
+    window.deleteCompetenceItem = async function (url) {
+        if (!url) return;
         if (!confirm('¿Eliminar este registro de competencia?')) return;
 
         try {
-            const response = await authFetch(`/api/competence/${itemId}`, {
+            // Encode URL for query param
+            const encodedUrl = encodeURIComponent(url);
+            const response = await authFetch(`/api/competence?url=${encodedUrl}`, {
                 method: 'DELETE'
             });
 
