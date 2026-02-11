@@ -217,21 +217,12 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     if existing:
         return existing
         
-    from datetime import datetime
+    # Create item with ONLY the fields the user provides (plus status)
+    # Relies on DB to handle defaults/nulls for other columns
     item = ScrappedCompetence(
         url=url,
-        product_code=product_code,
-        product_name=product_name,
-        status='pending',
-        timestamp=datetime.now(),
-        meli_id='',  # Ensure not null if constraint exists
-        title='',
-        price=0,
-        competitor='',
-        price_in_installments='',
-        image='',
-        api_cost_total=0,
-        remaining_credits=0
+        status='pending'
+        # Removed dummy values for title, price, etc. to respect DB defaults
     )
     db.add(item)
     db.commit()
