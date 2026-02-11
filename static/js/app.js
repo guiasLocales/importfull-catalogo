@@ -503,8 +503,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="w-full md:w-1/2 bg-gray-100 flex flex-col p-4 min-h-[300px]">
                     <div class="flex-1 flex items-center justify-center mb-4 relative min-h-[300px] bg-gray-50 rounded-lg">
                         <img id="main-product-image" 
-                             src="${product.product_image_b_format_url || (files && files.length > 0 ? files[0].largeImageLink : 'https://via.placeholder.com/400?text=Sin+Imagen')}" 
+                             src="${product.product_image_b_format_url || (files && files.length > 0 ? (files[0].thumbnailLink || files[0].webContentLink) : 'https://via.placeholder.com/400?text=Sin+Imagen')}" 
                              alt="${product.product_name}" 
+                             referrerpolicy="no-referrer"
                              onerror="this.onerror=null;this.src='https://via.placeholder.com/400?text=Error+Carga';this.classList.add('opacity-50');"
                              class="max-h-[400px] max-w-full object-contain rounded-lg shadow-sm transition-opacity duration-300">
                     </div>
@@ -523,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             ${files.map(file => `
                                 <button onclick="document.getElementById('main-product-image').src='${file.largeImageLink || file.thumbnailLink}'" 
                                         class="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border border-gray-300 hover:border-blue-500 transition-all relative group">
-                                    <img src="${file.thumbnailLink || file.largeImageLink}" alt="${file.name}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTA5MDkwIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0yMSAxNXY0YTIgMiAwIDAgMS0yIDJIMUM1YTIgMiAwIDAgMS0yLTJ2LTRtMTQtMmwtLTQtNHYxMm00LQhMNyA5Ii8+PC9zdmc+';this.style.padding='10px';">
+                                    <img src="${file.thumbnailLink}" alt="${file.name}" class="w-full h-full object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTA5MDkwIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0yMSAxNXY0YTIgMiAwIDAgMS0yIDJIMUM1YTIgMiAwIDAgMS0yLTJ2LTRtMTQtMmwtLTQtNHYxMm00LQhMNyA5Ii8+PC9zdmc+';this.style.padding='10px';">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                                 </button>
                             `).join('')}

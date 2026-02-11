@@ -221,8 +221,10 @@ def get_product_files(
     for file in files:
         file_id = file.get('id')
         if file_id:
-            file['thumbnailLink'] = f"/api/products/drive-image/{file_id}"
-            file['largeImageLink'] = f"/api/products/drive-image/{file_id}?size=large"
+            # file['thumbnailLink'] = f"/api/products/drive-image/{file_id}"
+            # file['largeImageLink'] = f"/api/products/drive-image/{file_id}?size=large"
+            # Use original links but ensure they are capable of serving content
+            pass
     
     return files
 
