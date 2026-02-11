@@ -67,3 +67,34 @@ class Token(BaseModel):
 
 class PublishRequest(BaseModel):
     action: str  # 'publish' or 'pause'
+
+
+# --- Competence Schemas ---
+class CompetenceBase(BaseModel):
+    meli_id: Optional[str] = None
+    url: Optional[str] = None
+    title: Optional[str] = None
+    price: Optional[Decimal] = None
+    competitor: Optional[str] = None
+    price_in_installments: Optional[str] = None
+    image: Optional[str] = None
+    status: Optional[str] = None
+    api_cost_total: Optional[Decimal] = None
+    remaining_credits: Optional[Decimal] = None
+    product_code: Optional[str] = None
+    product_name: Optional[str] = None
+
+class CompetenceCreate(BaseModel):
+    url: str  # Only field the user provides
+    product_code: Optional[str] = None
+    product_name: Optional[str] = None
+
+class CompetenceResponse(CompetenceBase):
+    id: int
+    timestamp: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CompetenceUpdate(BaseModel):
+    url: Optional[str] = None

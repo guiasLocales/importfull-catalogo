@@ -183,11 +183,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const views = {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
+            competence: document.getElementById('competenceView'),
             settings: document.getElementById('settingsView')
         };
         const navButtons = {
             inventory: document.getElementById('navInventory'),
             mercadolibre: document.getElementById('navMeli'),
+            competence: document.getElementById('navCompetence'),
             settings: document.getElementById('navSettings')
         };
 
@@ -195,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.values(views).forEach(v => { if (v) v.classList.add('hidden'); });
         Object.values(navButtons).forEach(b => {
             if (b) {
-                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700');
+                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700');
                 b.classList.add('text-gray-700', 'hover:bg-gray-50');
             }
         });
@@ -208,6 +210,8 @@ document.addEventListener('DOMContentLoaded', function () {
             navButtons[viewName].classList.remove('text-gray-700', 'hover:bg-gray-50');
             if (viewName === 'mercadolibre') {
                 navButtons[viewName].classList.add('bg-yellow-50', 'text-yellow-700');
+            } else if (viewName === 'competence') {
+                navButtons[viewName].classList.add('bg-purple-50', 'text-purple-700');
             } else {
                 navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
             }
@@ -216,6 +220,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Load data for the view
         if (viewName === 'mercadolibre') {
             loadMeliProducts();
+        }
+        if (viewName === 'competence') {
+            loadCompetenceData();
         }
 
         // Refresh icons
@@ -1972,6 +1979,177 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // === End MercadoLibre ===
+
+    // === Competence View Logic ===
+    let compDebounceTimer = null;
+
+    async function loadCompetenceData() {
+        const loading = document.getElementById('compLoadingOverlay');
+        const tableBody = document.getElementById('compTableBody');
+        const emptyState = document.getElementById('compEmptyState');
+
+        if (!tableBody) return;
+
+        if (loading) loading.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+
+        try {
+            const searchInput = document.getElementById('compSearchInput');
+            const statusFilter = document.getElementById('compStatusFilter');
+
+            let params = new URLSearchParams();
+            if (searchInput && searchInput.value.trim()) params.append('q', searchInput.value.trim());
+            if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
+
+            const response = await authFetch(`/api/competence?${params.toString()}`);
+            if (!response.ok) throw new Error('Error loading competence data');
+
+            const data = await response.json();
+            const items = data.items || [];
+
+            // Update counters
+            const pendingEl = document.getElementById('compPendingCount');
+            const completedEl = document.getElementById('compCompletedCount');
+            const errorEl = document.getElementById('compErrorCount');
+            const totalEl = document.getElementById('compTotalCount');
+            const showingEl = document.getElementById('compShowing');
+
+            if (pendingEl) pendingEl.textContent = data.pending_count || 0;
+            if (completedEl) completedEl.textContent = data.completed_count || 0;
+            if (errorEl) errorEl.textContent = data.error_count || 0;
+            if (totalEl) totalEl.textContent = data.total || 0;
+            if (showingEl) showingEl.textContent = items.length;
+
+            if (items.length === 0) {
+                tableBody.innerHTML = '';
+                if (emptyState) emptyState.classList.remove('hidden');
+            } else {
+                tableBody.innerHTML = items.map(item => {
+                    const price = item.price ? `$ ${Number(item.price).toLocaleString('es-AR')}` : '-';
+                    const imgHtml = item.image
+                        ? `<img src="${item.image}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600" onerror="this.style.display='none'">`
+                        : `<div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+
+                    const statusBadge = getCompStatusBadge(item.status);
+
+                    const linkHtml = item.url
+                        ? `<a href="${item.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors text-xs font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                            Ver
+                           </a>`
+                        : `<span class="text-gray-400 text-xs">-</span>`;
+
+                    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <td class="px-4 py-3">${imgHtml}</td>
+                        <td class="px-4 py-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]">${item.title || item.product_name || 'Pendiente de scraping...'}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">${item.product_code || ''} ${item.meli_id ? '· ' + item.meli_id : ''}</p>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">${item.competitor || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">${price}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">${item.price_in_installments || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                        <td class="px-4 py-3 text-center">${linkHtml}</td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="deleteCompetenceItem(${item.id})" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+        } catch (e) {
+            console.error('Error loading competence data:', e);
+            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Error al cargar datos de competencia</td></tr>`;
+        } finally {
+            if (loading) loading.classList.add('hidden');
+        }
+    }
+
+    function getCompStatusBadge(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'completed') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Completado</span>`;
+        if (s === 'error') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Error</span>`;
+        if (s === 'processing') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Procesando</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pendiente</span>`;
+    }
+
+    window.addCompetenceUrl = async function () {
+        const urlInput = document.getElementById('compNewUrl');
+        const btn = document.getElementById('btnAddCompUrl');
+        if (!urlInput || !urlInput.value.trim()) {
+            alert('Ingresa una URL válida de MercadoLibre');
+            return;
+        }
+
+        const url = urlInput.value.trim();
+        btn.disabled = true;
+        btn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Agregando...';
+
+        try {
+            const response = await authFetch('/api/competence', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Error al agregar');
+            }
+
+            urlInput.value = '';
+            loadCompetenceData();
+        } catch (e) {
+            console.error('Error adding competence URL:', e);
+            alert('Error: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="plus" class="h-4 w-4"></i> Agregar';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    };
+
+    window.deleteCompetenceItem = async function (itemId) {
+        if (!confirm('¿Eliminar este registro de competencia?')) return;
+
+        try {
+            const response = await authFetch(`/api/competence/${itemId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Error al eliminar');
+            loadCompetenceData();
+        } catch (e) {
+            console.error('Error deleting competence item:', e);
+            alert('Error: ' + e.message);
+        }
+    };
+
+    // Competence event listeners
+    const compSearchInput = document.getElementById('compSearchInput');
+    const compStatusFilter = document.getElementById('compStatusFilter');
+
+    if (compSearchInput) {
+        compSearchInput.addEventListener('input', () => {
+            clearTimeout(compDebounceTimer);
+            compDebounceTimer = setTimeout(loadCompetenceData, 300);
+        });
+    }
+
+    if (compStatusFilter) {
+        compStatusFilter.addEventListener('change', loadCompetenceData);
+    }
+
+    // === End Competence ===
 
     // Initial load - check auth FIRST, only load data if authenticated
     checkAuth();

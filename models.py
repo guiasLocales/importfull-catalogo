@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric
+from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime
 from db_conn import Base
 
 class Product(Base):
@@ -36,3 +36,23 @@ class User(Base):
     role = Column(String(50), default="admin")
     logo_url = Column(String(255), nullable=True) # Deprecated
     theme_pref = Column(String(20), default="light") # For settings
+
+
+class ScrappedCompetence(Base):
+    __tablename__ = "scrapped_competence"
+    __table_args__ = {'schema': 'mercadolibre'}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    meli_id = Column(String(50), index=True)
+    url = Column(Text)  # Only field filled by the user
+    title = Column(String(500))
+    price = Column(Numeric(10, 2))
+    competitor = Column(String(255))
+    price_in_installments = Column(String(255))
+    image = Column(Text)
+    timestamp = Column(DateTime)
+    status = Column(String(50))
+    api_cost_total = Column(Numeric(10, 4))
+    remaining_credits = Column(Numeric(10, 4))
+    product_code = Column(String(255))
+    product_name = Column(String(500))
