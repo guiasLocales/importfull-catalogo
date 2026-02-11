@@ -217,17 +217,20 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     if existing:
         return existing
         
-    # Create item with ONLY the fields the user provides (plus status)
-    # Relies on DB to handle defaults/nulls for other columns
-    item = ScrappedCompetence(
-        url=url,
-        status='pending'
-        # Removed dummy values for title, price, etc. to respect DB defaults
-    )
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-    return item
+    # Use raw SQL to be extremely precise and insert ONLY url and status
+    # This avoids generic ORM behavior of sending NULLs for everything
+    from sqlalchemy import text
+    try:
+        # User explicitly stated permission is ONLY for URL column
+        sql = text("INSERT INTO mercadolibre.scrapped_competence (url) VALUES (:url)")
+        db.execute(sql, {"url": url})
+        db.commit()
+        
+        # Fetch back for return (optional, standard ORM fetch)
+        return get_competence_item(db, url)
+    except Exception as e:
+        db.rollback()
+        raise e
 
 def delete_competence_item(db: Session, item_url: str):
     item = db.query(ScrappedCompetence).filter(ScrappedCompetence.url == item_url).first()
