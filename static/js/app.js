@@ -2148,11 +2148,18 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) {
             console.error('Error adding competence URL:', e);
 
-            // Show diagnose option if error is about permissions
+            // Show detailed error first
+            let msg = 'Error: ' + e.message;
+            if (e.message.includes('denied')) msg += '\n\nParece un problema de PERMISOS.';
+            if (e.message.includes('default value')) msg += '\n\nFaltan datos obligatorios en la tabla.';
+
+            alert(msg);
+
+            // Offer diagnostics if relevant
             if (e.message.includes('denied') || e.message.includes('OperationalError')) {
-                checkPermissions();
-            } else {
-                alert('Error: ' + e.message);
+                if (confirm('¿Quieres ver los permisos actuales de la base de datos para diagnosticar?')) {
+                    checkPermissions();
+                }
             }
         } finally {
             btn.disabled = false;

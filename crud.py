@@ -221,8 +221,8 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     # This avoids generic ORM behavior of sending NULLs for everything
     from sqlalchemy import text
     try:
-        # User explicitly stated permission is ONLY for URL column
-        sql = text("INSERT INTO mercadolibre.scrapped_competence (url) VALUES (:url)")
+        # User has INSERT permission now, try adding status as well
+        sql = text("INSERT INTO mercadolibre.scrapped_competence (url, status) VALUES (:url, 'pending')")
         db.execute(sql, {"url": url})
         db.commit()
         
