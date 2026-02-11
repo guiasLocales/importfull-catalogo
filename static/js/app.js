@@ -2068,14 +2068,33 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (e) {
             console.error('Error loading competence data:', e);
+
+            // Auto-diagnose schema
+            let schemaMsg = '';
+            try {
+                const schemaResp = await authFetch('/api/competence/debug-schema');
+                const schemaData = await schemaResp.json();
+                if (schemaData.status === 'success') {
+                    const cols = schemaData.columns.map(c => c.Field).join(', ');
+                    schemaMsg = `<div class="mt-2 text-xs text-left bg-gray-100 p-2 rounded border border-gray-300">
+                        <strong>Columnas detectadas en BD (${schemaData.columns.length}):</strong><br>
+                        ${cols}
+                    </div>`;
+                } else {
+                    schemaMsg = `<div class="mt-2 text-xs text-red-600">No se pudo leer el esquema de la tabla: ${schemaData.message}</div>`;
+                }
+            } catch (err) {
+                schemaMsg = `<div class="mt-2 text-xs text-red-600">Error diagnosticando esquema.</div>`;
+            }
+
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                         <div class="flex flex-col items-center gap-2">
-                            <p>Error al cargar datos. Es posible que la tabla no exista.</p>
-                            <button onclick="initCompetenceDB()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                                Inicializar Tabla de Base de Datos
-                            </button>
+                            <p class="font-medium text-red-600">Error de compatibilidad con la base de datos.</p>
+                            <p class="text-sm">La tabla existe pero las columnas no coinciden con el código.</p>
+                            ${schemaMsg}
+                            <p class="text-xs text-gray-400 mt-2">Por favor comparte esta lista de columnas con el soporte.</p>
                         </div>
                     </td>
                 </tr>`;
