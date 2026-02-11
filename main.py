@@ -40,12 +40,22 @@ except Exception as e:
     print(f"ERROR: Failed to import crud/schemas: {e}", file=sys.stderr)
     raise
 
-# Try to create tables, but don't crash if permissions are denied
-# try:
-#     Base.metadata.create_all(bind=engine)
-# except Exception as e:
-#     print(f"Warning: Could not create all tables: {e}")
-#     print("Continuing with existing tables...")
+# Try to create tables
+try:
+    from sqlalchemy import text
+    try:
+        # Create schema if not exists (MySQL specific)
+        if 'mysql' in str(engine.url):
+             with engine.connect() as conn:
+                 conn.execute(text("CREATE SCHEMA IF NOT EXISTS mercadolibre"))
+                 conn.commit()
+    except Exception as e:
+        print(f"Warning creating schema: {e}")
+
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Warning: Could not create all tables: {e}")
+    print("Continuing with existing tables...")
 
 app = FastAPI(
     title="Inventory API",

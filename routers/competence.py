@@ -12,6 +12,43 @@ router = APIRouter(
 )
 
 
+@router.post("/init-db")
+def init_competence_db(db: Session = Depends(get_db)):
+    """Initialize the competence table if it doesn't exist."""
+    from sqlalchemy import text
+    try:
+        # Check if schema exists, create if not (might require high privileges)
+        try:
+             db.execute(text("CREATE SCHEMA IF NOT EXISTS mercadolibre"))
+        except Exception as e:
+             print(f"Schema creation failed (might exist): {e}")
+
+        # Create table directly
+        db.execute(text("""
+        CREATE TABLE IF NOT EXISTS mercadolibre.scrapped_competence (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            meli_id VARCHAR(50),
+            url TEXT,
+            title VARCHAR(500),
+            price DECIMAL(10, 2),
+            competitor VARCHAR(255),
+            price_in_installments VARCHAR(255),
+            image TEXT,
+            timestamp DATETIME,
+            status VARCHAR(50),
+            api_cost_total DECIMAL(10, 4),
+            remaining_credits DECIMAL(10, 4),
+            product_code VARCHAR(255),
+            product_name VARCHAR(500),
+            INDEX ix_mercadolibre_scrapped_competence_meli_id (meli_id)
+        )
+        """))
+        db.commit()
+        return {"status": "success", "message": "Table checked/created"}
+    except Exception as e:
+        print(f"Error initializing DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("")
 def list_competence(
     q: str = Query(None, description="Search query"),
