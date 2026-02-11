@@ -2068,11 +2068,48 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (e) {
             console.error('Error loading competence data:', e);
-            tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-500">Error al cargar datos de competencia</td></tr>`;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                        <div class="flex flex-col items-center gap-2">
+                            <p>Error al cargar datos. Es posible que la tabla no exista.</p>
+                            <button onclick="initCompetenceDB()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                                Inicializar Tabla de Base de Datos
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
         } finally {
             if (loading) loading.classList.add('hidden');
         }
     }
+
+    window.initCompetenceDB = async function () {
+        if (!confirm('Esto intentará crear la tabla mercadolibre.scrapped_competence si no existe. ¿Continuar?')) return;
+
+        try {
+            const btn = document.querySelector('button[onclick="initCompetenceDB()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Inicializando...';
+            }
+
+            const response = await authFetch('/api/competence/init-db', {
+                method: 'POST'
+            });
+            const result = await response.json();
+
+            if (!response.ok) throw new Error(result.detail || 'Error desconocido');
+
+            alert('Resultado: ' + (result.message || 'Operación completada'));
+            loadCompetenceData(); // Reload data
+        } catch (e) {
+            alert('Error al inicializar: ' + e.message);
+            console.error(e);
+            // Re-enable button logic if needed, but page reload is safer
+        }
+    };
+
 
     function getCompStatusBadge(status) {
         const s = (status || '').toLowerCase();
