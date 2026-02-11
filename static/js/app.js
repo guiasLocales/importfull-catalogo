@@ -2039,12 +2039,19 @@ document.addEventListener('DOMContentLoaded', function () {
                            </a>`
                         : `<span class="text-gray-400 text-xs">-</span>`;
 
+                    const apiCost = item.api_cost_total ? `$${Number(item.api_cost_total).toFixed(4)}` : '-';
+                    const credits = item.remaining_credits ? Number(item.remaining_credits).toFixed(4) : '-';
+                    const dateFormatted = item.timestamp ? new Date(item.timestamp).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const meliId = item.meli_id || '<span class="text-gray-400 text-xs italic">N/A</span>';
+                    const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
+
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                         <td class="px-4 py-3">${imgHtml}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 font-mono">${meliId}</td>
                         <td class="px-4 py-3">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]">${item.title || item.product_name || 'Pendiente...'}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">${item.product_code || ''} ${item.meli_id ? '· ' + item.meli_id : ''}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]" title="${item.title || item.product_name || ''}">${item.title || item.product_name || 'Pendiente...'}</p>
+                                ${prodCode}
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -2056,6 +2063,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3 text-center">
                             <span class="text-xs text-gray-600 dark:text-gray-400">${item.price_in_installments || '-'}</span>
                         </td>
+                        <td class="px-4 py-3 text-center text-xs text-gray-600">${apiCost}</td>
+                        <td class="px-4 py-3 text-center text-xs text-gray-600">${credits}</td>
+                        <td class="px-4 py-3 text-center text-xs text-gray-500 whitespace-nowrap">${dateFormatted}</td>
                         <td class="px-4 py-3 text-center">${statusBadge}</td>
                         <td class="px-4 py-3 text-center">${linkHtml}</td>
                         <td class="px-4 py-3 text-center">
@@ -2137,11 +2147,27 @@ document.addEventListener('DOMContentLoaded', function () {
             loadCompetenceData();
         } catch (e) {
             console.error('Error adding competence URL:', e);
-            alert('Error: ' + e.message);
+
+            // Show diagnose option if error is about permissions
+            if (e.message.includes('denied') || e.message.includes('OperationalError')) {
+                checkPermissions();
+            } else {
+                alert('Error: ' + e.message);
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i data-lucide="plus" class="h-4 w-4"></i> Agregar';
             if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    };
+
+    window.checkPermissions = async function () {
+        try {
+            const response = await authFetch('/api/competence/debug-permissions');
+            const data = await response.json();
+            alert('DIAGNÓSTICO DE PERMISOS:\n\n' + JSON.stringify(data, null, 2));
+        } catch (err) {
+            alert('Error al verificar permisos: ' + err.message);
         }
     };
 

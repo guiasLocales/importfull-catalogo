@@ -13,6 +13,25 @@ router = APIRouter(
 )
 
 
+@router.get("/debug-permissions")
+def debug_permissions(db: Session = Depends(get_db)):
+    """Debug endpoint to check current user permissions."""
+    from sqlalchemy import text
+    try:
+        user_result = db.execute(text("SELECT CURRENT_USER()")).scalar()
+        
+        # MySQL specific command to show grants
+        grants_result = db.execute(text("SHOW GRANTS FOR CURRENT_USER()"))
+        grants = [row[0] for row in grants_result]
+        
+        return {
+            "status": "success",
+            "current_user": user_result,
+            "grants": grants
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @router.get("/debug-schema")
 def debug_competence_schema(db: Session = Depends(get_db)):
     """Debug endpoint to inspect table columns since we cannot create tables."""
