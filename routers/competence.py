@@ -12,6 +12,18 @@ router = APIRouter(
 )
 
 
+@router.get("/debug-schema")
+def debug_competence_schema(db: Session = Depends(get_db)):
+    """Debug endpoint to inspect table columns since we cannot create tables."""
+    from sqlalchemy import text
+    try:
+        # Try DESCRIBE for MySQL
+        result = db.execute(text("DESCRIBE mercadolibre.scrapped_competence"))
+        columns = [{"Field": row[0], "Type": row[1], "Null": row[2], "Key": row[3]} for row in result]
+        return {"status": "success", "columns": columns}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "hint": "Table might not exist or user lacks SELECT permissions"}
+
 @router.post("/init-db")
 def init_competence_db(db: Session = Depends(get_db)):
     """Initialize the competence table if it doesn't exist."""
