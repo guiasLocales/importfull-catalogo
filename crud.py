@@ -221,13 +221,22 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     # This avoids generic ORM behavior of sending NULLs for everything
     from sqlalchemy import text
     import uuid
+    import re
     from datetime import datetime
     
     try:
+        # 1. Try to extract 'MLA' ID from URL to use as valid data
+        # Matches MLA-1234 or MLA1234
+        meli_id_match = re.search(r'(MLA-?\d+)', url)
+        if meli_id_match:
+            # Normalize to remove dash if preferred, or keep as found
+            meli_id_val = meli_id_match.group(1).replace('-', '')
+        else:
+            # 2. Fallback to temp ID if URL format is unusual
+            meli_id_val = f"TEMP-{uuid.uuid4().hex[:8]}"
+
+        # 3. Insert with the found (or temp) ID
         # DB requires values for all columns. Providing safe defaults.
-        # Using a temporary unique meli_id to avoid unique constraints if any.
-        temp_id = f"TEMP-{uuid.uuid4().hex[:8]}"
-        
         sql = text("""
             INSERT INTO mercadolibre.scrapped_competence 
             (url, status, meli_id, title, price, competitor, price_in_installments, 
@@ -239,7 +248,7 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
         
         db.execute(sql, {
             "url": url, 
-            "meli_id": temp_id,
+            "meli_id": meli_id_val,
             "ts": datetime.now()
         })
         db.commit()
