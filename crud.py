@@ -220,10 +220,28 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     # Use raw SQL to be extremely precise and insert ONLY url and status
     # This avoids generic ORM behavior of sending NULLs for everything
     from sqlalchemy import text
+    import uuid
+    from datetime import datetime
+    
     try:
-        # User has INSERT permission now, try adding status as well
-        sql = text("INSERT INTO mercadolibre.scrapped_competence (url, status) VALUES (:url, 'pending')")
-        db.execute(sql, {"url": url})
+        # DB requires values for all columns. Providing safe defaults.
+        # Using a temporary unique meli_id to avoid unique constraints if any.
+        temp_id = f"TEMP-{uuid.uuid4().hex[:8]}"
+        
+        sql = text("""
+            INSERT INTO mercadolibre.scrapped_competence 
+            (url, status, meli_id, title, price, competitor, price_in_installments, 
+             image, timestamp, api_cost_total, remaining_credits, product_code, product_name) 
+            VALUES 
+            (:url, 'pending', :meli_id, '', 0, '', '', 
+             '', :ts, 0, 0, '', '')
+        """)
+        
+        db.execute(sql, {
+            "url": url, 
+            "meli_id": temp_id,
+            "ts": datetime.now()
+        })
         db.commit()
         
         # Fetch back for return (optional, standard ORM fetch)
