@@ -217,11 +217,21 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     if existing:
         return existing
         
+    from datetime import datetime
     item = ScrappedCompetence(
         url=url,
         product_code=product_code,
         product_name=product_name,
-        status='pending'
+        status='pending',
+        timestamp=datetime.now(),
+        meli_id='',  # Ensure not null if constraint exists
+        title='',
+        price=0,
+        competitor='',
+        price_in_installments='',
+        image='',
+        api_cost_total=0,
+        remaining_credits=0
     )
     db.add(item)
     db.commit()

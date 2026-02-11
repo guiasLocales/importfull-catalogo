@@ -46,13 +46,18 @@ def create_competence(request: CompetenceCreate, db: Session = Depends(get_db)):
     # Clean URL
     url = request.url.strip()
     
-    item = crud.create_competence_item(
-        db, 
-        url=url,
-        product_code=request.product_code,
-        product_name=request.product_name
-    )
-    return item
+    try:
+        item = crud.create_competence_item(
+            db, 
+            url=url,
+            product_code=request.product_code,
+            product_name=request.product_name
+        )
+        return item
+    except Exception as e:
+        print(f"Error creating competence item: {e}")
+        # Return the specific database error to the user for debugging
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 
 @router.delete("")
