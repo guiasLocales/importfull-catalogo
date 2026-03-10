@@ -36,6 +36,8 @@ class ProductUpdate(BaseModel):
     product_name_meli: Optional[str] = None
     catalog_link: Optional[str] = None
     description: Optional[str] = None
+    price: Optional[Decimal] = None
+    stock: Optional[int] = None
 
 class ProductResponse(ProductBase):
     id: int

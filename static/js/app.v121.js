@@ -535,8 +535,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price = parseFloat(priceEl.value);
-            const stockEl = document.getElementById('edit_stock');
-            if (stockEl && stockEl.value !== "") updates.stock = parseInt(stockEl.value, 10);
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -754,9 +752,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock Disponible</label>
-                            <input type="number" id="edit_stock" value="${product.stock || 0}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm text-right">
+                            <p class="text-xs text-gray-500 mb-1 text-right">Stock Disponible</p>
+                            <span class="text-xl font-bold text-gray-900 block text-right">
+                                ${product.stock || 0}
+                            </span>
                         </div>
                          <div class="col-span-2 pt-3 border-t border-gray-100 flex justify-between items-center">
                             <div class="text-sm">
