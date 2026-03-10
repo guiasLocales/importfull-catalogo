@@ -2431,27 +2431,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3 text-right">
                             <span class="text-sm font-semibold text-purple-600 dark:text-purple-400">${price}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-medium text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.net_profit ? '$ ' + Number(item.net_profit).toLocaleString('es-AR') : '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="text-xs text-gray-600 dark:text-gray-400">${item.net_margin_percentage ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="text-xs text-gray-600 dark:text-gray-400">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</span>
-                        </td>
                         <td class="px-4 py-3 text-center">${linkHtml}</td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
-                                <button onclick="openCompetenceModal('${item.catalog_link}')" class="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Configurar Costos">
-                                    <i data-lucide="calculator" class="h-4 w-4"></i>
-                                </button>
                                 <button onclick="deleteCompetenceItem(this.dataset.url)" data-url="${item.catalog_link}" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
                                     <i data-lucide="trash-2" class="h-4 w-4"></i>
                                 </button>
