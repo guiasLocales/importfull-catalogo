@@ -292,8 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         class="row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
                         ${isSelected ? 'checked' : ''}>
                 </div>
-                <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.id}">
-                    ${product.id}
+                <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
+                    ${product.product_code || '-'}
                 </div>
                 <div class="col-span-4 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
                     <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
@@ -308,8 +308,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="col-span-1 text-sm text-gray-600 truncate" title="${product.brand}">${product.brand || '-'}</div>
                 <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
-                <div class="col-span-1">
-                    <span class="text-sm font-semibold text-gray-900">${formatCurrency(product.price)}</span>
+                <div class="col-span-1 flex items-center">
+                    <div class="relative w-24 group/price">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">$</span>
+                        <input type="number" 
+                               value="${product.price || ''}" 
+                               onchange="updateProductPriceInline(${product.id}, this.value, this)"
+                               onclick="event.stopPropagation()"
+                               class="w-full pl-6 pr-2 py-1 text-sm font-bold text-white bg-blue-600 border border-transparent rounded hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right" 
+                               step="0.01">
+                    </div>
                 </div>
                 <div class="col-span-1 flex items-center justify-center text-center">
                     ${(() => {
@@ -354,7 +362,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div>
                         <h4 class="font-medium text-gray-900 text-sm line-clamp-1" onclick="openProductDetail(${product.id})">${product.product_name}</h4>
                         <p class="text-xs text-gray-500 mb-1">${product.product_code}</p>
-                        <span class="text-sm font-bold text-blue-600">${formatCurrency(product.price)}</span>
+                        <div class="relative w-24 mt-1">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">$</span>
+                            <input type="number" 
+                                   value="${product.price || ''}" 
+                                   onchange="updateProductPriceInline(${product.id}, this.value, this)"
+                                   onclick="event.stopPropagation()"
+                                   class="w-full pl-6 pr-2 py-1 text-sm font-bold text-white bg-blue-600 border border-transparent rounded shadow-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                                   step="0.01">
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center justify-between border-t border-gray-100 pt-3 mt-2">
@@ -450,6 +466,64 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
+    window.updateProductPriceInline = async (id, newPrice, inputEl) => {
+        const parsedPrice = parseFloat(newPrice);
+        if (isNaN(parsedPrice)) return;
+        
+        const originalBg = inputEl.classList.contains('bg-blue-600') ? 'bg-blue-600' : '';
+        const originalHover = inputEl.classList.contains('hover:bg-blue-700') ? 'hover:bg-blue-700' : '';
+        
+        // Show loading state by removing blue and making it orange
+        inputEl.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        inputEl.classList.add('bg-orange-500');
+        
+        try {
+            const response = await authFetch(`/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ price: parsedPrice })
+            });
+
+            if (!response.ok) throw new Error('Error al guardar precio');
+
+            // Success state
+            inputEl.classList.remove('bg-orange-500');
+            inputEl.classList.add('bg-green-600');
+            
+            // Update local state
+            const productIndex = state.products.findIndex(p => p.id === id);
+            if (productIndex >= 0) {
+                state.products[productIndex].price = parsedPrice;
+                // If detail modal is open for this product, update it too
+                const detailPrice = document.getElementById('edit_price');
+                if (detailPrice && currentDetailIndex === productIndex) {
+                    detailPrice.value = parsedPrice;
+                }
+            }
+            
+            // Restore colors after a second
+            setTimeout(() => {
+                inputEl.classList.remove('bg-green-600');
+                if (originalBg) inputEl.classList.add(originalBg);
+                if (originalHover) inputEl.classList.add(originalHover);
+            }, 1000);
+
+        } catch (e) {
+            console.error(e);
+            alert('Error al guardar el precio.');
+            
+            // Error state
+            inputEl.classList.remove('bg-orange-500');
+            inputEl.classList.add('bg-red-600');
+            setTimeout(() => {
+                inputEl.classList.remove('bg-red-600');
+                if (originalBg) inputEl.classList.add(originalBg);
+                if (originalHover) inputEl.classList.add(originalHover);
+                // Revert to old valid value? Not strictly necessary, but could be nice.
+            }, 1500);
+        }
+    };
 
     // Global function for publish toggle
     window.togglePublish = async (id, publish, buttonElement) => {
