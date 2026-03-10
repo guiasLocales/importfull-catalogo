@@ -192,6 +192,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    async function loadCategories() {
+        if (!elements.filterCategory) return;
+        try {
+            const response = await authFetch('/api/products/categories');
+            if (response.ok) {
+                const categories = await response.json();
+                const firstOption = elements.filterCategory.options[0];
+                elements.filterCategory.innerHTML = '';
+                if (firstOption) elements.filterCategory.appendChild(firstOption);
+                
+                categories.forEach(cat => {
+                    if (!cat) return;
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    elements.filterCategory.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Error loading categories:', e);
+        }
+    }
+
     async function deleteProductApi(id) {
         const response = await authFetch(`/api/products/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Error deleting product');
@@ -295,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
                     ${product.product_code || '-'}
                 </div>
-                <div class="col-span-4 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
+                <div class="col-span-5 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
                     <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                         <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" 
                              alt="" class="h-full w-full object-cover">
@@ -306,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
-                <div class="col-span-1 text-sm text-gray-600 truncate" title="${product.brand}">${product.brand || '-'}</div>
                 <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
                 <div class="col-span-1 flex items-center">
                     <div class="relative w-24 group/price">
@@ -3068,6 +3090,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('token');
     if (token) {
         fetchProducts();
+        loadCategories();
     }
 
 }); // End DOMContentLoaded

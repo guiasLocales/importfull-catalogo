@@ -46,6 +46,13 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
         
     return query.offset(skip).limit(limit).all()
 
+def get_categories(db: Session):
+    categories = db.query(Product.product_type_path).filter(
+        Product.product_type_path != None, 
+        Product.product_type_path != ''
+    ).distinct().order_by(Product.product_type_path).all()
+    return [c[0] for c in categories]
+
 def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
                       status: str = None, search: str = None):
     """Get products that have a MercadoLibre ID (published on ML)"""

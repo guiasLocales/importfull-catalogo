@@ -78,6 +78,10 @@ def read_meli_products(
         "paused_count": result["paused_count"]
     }
 
+@router.get("/categories", response_model=List[str])
+def read_categories(db: Session = Depends(get_db)):
+    return crud.get_categories(db)
+
 @router.get("/search", response_model=List[ProductResponse])
 def search_products(
     q: str = Query(..., min_length=1),
