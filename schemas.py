@@ -28,8 +28,15 @@ class ProductCreate(ProductBase):
     pass
 
 class ProductUpdate(BaseModel):
+    product_name: Optional[str] = None
+    price: Optional[Decimal] = None
+    stock: Optional[int] = None
+    brand: Optional[str] = None
+    description: Optional[str] = None
+    product_type_path: Optional[str] = None
     publish_event: Optional[str] = None
     drive_url: Optional[str] = None
+    is_validated: Optional[bool] = None
 
 class ProductResponse(ProductBase):
     id: int

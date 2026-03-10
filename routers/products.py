@@ -125,6 +125,20 @@ def patch_product(
         
     return db_product
 
+@router.put("/{product_id}", response_model=ProductResponse)
+def put_product(
+    product_id: int, 
+    request: ProductUpdate, 
+    db: Session = Depends(get_db)
+):
+    """PUT endpoint for frontend compatibility"""
+    updates = request.dict(exclude_unset=True)
+    db_product = crud.update_product(db, product_id=product_id, updates=updates)
+    if db_product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    return db_product
+
 @router.post("/{product_id}/notify")
 def notify_product_update(product_id: int, db: Session = Depends(get_db)):
     """Manually trigger an update webhook notification"""

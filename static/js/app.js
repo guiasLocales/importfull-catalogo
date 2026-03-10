@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
             brand: '',
             publish_event: '',
             stock_filter: ''
-        }
+        },
+        view: 'inventory'
     };
 
 
@@ -180,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Navigation Logic ---
     window.switchView = (viewName) => {
+        state.view = viewName;
         const views = {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
@@ -1266,7 +1268,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Success
             closeModal();
-            fetchProducts();
+            
+            // Refresh the appropriate view
+            if (state.view === 'mercadolibre') {
+                loadMeliProducts();
+            } else if (state.view === 'competence') {
+                loadCompetenceData();
+            } else {
+                fetchProducts();
+            }
 
         } catch (error) {
             console.error(error);
