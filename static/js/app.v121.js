@@ -2417,28 +2417,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
 
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-800">
-                        <!-- Producto Interno -->
+                        <!-- PRODUCTO INTERNO (ImportFull) -->
                         <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">${imgHtml}</td>
                         <td class="px-4 py-3 text-xs font-mono text-gray-500 border-r border-gray-100 dark:border-gray-800">${item.meli_id || '-'}</td>
-                        <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[250px]" title="${item.product_name || item.title || ''}">${item.product_name || item.title || 'Pendiente...'}</p>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[200px]" title="${item.product_name || '-'}">${item.product_name || 'Sin nombre DB'}</p>
                                 ${prodCode}
                             </div>
                         </td>
+                        <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-blue-50/5 dark:bg-blue-900/5">
+                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
+                        </td>
 
-                        <!-- Competencia -->
+                        <!-- COMPETENCIA (Scrapped) -->
                         <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
                             <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">${item.competitor || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title="${item.title || ''}">${item.title || 'Pendiente...'}</p>
                         </td>
                         <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-purple-50/10 dark:bg-purple-900/10">
                             <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${price}</span>
                         </td>
 
-                        <!-- Métricas / Tu Producto -->
-                        <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-blue-50/5 dark:bg-blue-900/5">
-                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
-                        </td>
+                        <!-- RESULTADOS FINANCIEROS -->
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800">
                             <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
                         </td>
