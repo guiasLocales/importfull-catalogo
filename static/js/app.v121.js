@@ -526,11 +526,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusEl.innerHTML = '<span class="flex items-center gap-1.5 text-blue-600 animate-pulse text-xs font-medium"><div class="h-2 w-2 bg-blue-600 rounded-full"></div> Guardando...</span>';
             }
 
-            const updates = {
-                product_name_meli: document.getElementById('edit_product_name_meli').value,
-                catalog_link: document.getElementById('edit_catalog_link').value,
-                description: document.getElementById('edit_description').value
-            };
+            const updates = {};
+            const nameEl = document.getElementById('edit_product_name_meli');
+            if (nameEl) updates.product_name_meli = nameEl.value;
+            const linkEl = document.getElementById('edit_catalog_link');
+            if (linkEl) updates.catalog_link = linkEl.value;
+            const descEl = document.getElementById('edit_description');
+            if (descEl) updates.description = descEl.value;
+            const priceEl = document.getElementById('edit_price');
+            if (priceEl && priceEl.value !== "") updates.price = parseFloat(priceEl.value);
+            const stockEl = document.getElementById('edit_stock');
+            if (stockEl && stockEl.value !== "") updates.stock = parseInt(stockEl.value, 10);
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -743,14 +749,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     <!-- Key Stats Grid -->
                     <div class="grid grid-cols-2 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
-                            <p class="text-xs text-gray-500 mb-1">Precio Venta</p>
-                            <span class="text-2xl font-bold text-gray-900 block">${formatCurrency(product.price)}</span>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Venta ($)</label>
+                            <input type="number" id="edit_price" value="${product.price || ''}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-500 mb-1">Stock Disponible</p>
-                            <span class="text-xl font-bold text-gray-900 block">
-                                ${product.stock || 0}
-                            </span>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock Disponible</label>
+                            <input type="number" id="edit_stock" value="${product.stock || 0}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm text-right">
                         </div>
                          <div class="col-span-2 pt-3 border-t border-gray-100 flex justify-between items-center">
                             <div class="text-sm">
