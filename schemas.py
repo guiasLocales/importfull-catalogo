@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
+from datetime import datetime
 from decimal import Decimal
 
 class ProductBase(BaseModel):
@@ -138,7 +139,7 @@ class CompetenceUpdate(BaseModel):
 
 class CompetenceResponse(CompetenceBase):
     model_config = ConfigDict(from_attributes=True)
-    timestamp: Optional[str] = None
+    timestamp: Optional[datetime] = None
     # No id field in DB
 
 class CompetenceListResponse(BaseModel):
