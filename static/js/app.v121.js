@@ -2416,36 +2416,43 @@ document.addEventListener('DOMContentLoaded', function () {
                     // meli_id removed
                     const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
 
-                    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-4 py-3">${imgHtml}</td>
-                        <td class="px-4 py-3 text-xs font-mono text-gray-500">${item.meli_id || '-'}</td>
-                        <td class="px-4 py-3">
+                    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-800">
+                        <!-- Producto Interno -->
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">${imgHtml}</td>
+                        <td class="px-4 py-3 text-xs font-mono text-gray-500 border-r border-gray-100 dark:border-gray-800">${item.meli_id || '-'}</td>
+                        <td class="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
                             <div class="min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[300px]" title="${item.title || item.product_name || ''}">${item.title || item.product_name || 'Pendiente...'}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[250px]" title="${item.product_name || item.title || ''}">${item.product_name || item.title || 'Pendiente...'}</p>
                                 ${prodCode}
                             </div>
                         </td>
-                        <td class="px-4 py-3">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">${item.competitor || '-'}</span>
+
+                        <!-- Competencia -->
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
+                            <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">${item.competitor || '-'}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-semibold text-purple-600 dark:text-purple-400">${price}</span>
+                        <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-purple-50/10 dark:bg-purple-900/10">
+                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${price}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-medium text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
+
+                        <!-- Métricas / Tu Producto -->
+                        <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-blue-50/5 dark:bg-blue-900/5">
+                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800">
                             <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
+                        <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-green-50/5 dark:bg-green-900/5">
                             <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.net_profit ? '$ ' + Number(item.net_profit).toLocaleString('es-AR') : '-'}</span>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="text-xs text-gray-600 dark:text-gray-400">${item.net_margin_percentage ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
+                        <td class="px-4 py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.net_margin_percentage ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="text-xs text-gray-600 dark:text-gray-400">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</span>
+                        <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</span>
                         </td>
+
+                        <!-- Link & Acciones -->
                         <td class="px-4 py-3 text-center">${linkHtml}</td>
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
