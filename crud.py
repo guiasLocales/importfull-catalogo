@@ -237,25 +237,30 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     
     try:
         # meli_id removed logic
+        
+        # Ensure we have a product_code, fallback to a slice of URL if somehow missing
+        effective_code = product_code or url.split('/')[-1][:50]
 
         # 3. Insert without meli_id
         sql = text("""
             INSERT INTO mercadolibre.scrapped_competence 
-            (catalog_link, status, title, price, competitor, price_in_installments, 
-             image, timestamp, api_cost_total, remaining_credits, product_code, product_name) 
+            (product_code, catalog_link, status, title, price, competitor, price_in_installments, 
+             image, timestamp, api_cost_total, remaining_credits, product_name) 
             VALUES 
-            (:catalog_link, 'pending', '', 0, '', '', 
-             '', :ts, 0, 0, '', '')
+            (:product_code, :catalog_link, 'pending', '', 0, '', '', 
+             '', :ts, 0, 0, :product_name)
         """)
         
         db.execute(sql, {
+            "product_code": effective_code,
             "catalog_link": url, 
+            "product_name": product_name or "",
             "ts": datetime.now()
         })
         db.commit()
         
         # Fetch back for return (optional, standard ORM fetch)
-        return get_competence_item(db, url)
+        return db.query(ScrappedCompetence).filter(ScrappedCompetence.product_code == effective_code).first()
     except Exception as e:
         db.rollback()
         raise e

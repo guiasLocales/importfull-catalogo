@@ -46,23 +46,23 @@ class ScrappedCompetence(Base):
     __table_args__ = {'schema': 'mercadolibre'}
 
     # Removed id column to match existing DB
-    catalog_link = Column(Text, primary_key=True)  # Using catalog_link as logical PK
+    product_code = Column(String(100), primary_key=True)
+    catalog_link = Column(Text, nullable=False)
     # meli_id removed as per user request
-    title = Column(String(500))
-    price = Column(Numeric(10, 2))
-    competitor = Column(String(255))
+    title = Column(String(255))
+    price = Column(Integer)
+    competitor = Column(String(100))
     price_in_installments = Column(String(255))
     image = Column(Text)
     timestamp = Column(DateTime)
     status = Column(String(50))
-    api_cost_total = Column(Numeric(10, 4))
-    remaining_credits = Column(Numeric(10, 4))
-    product_code = Column(String(255))
-    product_name = Column(String(500))
+    api_cost_total = Column(Integer)
+    remaining_credits = Column(Integer)
+    product_name = Column(String(255))
     
-    # New Cost/Profit fields
-    selling_price = Column(Numeric(10, 0))
-    product_cost = Column(Numeric(10, 0))
+    # Financial and Cost columns
+    selling_price = Column(Integer)
+    product_cost = Column(Integer)
     listing_type = Column(String(100))
     ml_commision_percentage = Column(Numeric(5, 2))
     ml_commision = Column(Numeric(10, 2))
