@@ -132,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.append('q', state.search);
             }
             if (state.filters.category) params.append('category', state.filters.category);
-            if (state.filters.brand) params.append('brand', state.filters.brand);
             if (state.filters.publish_event) {
                 params.append('publish_event', state.filters.publish_event);
             }
@@ -332,12 +331,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
                 <div class="col-span-1 flex items-center">
                     <div class="relative w-24 group/price">
-                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">$</span>
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
                         <input type="number" 
                                value="${product.price || ''}" 
                                onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
-                               class="w-full pl-6 pr-2 py-1 text-sm font-bold text-white bg-blue-600 border border-transparent rounded hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right" 
+                               class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                                step="0.01">
                     </div>
                 </div>
@@ -385,12 +384,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h4 class="font-medium text-gray-900 text-sm line-clamp-1" onclick="openProductDetail(${product.id})">${product.product_name}</h4>
                         <p class="text-xs text-gray-500 mb-1">${product.product_code}</p>
                         <div class="relative w-24 mt-1">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-white font-bold text-sm pointer-events-none">$</span>
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
                             <input type="number" 
                                    value="${product.price || ''}" 
                                    onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                    onclick="event.stopPropagation()"
-                                   class="w-full pl-6 pr-2 py-1 text-sm font-bold text-white bg-blue-600 border border-transparent rounded shadow-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                                   class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                                    step="0.01">
                         </div>
                     </div>
@@ -493,12 +492,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const parsedPrice = parseFloat(newPrice);
         if (isNaN(parsedPrice)) return;
         
-        const originalBg = inputEl.classList.contains('bg-blue-600') ? 'bg-blue-600' : '';
-        const originalHover = inputEl.classList.contains('hover:bg-blue-700') ? 'hover:bg-blue-700' : '';
+        const originalBg = inputEl.classList.contains('bg-gray-100') ? 'bg-gray-100' : '';
+        const originalHover = inputEl.classList.contains('hover:bg-gray-200') ? 'hover:bg-gray-200' : '';
+        const originalText = inputEl.classList.contains('text-gray-800') ? 'text-gray-800' : '';
         
-        // Show loading state by removing blue and making it orange
-        inputEl.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        inputEl.classList.add('bg-orange-500');
+        // Show loading state by removing gray and making it orange
+        inputEl.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
+        inputEl.classList.add('bg-orange-500', 'text-white');
         
         try {
             const response = await authFetch(`/api/products/${id}`, {
@@ -526,7 +526,8 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Restore colors after a second
             setTimeout(() => {
-                inputEl.classList.remove('bg-green-600');
+                inputEl.classList.remove('bg-green-600', 'text-white');
+                if (originalText) inputEl.classList.add(originalText);
                 if (originalBg) inputEl.classList.add(originalBg);
                 if (originalHover) inputEl.classList.add(originalHover);
             }, 1000);
@@ -537,9 +538,10 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Error state
             inputEl.classList.remove('bg-orange-500');
-            inputEl.classList.add('bg-red-600');
+            inputEl.classList.add('bg-red-600', 'text-white');
             setTimeout(() => {
-                inputEl.classList.remove('bg-red-600');
+                inputEl.classList.remove('bg-red-600', 'text-white');
+                if (originalText) inputEl.classList.add(originalText);
                 if (originalBg) inputEl.classList.add(originalBg);
                 if (originalHover) inputEl.classList.add(originalHover);
                 // Revert to old valid value? Not strictly necessary, but could be nice.
