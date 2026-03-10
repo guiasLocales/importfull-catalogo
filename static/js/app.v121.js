@@ -2413,6 +2413,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     const apiCost = item.api_cost_total ? `$${Number(item.api_cost_total).toFixed(4)}` : '-';
                     const credits = item.remaining_credits ? Number(item.remaining_credits).toFixed(4) : '-';
                     const dateFormatted = item.timestamp ? new Date(item.timestamp).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                    const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
+
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-800">
                         <!-- COMPETENCIA (Scrapped) -->
                         <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">${imgHtml}</td>
