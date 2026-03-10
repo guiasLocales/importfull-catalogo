@@ -1,8 +1,8 @@
 import base64
 import os
 
-TOKEN_PATH = r"C:\importfull-inventory\token.json"
-B64_PATH = r"C:\importfull-inventory\token.b64"
+TOKEN_PATH = "token.json"
+B64_PATH = "token.b64"
 
 if os.path.exists(TOKEN_PATH):
     with open(TOKEN_PATH, 'r') as f:
