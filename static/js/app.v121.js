@@ -1486,30 +1486,73 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título MercadoLibre</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título MercadoLibre</label>
+                            </div>
                             <div class="flex gap-2">
-                                <input type="text" id="detail-product_name_meli" 
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
-                                <button id="btn-ai-product_name_meli" onclick="triggerAIPrePublish(${productId}, 'product_name_meli')" 
-                                    class="mt-1 px-3 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-md border border-purple-200 transition-colors"
+                                <input type="text" id="detail-product_name_meli" value="${product.product_name_meli || ''}" placeholder="Dejar vacío para mantener el actual"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 placeholder-gray-400">
+                                
+                                <button type="button" id="btn-ai-product_name_meli" onclick="window.triggerAIPrePublish(${productId}, 'product_name_meli')" 
+                                    class="mt-1 px-3 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-md border border-purple-200 transition-colors flex-shrink-0 flex items-center justify-center"
                                     title="Generar con AI">
-                                    <i data-lucide="sparkles" class="h-4 w-4"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
                                 </button>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-                            <div class="relative">
-                                <textarea id="detail-description" rows="12" 
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"></textarea>
-                                <button id="btn-ai-description" onclick="triggerAIPrePublish(${productId}, 'description')" 
+                            <div class="relative mt-1">
+                                <textarea id="detail-description" rows="12" placeholder="Dejar vacío para mantener la actual"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 placeholder-gray-400">${product.description || ''}</textarea>
+                                <button type="button" id="btn-ai-description" onclick="window.triggerAIPrePublish(${productId}, 'description')" 
                                     class="absolute top-2 right-2 p-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-md border border-purple-200 transition-colors"
                                     title="Generar con AI">
-                                    <i data-lucide="sparkles" class="h-4 w-4"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
                                 </button>
                             </div>
                         </div>
+
+                    <script>
+                        window.triggerAIPrePublish = async function(productId, field) {
+                            const btn = document.getElementById('btn-ai-' + field);
+                            const input = document.getElementById('detail-' + field);
+                            
+                            if (!btn || !input) return;
+                            
+                            // Visual feedback
+                            const originalHtml = btn.innerHTML;
+                            btn.innerHTML = '<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                            btn.disabled = true;
+                            
+                            try {
+                                const promptText = input.value.trim() || (field === 'description' ? 'Generar descripción optimizada' : 'Optimizar título para ML');
+                                
+                                const response = await window.authFetch('/api/products/' + productId + '/pre-publish', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        prompt: promptText,
+                                        field: field
+                                    })
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (!response.ok) throw new Error(data.detail || 'Error en AI');
+                                
+                                alert('Solicitud AI enviada: ' + data.message + '\\n(Los cambios se reflejarán cuando refresques la vista más tarde)');
+                                
+                            } catch (error) {
+                                console.error('AI Error:', error);
+                                alert('Error generando contenido AI: ' + error.message);
+                            } finally {
+                                btn.innerHTML = originalHtml;
+                                btn.disabled = false;
+                            }
+                        };
+                    </script>
 
                  <!-- Path -->
                 <div>
