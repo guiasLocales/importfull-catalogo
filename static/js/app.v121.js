@@ -890,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <!-- Validation Issues (Collapsible) -->
                     <div class="mb-6">
                         ${(() => {
-                    const hasIssues = product.reason || product.remedy;
+                    const hasIssues = (product.reason && product.reason !== 'None') || (product.remedy && product.remedy !== 'None');
                     const bgClass = hasIssues ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200';
                     const textClass = hasIssues ? 'text-orange-800' : 'text-gray-500';
                     const hoverClass = hasIssues ? 'hover:bg-orange-100' : 'hover:bg-gray-100';
@@ -990,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Description Editor -->
-                    <div class="mb-6 flex-1 flex flex-col min-h-[150px] relative">
+                    <div class="mb-24 flex-1 flex flex-col min-h-[150px] relative">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex justify-between items-center">
                             <span>Descripción</span>
                             <button id="btn-ai-description" onclick="triggerAIPrePublish(${product.id}, 'description')" 
