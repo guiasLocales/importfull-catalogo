@@ -2413,12 +2413,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     const apiCost = item.api_cost_total ? `$${Number(item.api_cost_total).toFixed(4)}` : '-';
                     const credits = item.remaining_credits ? Number(item.remaining_credits).toFixed(4) : '-';
                     const dateFormatted = item.timestamp ? new Date(item.timestamp).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : '-';
-                    // meli_id removed
-                    const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
-
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-800">
-                        <!-- PRODUCTO INTERNO (ImportFull) -->
+                        <!-- COMPETENCIA (Scrapped) -->
                         <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">${imgHtml}</td>
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
+                            <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">${item.competitor || '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title="${item.title || ''}">${item.title || 'Pendiente...'}</p>
+                        </td>
+                        <td class="px-4 py-3 text-center border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">${linkHtml}</td>
+                        <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-purple-50/10 dark:bg-purple-900/10">
+                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${price}</span>
+                        </td>
+
+                        <!-- PRODUCTO INTERNO (ImportFull) -->
                         <td class="px-4 py-3 text-xs font-mono text-gray-500 border-r border-gray-100 dark:border-gray-800">${item.meli_id || '-'}</td>
                         <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800">
                             <div class="min-w-0">
@@ -2427,18 +2436,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </td>
                         <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-blue-50/5 dark:bg-blue-900/5">
-                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : '-'}</span>
-                        </td>
-
-                        <!-- COMPETENCIA (Scrapped) -->
-                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
-                            <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">${item.competitor || '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 border-r border-gray-100 dark:border-gray-800 bg-purple-50/5 dark:bg-purple-900/5">
-                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title="${item.title || ''}">${item.title || 'Pendiente...'}</p>
-                        </td>
-                        <td class="px-4 py-3 text-right border-r border-gray-200 dark:border-gray-700 bg-purple-50/10 dark:bg-purple-900/10">
-                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${price}</span>
+                            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${item.selling_price ? '$ ' + Number(item.selling_price).toLocaleString('es-AR') : (item.internal_price ? '$ ' + Number(item.internal_price).toLocaleString('es-AR') : '-')}</span>
                         </td>
 
                         <!-- RESULTADOS FINANCIEROS -->
@@ -2455,8 +2453,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</span>
                         </td>
 
-                        <!-- Link & Acciones -->
-                        <td class="px-4 py-3 text-center">${linkHtml}</td>
+                        <!-- Acciones -->
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
                                 <button onclick="openCompetenceModal('${item.catalog_link}')" class="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Configurar Costos">

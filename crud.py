@@ -175,7 +175,9 @@ def get_brands(db: Session):
 def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
     """Get competition scraping entries with optional search and filter."""
-    query = db.query(ScrappedCompetence).filter(
+    query = db.query(ScrappedCompetence, Product.price).outerjoin(
+        Product, ScrappedCompetence.product_code == Product.product_code
+    ).filter(
         ScrappedCompetence.catalog_link != '',
         ScrappedCompetence.catalog_link != None
     )
@@ -190,13 +192,16 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
             ScrappedCompetence.catalog_link.ilike(f"%{search}%"),
             ScrappedCompetence.product_name.ilike(f"%{search}%"),
             ScrappedCompetence.product_code.ilike(f"%{search}%"),
-            ScrappedCompetence.product_code.ilike(f"%{search}%"),
-            # meli_id removed
         ]
         query = query.filter(or_(*search_conditions))
     
     total = query.count()
-    items = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+    results = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+
+    items = []
+    for sc, iprice in results:
+        sc.internal_price = float(iprice) if iprice is not None else None
+        items.append(sc)
 
     
     # Counts by status

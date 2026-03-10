@@ -111,6 +111,7 @@ class CompetenceBase(BaseModel):
     net_profit: Optional[float] = None
     net_margin_percentage: Optional[float] = None
     markup_percentage: Optional[float] = None
+    internal_price: Optional[float] = None
 
 class CompetenceCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
