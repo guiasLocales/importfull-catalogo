@@ -59,10 +59,10 @@ class ScrappedCompetence(Base):
     remaining_credits = Column(Numeric(10, 4))
     product_code = Column(String(255))
     product_name = Column(String(500))
-
+    
     # New Cost/Profit fields
-    selling_price = Column(Numeric(10, 2))
-    product_cost = Column(Numeric(10, 2))
+    selling_price = Column(Numeric(10, 0))
+    product_cost = Column(Numeric(10, 0))
     listing_type = Column(String(100))
     ml_commision_percentage = Column(Numeric(5, 2))
     ml_commision = Column(Numeric(10, 2))
@@ -77,6 +77,7 @@ class ScrappedCompetence(Base):
     net_profit = Column(Numeric(10, 2))
     net_margin_percentage = Column(Numeric(5, 2))
     markup_percentage = Column(Numeric(5, 2))
+
 
 class Prompt(Base):
     __tablename__ = "prompts"
