@@ -3,14 +3,20 @@ from sqlalchemy.orm import Session
 from db_conn import get_db
 from routers.auth import get_current_user
 import crud
-from schemas import CompetenceCreate, CompetenceUpdate
+import schemas
+from schemas import CompetenceCreate, CompetenceUpdate, CompetenceResponse, CompetenceListResponse
 from typing import Optional
 
 router = APIRouter(
     prefix="/api/competence",
-    tags=["competence"],
+    tags=["competence-v121-fixed"],
     dependencies=[Depends(get_current_user)]
 )
+
+WEBHOOK_SCRAPPING_URL = "https://service--import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
+WEBHOOK_SECRET = "mati-gordo"
+
+import httpx
 
 
 @router.get("/debug-permissions")
@@ -44,7 +50,7 @@ def debug_competence_schema(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e), "hint": "Table might not exist or user lacks SELECT permissions"}
 
-@router.get("")
+@router.get("", response_model=CompetenceListResponse)
 def list_competence(
     q: str = Query(None, description="Search query"),
     status: str = Query(None, description="Filter by status"),
@@ -53,26 +59,85 @@ def list_competence(
     db: Session = Depends(get_db)
 ):
     """List all competence scraping entries."""
-    return crud.get_competence_items(db, skip=skip, limit=limit, search=q, status=status)
+    try:
+        data = crud.get_competence_items(db, skip=skip, limit=limit, search=q, status=status)
+        return CompetenceListResponse.model_validate(data)
+    except Exception as e:
+        print(f"Error listing competence items: {e}")
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
+
+@router.get("/item", response_model=CompetenceResponse)
+def get_competence_item(url: str, db: Session = Depends(get_db)):
+    """Get a single competence item by URL."""
+    item = crud.get_competence_item(db, url)
+    if not item:
+        raise HTTPException(status_code=404, detail="Competence item not found")
+    return CompetenceResponse.model_validate(item)
+
+@router.patch("/item", response_model=CompetenceResponse)
+def update_competence_item(url: str, updates: CompetenceUpdate, db: Session = Depends(get_db)):
+    """Update a competence item by URL."""
+    item = crud.get_competence_item(db, url)
+    if not item:
+        raise HTTPException(status_code=404, detail="Competence item not found")
+    
+    # Update fields
+    update_data = updates.model_dump(exclude_unset=True)
+    
+    # We need to use the existing values if not provided in updates
+    selling_price = update_data.get('selling_price', float(item.selling_price or 0))
+    product_cost = update_data.get('product_cost', float(item.product_cost or 0))
+    ml_comm_pct = update_data.get('ml_commision_percentage', float(item.ml_commision_percentage or 0))
+    est_ret_pct = update_data.get('estimated_returns_percentage', float(item.estimated_returns_percentage or 0))
+    
+    ship_cost = update_data.get('shipping_cost', float(item.shipping_cost or 0))
+    pack_cost = update_data.get('packaging_cost', float(item.packaging_cost or 0))
+    adv_cost = update_data.get('advertising_cost', float(item.advertising_cost or 0))
+    taxes = update_data.get('withholdings_gross_income_tax', float(item.withholdings_gross_income_tax or 0))
+    fin_cost = update_data.get('financial_cost', float(item.financial_cost or 0))
+
+    # Calculate
+    ml_comm = selling_price * (ml_comm_pct / 100)
+    ret_cost = selling_price * (est_ret_pct / 100)
+    
+    total = product_cost + ml_comm + ship_cost + pack_cost + adv_cost + ret_cost + taxes + fin_cost
+    profit = selling_price - total
+    
+    margin = profit / selling_price if selling_price > 0 else 0
+    markup = profit / product_cost if product_cost > 0 else 0
+
+    update_data['ml_commision'] = ml_comm
+    update_data['returns_cost'] = ret_cost
+    update_data['total_costs'] = total
+    update_data['net_profit'] = profit
+    update_data['net_margin_percentage'] = margin * 100 # Store as 0-100 for consistency if requested or fix UI
+    update_data['markup_percentage'] = markup * 100
+
+    for key, value in update_data.items():
+        setattr(item, key, value)
+    
+    db.commit()
+    db.refresh(item)
+    return CompetenceResponse.model_validate(item)
 
 
 @router.post("")
 def create_competence(request: CompetenceCreate, db: Session = Depends(get_db)):
-    """Create a new competence entry. Only the URL is required from the frontend."""
-    if not request.url or not request.url.strip():
+    """Create a new competence entry. Only the catalog_link is required from the frontend."""
+    if not request.catalog_link or not request.catalog_link.strip():
         raise HTTPException(status_code=400, detail="URL is required")
     
     # Clean URL
-    url = request.url.strip()
+    catalog_link = request.catalog_link.strip()
     
     try:
         item = crud.create_competence_item(
             db, 
-            url=url,
+            url=catalog_link,
             product_code=request.product_code,
             product_name=request.product_name
         )
-        return item
+        return CompetenceResponse.model_validate(item)
     except Exception as e:
         print(f"Error creating competence item: {e}")
         # Return the specific database error to the user for debugging
@@ -89,3 +154,22 @@ def delete_competence(url: str = Query(..., description="URL of the item to dele
     if not success:
         raise HTTPException(status_code=404, detail="Competence item not found")
     return {"status": "deleted", "url": url}
+
+@router.post("/start-scraping")
+def start_scraping(db: Session = Depends(get_db)):
+    """Trigger global competence scraping via webhook."""
+    data = {
+        "secret": WEBHOOK_SECRET
+    }
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            response = client.post(WEBHOOK_SCRAPPING_URL, json=data)
+            print(f"Scraping webhook sent. Status: {response.status_code}")
+            
+            if not (200 <= response.status_code < 300):
+                raise HTTPException(status_code=500, detail=f"Webhook failed with status {response.status_code}")
+                
+            return {"status": "success", "message": "Scraping started"}
+    except Exception as e:
+        print(f"Error sending scraping webhook: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger scraping: {str(e)}")

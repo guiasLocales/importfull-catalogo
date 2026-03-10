@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
 from decimal import Decimal
 
 class ProductBase(BaseModel):
@@ -23,20 +23,19 @@ class ProductBase(BaseModel):
     reason: Optional[str] = None
     remedy: Optional[str] = None
     permalink: Optional[str] = None
+    product_name_meli: Optional[str] = None
+    cost: Optional[Decimal] = None
+    catalog_link: Optional[str] = None
 
 class ProductCreate(ProductBase):
     pass
 
 class ProductUpdate(BaseModel):
-    product_name: Optional[str] = None
-    price: Optional[Decimal] = None
-    stock: Optional[int] = None
-    brand: Optional[str] = None
-    description: Optional[str] = None
-    product_type_path: Optional[str] = None
     publish_event: Optional[str] = None
     drive_url: Optional[str] = None
-    is_validated: Optional[bool] = None
+    product_name_meli: Optional[str] = None
+    catalog_link: Optional[str] = None
+    description: Optional[str] = None
 
 class ProductResponse(ProductBase):
     id: int
@@ -78,30 +77,91 @@ class PublishRequest(BaseModel):
 
 # --- Competence Schemas ---
 class CompetenceBase(BaseModel):
-    meli_id: Optional[str] = None
-    url: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+    # meli_id removed
+    catalog_link: Optional[str] = None
     title: Optional[str] = None
-    price: Optional[Decimal] = None
+    price: Optional[float] = None
     competitor: Optional[str] = None
     price_in_installments: Optional[str] = None
     image: Optional[str] = None
     status: Optional[str] = None
-    api_cost_total: Optional[Decimal] = None
-    remaining_credits: Optional[Decimal] = None
+    api_cost_total: Optional[float] = None
+    remaining_credits: Optional[float] = None
     product_code: Optional[str] = None
     product_name: Optional[str] = None
+
+    # New Cost/Profit fields
+    selling_price: Optional[float] = None
+    product_cost: Optional[float] = None
+    listing_type: Optional[str] = None
+    ml_commision_percentage: Optional[float] = None
+    ml_commision: Optional[float] = None
+    shipping_cost: Optional[float] = None
+    packaging_cost: Optional[float] = None
+    advertising_cost: Optional[float] = None
+    estimated_returns_percentage: Optional[float] = None
+    returns_cost: Optional[float] = None
+    withholdings_gross_income_tax: Optional[float] = None
+    financial_cost: Optional[float] = None
+    total_costs: Optional[float] = None
+    net_profit: Optional[float] = None
+    net_margin_percentage: Optional[float] = None
+    markup_percentage: Optional[float] = None
 
 class CompetenceCreate(BaseModel):
-    url: str  # Only field the user provides
+    model_config = ConfigDict(from_attributes=True)
+    catalog_link: str  # Only field the user provides (was 'url')
     product_code: Optional[str] = None
     product_name: Optional[str] = None
 
+class CompetenceUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    selling_price: Optional[float] = None
+    product_cost: Optional[float] = None
+    listing_type: Optional[str] = None
+    ml_commision_percentage: Optional[float] = None
+    ml_commision: Optional[float] = None
+    shipping_cost: Optional[float] = None
+    packaging_cost: Optional[float] = None
+    advertising_cost: Optional[float] = None
+    estimated_returns_percentage: Optional[float] = None
+    returns_cost: Optional[float] = None
+    withholdings_gross_income_tax: Optional[float] = None
+    financial_cost: Optional[float] = None
+    total_costs: Optional[float] = None
+    net_profit: Optional[float] = None
+    net_margin_percentage: Optional[float] = None
+    markup_percentage: Optional[float] = None
+
 class CompetenceResponse(CompetenceBase):
+    model_config = ConfigDict(from_attributes=True)
     timestamp: Optional[str] = None
     # No id field in DB
 
+class CompetenceListResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    items: List[CompetenceResponse]
+    total: int
+    pending_count: int
+    completed_count: int
+    error_count: int
+
+
+# --- Prompts Schemas ---
+class PromptUpdate(BaseModel):
+    ai_general: Optional[str] = None
+    rules: Optional[str] = None
+    ai_improving_human_reply: Optional[str] = None
+
+class PromptResponse(BaseModel):
+    id: int
+    ai_auditor: Optional[str] = None
+    ai_category: Optional[str] = None
+    ai_general: Optional[str] = None
+    ai_inventory_search: Optional[str] = None
+    ai_improving_human_reply: Optional[str] = None
+    rules: Optional[str] = None
+    
     class Config:
         from_attributes = True
-
-class CompetenceUpdate(BaseModel):
-    url: Optional[str] = None

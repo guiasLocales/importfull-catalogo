@@ -25,6 +25,9 @@ class Product(Base):
     reason = Column(String(255))
     remedy = Column(String(255))
     permalink = Column(String(255))
+    product_name_meli = Column(String(255))
+    cost = Column(Numeric(10, 0))
+    catalog_link = Column(Text)
 
 
 class User(Base):
@@ -43,8 +46,8 @@ class ScrappedCompetence(Base):
     __table_args__ = {'schema': 'mercadolibre'}
 
     # Removed id column to match existing DB
-    url = Column(Text, primary_key=True)  # Using url as logical PK
-    meli_id = Column(String(50), index=True)
+    catalog_link = Column(Text, primary_key=True)  # Using catalog_link as logical PK
+    # meli_id removed as per user request
     title = Column(String(500))
     price = Column(Numeric(10, 2))
     competitor = Column(String(255))
@@ -56,3 +59,34 @@ class ScrappedCompetence(Base):
     remaining_credits = Column(Numeric(10, 4))
     product_code = Column(String(255))
     product_name = Column(String(500))
+    
+    # New Cost/Profit fields
+    selling_price = Column(Numeric(10, 0))
+    product_cost = Column(Numeric(10, 0))
+    listing_type = Column(String(100))
+    ml_commision_percentage = Column(Numeric(5, 2))
+    ml_commision = Column(Numeric(10, 2))
+    shipping_cost = Column(Numeric(10, 2))
+    packaging_cost = Column(Numeric(10, 2))
+    advertising_cost = Column(Numeric(10, 2))
+    estimated_returns_percentage = Column(Numeric(5, 2))
+    returns_cost = Column(Numeric(10, 2))
+    withholdings_gross_income_tax = Column(Numeric(10, 2))
+    financial_cost = Column(Numeric(10, 2))
+    total_costs = Column(Numeric(10, 2))
+    net_profit = Column(Numeric(10, 2))
+    net_margin_percentage = Column(Numeric(5, 2))
+    markup_percentage = Column(Numeric(5, 2))
+
+
+class Prompt(Base):
+    __tablename__ = "prompts"
+    __table_args__ = {'schema': 'mercadolibre'}
+
+    id = Column(Integer, primary_key=True)
+    ai_auditor = Column(Text)
+    ai_category = Column(Text)
+    ai_general = Column(Text)
+    ai_inventory_search = Column(Text)
+    ai_improving_human_reply = Column(Text)
+    rules = Column(Text)

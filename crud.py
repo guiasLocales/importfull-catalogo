@@ -168,7 +168,10 @@ def get_brands(db: Session):
 def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
     """Get competition scraping entries with optional search and filter."""
-    query = db.query(ScrappedCompetence)
+    query = db.query(ScrappedCompetence).filter(
+        ScrappedCompetence.catalog_link != '',
+        ScrappedCompetence.catalog_link != None
+    )
     
     if status:
         query = query.filter(ScrappedCompetence.status == status)
@@ -177,10 +180,11 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
         search_conditions = [
             ScrappedCompetence.title.ilike(f"%{search}%"),
             ScrappedCompetence.competitor.ilike(f"%{search}%"),
-            ScrappedCompetence.url.ilike(f"%{search}%"),
+            ScrappedCompetence.catalog_link.ilike(f"%{search}%"),
             ScrappedCompetence.product_name.ilike(f"%{search}%"),
             ScrappedCompetence.product_code.ilike(f"%{search}%"),
-            ScrappedCompetence.meli_id.ilike(f"%{search}%"),
+            ScrappedCompetence.product_code.ilike(f"%{search}%"),
+            # meli_id removed
         ]
         query = query.filter(or_(*search_conditions))
     
@@ -208,7 +212,7 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
     }
 
 def get_competence_item(db: Session, item_url: str):
-    return db.query(ScrappedCompetence).filter(ScrappedCompetence.url == item_url).first()
+    return db.query(ScrappedCompetence).filter(ScrappedCompetence.catalog_link == item_url).first()
 
 def create_competence_item(db: Session, url: str, product_code: str = None, product_name: str = None):
     """Create a new competence scraping entry with just the URL."""
@@ -217,7 +221,7 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     if existing:
         return existing
         
-    # Use raw SQL to be extremely precise and insert ONLY url and status
+    # Use raw SQL to be extremely precise and insert ONLY catalog_link and status
     # This avoids generic ORM behavior of sending NULLs for everything
     from sqlalchemy import text
     import uuid
@@ -225,30 +229,20 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
     from datetime import datetime
     
     try:
-        # 1. Try to extract 'MLA' ID from URL to use as valid data
-        # Matches MLA-1234 or MLA1234
-        meli_id_match = re.search(r'(MLA-?\d+)', url)
-        if meli_id_match:
-            # Normalize to remove dash if preferred, or keep as found
-            meli_id_val = meli_id_match.group(1).replace('-', '')
-        else:
-            # 2. Fallback to temp ID if URL format is unusual
-            meli_id_val = f"TEMP-{uuid.uuid4().hex[:8]}"
+        # meli_id removed logic
 
-        # 3. Insert with the found (or temp) ID
-        # DB requires values for all columns. Providing safe defaults.
+        # 3. Insert without meli_id
         sql = text("""
             INSERT INTO mercadolibre.scrapped_competence 
-            (url, status, meli_id, title, price, competitor, price_in_installments, 
+            (catalog_link, status, title, price, competitor, price_in_installments, 
              image, timestamp, api_cost_total, remaining_credits, product_code, product_name) 
             VALUES 
-            (:url, 'pending', :meli_id, '', 0, '', '', 
+            (:catalog_link, 'pending', '', 0, '', '', 
              '', :ts, 0, 0, '', '')
         """)
         
         db.execute(sql, {
-            "url": url, 
-            "meli_id": meli_id_val,
+            "catalog_link": url, 
             "ts": datetime.now()
         })
         db.commit()
@@ -260,9 +254,19 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
         raise e
 
 def delete_competence_item(db: Session, item_url: str):
-    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.url == item_url).first()
+    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.catalog_link == item_url).first()
     if not item:
         return False
-    db.delete(item)
-    db.commit()
-    return True
+    
+    # Instead of deleting, we set the link to empty to "soft delete" it from the UI
+    # We can't use NULL because it's the Primary Key in the model
+    try:
+        from sqlalchemy import text
+        sql = text("UPDATE mercadolibre.scrapped_competence SET catalog_link = '' WHERE catalog_link = :url")
+        db.execute(sql, {"url": item_url})
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error in soft delete: {e}")
+        db.rollback()
+        return False

@@ -14,6 +14,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "")
 DB_HOST = os.getenv("DB_HOST", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME", "")
 
 # Debug: print all connection variables (hide password)
 print(f"DEBUG DB Config (db_conn.py): DB_USER={DB_USER}, DB_NAME={DB_NAME}, DB_HOST={DB_HOST}")
@@ -28,6 +29,24 @@ try:
             DATABASE_URL, 
             connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL or "sqlite" in str(DATABASE_URL) else {}
         )
+    elif INSTANCE_CONNECTION_NAME and DB_USER and DB_NAME:
+        print(f"Connecting to MySQL via Unix Socket: {INSTANCE_CONNECTION_NAME}")
+        from urllib.parse import quote_plus
+        
+        content_user = quote_plus(DB_USER)
+        content_pass = quote_plus(DB_PASSWORD)
+        
+        # Socket path is usually /cloudsql/INSTANCE_CONNECTION_NAME
+        socket_path = f"/cloudsql/{INSTANCE_CONNECTION_NAME}"
+        SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{content_user}:{content_pass}@/{DB_NAME}?unix_socket={socket_path}"
+        
+        engine = create_engine(
+            SQLALCHEMY_DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=300
+        )
+        print("Engine created for MySQL (Unix Socket)")
+        
     elif DB_HOST and DB_USER and DB_NAME:
         print(f"Connecting to MySQL via Public IP: {DB_HOST}")
         

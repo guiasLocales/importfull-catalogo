@@ -20,7 +20,7 @@ except Exception as e:
     raise
 
 try:
-    from routers import products, metadata, auth, competence
+    from routers import products, metadata, auth, competence, prompts
     print("DEBUG: Imported routers", file=sys.stderr)
 except Exception as e:
     print(f"ERROR: Failed to import routers: {e}", file=sys.stderr)
@@ -77,6 +77,7 @@ app.include_router(products.router)
 app.include_router(metadata.router)
 app.include_router(auth.router)
 app.include_router(competence.router)
+app.include_router(prompts.router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -97,6 +98,59 @@ async def serve_index():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/db-check")
+def db_check():
+    """TEMPORARY: Public diagnostic endpoint to check database tables."""
+    from sqlalchemy import text
+    from db_conn import SessionLocal
+    results = {}
+    try:
+        db = SessionLocal()
+        # Check which DB we're connected to
+        results["current_db"] = db.execute(text("SELECT DATABASE()")).scalar()
+        
+        # Show tables in current DB
+        tables = [row[0] for row in db.execute(text("SHOW TABLES"))]
+        results["tables_in_current_db"] = tables
+        
+        # Check if product_catalog_sync exists and count
+        if "product_catalog_sync" in tables:
+            count = db.execute(text("SELECT COUNT(*) FROM product_catalog_sync")).scalar()
+            results["product_catalog_sync_count"] = count
+            cols = [row[0] for row in db.execute(text("SHOW COLUMNS FROM product_catalog_sync"))]
+            results["product_catalog_sync_columns"] = cols
+            # Check meli products
+            meli_count = db.execute(text("SELECT COUNT(*) FROM product_catalog_sync WHERE meli_id IS NOT NULL AND meli_id != ''")).scalar()
+            results["products_with_meli_id"] = meli_count
+            # Sample meli_ids
+            if meli_count > 0:
+                sample = [row[0] for row in db.execute(text("SELECT meli_id FROM product_catalog_sync WHERE meli_id IS NOT NULL AND meli_id != '' LIMIT 5"))]
+                results["sample_meli_ids"] = sample
+            # Check statuses
+            statuses = [{r[0]: r[1]} for r in db.execute(text("SELECT status, COUNT(*) FROM product_catalog_sync GROUP BY status"))]
+            results["status_distribution"] = statuses
+        else:
+            results["product_catalog_sync_count"] = "TABLE NOT FOUND"
+        
+        # Check mercadolibre schema
+        try:
+            ml_tables = [row[0] for row in db.execute(text("SHOW TABLES IN mercadolibre"))]
+            results["mercadolibre_tables"] = ml_tables
+            
+            if "scrapped_competence" in ml_tables:
+                cols = [row[0] for row in db.execute(text("SHOW COLUMNS FROM mercadolibre.scrapped_competence"))]
+                results["scrapped_competence_columns"] = cols
+                count = db.execute(text("SELECT COUNT(*) FROM mercadolibre.scrapped_competence")).scalar()
+                results["scrapped_competence_count"] = count
+        except Exception as e:
+            results["mercadolibre_error"] = str(e)
+            
+        db.close()
+    except Exception as e:
+        results["error"] = str(e)
+    return results
+
 
 @app.on_event("startup")
 def create_default_user():

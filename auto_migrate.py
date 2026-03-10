@@ -42,5 +42,43 @@ def run_migrations():
         print(f"Migration error (may already be applied): {e}")
         return False
 
+    # --- Migration: Drop meli_id from scrapped_competence (User Request) ---
+    try:
+        db = SessionLocal()
+        # Check if column exists in mercadolibre.scrapped_competence
+        print("Checking for 'meli_id' in 'mercadolibre.scrapped_competence'...")
+        
+        # MySQL specific: Check information_schema
+        result = db.execute(text("""
+            SELECT count(*) 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = 'mercadolibre' 
+            AND TABLE_NAME = 'scrapped_competence'
+            AND COLUMN_NAME = 'meli_id'
+        """))
+        exists = result.scalar() > 0
+        
+        if exists:
+            print("Found 'meli_id'. Dropping...")
+            # Drop index first just in case
+            try:
+                db.execute(text("ALTER TABLE mercadolibre.scrapped_competence DROP INDEX ix_mercadolibre_scrapped_competence_meli_id"))
+                print("Index dropped.")
+            except Exception as e:
+                print(f"Index drop note: {e}")
+                
+            db.execute(text("ALTER TABLE mercadolibre.scrapped_competence DROP COLUMN meli_id"))
+            db.commit()
+            print("Column 'meli_id' dropped successfully.")
+        else:
+            print("'meli_id' not found (already dropped).")
+            
+        db.close()
+        return True
+
+    except Exception as e:
+        print(f"Competence migration error: {e}")
+        return False
+
 if __name__ == "__main__":
     run_migrations()

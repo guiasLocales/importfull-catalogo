@@ -16,24 +16,29 @@ router = APIRouter(
 )
 
 # Webhook configuration
-WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/goog-app/publications"
+WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications"
 WEBHOOK_SECRET = "mati-gordo"
 
-def send_webhook(item_id: int, event_type: str):
-    """Send webhook notification for events (publish/paused/update)"""
+def send_webhook(item_id: int, event_type: str, extra_data: dict = None):
+    """Send webhook notification for events (publish/paused/update/pre-publish)"""
     data = {
         "event_type": event_type,
         "item_id": item_id,
         "secret": WEBHOOK_SECRET
     }
+    if extra_data:
+        data["data"] = extra_data
     try:
         with httpx.Client(timeout=10.0) as client:
             response = client.post(WEBHOOK_URL, json=data)
             print(f"Webhook sent for item {item_id}: {data['event_type']} - Status: {response.status_code}")
-            return response.status_code == 200
+            if response.status_code in (200, 202):
+                return True, "Success"
+            else:
+                return False, f"Status: {response.status_code} - {response.text[:200]}"
     except Exception as e:
         print(f"Webhook error for item {item_id}: {e}")
-        return False
+        return False, str(e)
 
 @router.get("/", response_model=List[ProductResponse])
 def read_products(
@@ -96,7 +101,7 @@ def update_publish_status(
     request: PublishRequest, 
     db: Session = Depends(get_db)
 ):
-    """Trigger publish/pause webhook - does NOT modify database, only sends notification"""
+    """Trigger publish/pause webhook and update status in DB"""
     print(f"DEBUG: Received action='{request.action}'")
     if request.action not in ["publish", "pause"]:
         raise HTTPException(status_code=400, detail="action must be 'publish' or 'pause'")
@@ -106,7 +111,13 @@ def update_publish_status(
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Send webhook notification (database will be updated by external service)
+    # Write intermediate status to DB
+    new_status = "en proceso" if request.action == "publish" else "pausando"
+    db_product.status = new_status
+    db.commit()
+    db.refresh(db_product)
+    
+    # Send webhook notification (external service will set final status)
     event_type = request.action
     send_webhook(product_id, event_type)
     
@@ -125,32 +136,58 @@ def patch_product(
         
     return db_product
 
-@router.put("/{product_id}", response_model=ProductResponse)
-def put_product(
-    product_id: int, 
-    request: ProductUpdate, 
-    db: Session = Depends(get_db)
-):
-    """PUT endpoint for frontend compatibility"""
-    updates = request.dict(exclude_unset=True)
-    db_product = crud.update_product(db, product_id=product_id, updates=updates)
-    if db_product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-        
-    return db_product
-
 @router.post("/{product_id}/notify")
 def notify_product_update(product_id: int, db: Session = Depends(get_db)):
-    """Manually trigger an update webhook notification"""
+    """Manually trigger an update webhook notification and set status to actualizando"""
     product = crud.get_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Write intermediate status to DB
+    product.status = "actualizando"
+    db.commit()
+    db.refresh(product)
         
-    success = send_webhook(product_id, "update")
+    success, msg = send_webhook(product_id, "update")
     if not success:
-        raise HTTPException(status_code=500, detail="Failed to send webhook")
+        raise HTTPException(status_code=500, detail=f"Failed to send webhook: {msg}")
         
     return {"status": "success", "message": "Update notification sent"}
+
+from pydantic import BaseModel
+import os
+import models
+
+class PrePublishRequest(BaseModel):
+    prompt: str
+    field: str # 'product_name_meli' or 'description'
+
+@router.post("/{product_id}/pre-publish")
+def trigger_pre_publish(
+    product_id: int, 
+    request: PrePublishRequest,
+    db: Session = Depends(get_db)
+):
+    """Send pre-publish webhook to external service for AI content generation"""
+    product = crud.get_product(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    extra_data = {
+        "prompt": request.prompt,
+        "field": request.field
+    }
+    
+    success, msg = send_webhook(product_id, "pre-publish", extra_data)
+    
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Error enviando al servicio de AI: {msg}")
+
+    return {
+        "status": "success", 
+        "message": "Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.",
+        "field": request.field
+    }
 
 @router.post("/{product_id}/upload")
 async def upload_product_photo(

@@ -197,17 +197,79 @@
             color: #e5e7eb !important;
         }
     </style>
+    <script>
+        // Inline Mobile Menu Logic to ensure availability
+        window.toggleMobileMenu = () => {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (sidebar && overlay) {
+                if (sidebar.classList.contains('-translate-x-full')) {
+                    // Open
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                } else {
+                    // Close
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            } else {
+                console.error("Sidebar or overlay elements not found!");
+            }
+        };
+
+        window.closeMobileMenu = () => {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (sidebar && overlay) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        };
+    </script>
 </head>
 
 <body
     class="bg-gray-50 dark:bg-gray-900 text-slate-800 dark:text-gray-100 h-screen flex flex-col overflow-hidden transition-colors duration-200">
 
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <aside
-            class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-none z-20 transition-colors duration-200">
+    <!-- Mobile Header -->
+    <header
+        class="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 min-h-[64px] z-30 w-full relative flex-none">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleMobileMenu()"
+                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
+                <i data-lucide="menu" class="h-6 w-6"></i>
+            </button>
+            <span
+                class="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Inventario</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Mobile Avatar/User (Optional) -->
+            <div
+                class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                A</div>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay (Mobile only) - Moved to body level -->
+    <div id="sidebarOverlay" onclick="closeMobileMenu()"
+        class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar - Moved to body level to fix stacking context -->
+    <!-- Content Wrapper (Sidebar + Main) -->
+    <div class="flex flex-1 overflow-hidden relative w-full">
+        <aside id="mainSidebar"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transform -translate-x-full lg:translate-x-0 lg:static lg:flex transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none h-full bg-red-500">
             <!-- Logo Area -->
-            <div class="h-28 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700">
+            <div
+                class="h-28 flex items-center justify-center px-4 border-b border-gray-200 dark:border-gray-700 flex-none relative">
+                <!-- Close button for mobile -->
+                <button onclick="closeMobileMenu()"
+                    class="absolute top-4 right-4 lg:hidden p-1 text-gray-500 hover:text-gray-700">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+
                 <div id="logoContainer" class="flex items-center justify-center w-full">
                     <!-- Default icon + text (shows when no logo) -->
                     <div id="defaultLogoArea" class="flex items-center space-x-2">
@@ -231,14 +293,14 @@
             <nav class="flex-1 overflow-y-auto py-4">
                 <ul class="space-y-1 px-3">
                     <li>
-                        <button onclick="switchView('inventory')" id="navInventory"
+                        <button onclick="switchView('inventory'); closeMobileMenu()" id="navInventory"
                             class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700">
                             <i data-lucide="box" class="h-5 w-5 mr-3"></i>
                             Inventario
                         </button>
                     </li>
                     <li>
-                        <button onclick="switchView('mercadolibre')" id="navMeli"
+                        <button onclick="switchView('mercadolibre'); closeMobileMenu()" id="navMeli"
                             class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             <img src="/static/img/meli-logo-light.png" alt="ML"
                                 class="h-9 mr-3 object-contain dark:hidden">
@@ -248,14 +310,21 @@
                         </button>
                     </li>
                     <li>
-                        <button onclick="switchView('competence')" id="navCompetence"
+                        <button onclick="switchView('competence'); closeMobileMenu()" id="navCompetence"
                             class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             <i data-lucide="target" class="h-5 w-5 mr-3"></i>
                             Competencia
                         </button>
                     </li>
                     <li>
-                        <button onclick="switchView('settings')" id="navSettings"
+                        <button onclick="switchView('prompts'); closeMobileMenu()" id="navPrompts"
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="message-square" class="h-5 w-5 mr-3"></i>
+                            Prompts AI
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('settings'); closeMobileMenu()" id="navSettings"
                             class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                             <i data-lucide="settings" class="h-5 w-5 mr-3"></i>
                             Configuración
@@ -266,6 +335,11 @@
 
             <!-- User / Theme Toggle -->
             <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <button onclick="startScraping()" id="btnStartScraping"
+                    class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-colors mb-3 shadow-md">
+                    <i data-lucide="play" class="h-5 w-5 mr-3"></i>
+                    Iniciar Scrapping
+                </button>
                 <button id="themeToggle"
                     class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors mb-2">
                     <i data-lucide="moon" class="h-5 w-5 mr-3"></i>
@@ -283,13 +357,7 @@
             </div>
         </aside>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden relative">
-
-            <!-- Top Header (Simplified, mostly for mobile menu trigger if needed later) -->
-            <!-- <header class="bg-white border-b border-gray-200 shadow-sm z-10 flex-none h-16 flex items-center px-8 justify-between lg:hidden">
-                 Mobile menu button placeholder 
-            </header> -->
+        <div class="flex flex-1 overflow-hidden relative">
 
             <!-- Content Views -->
             <main class="flex-1 overflow-hidden relative w-full h-full">
@@ -328,53 +396,65 @@
                         </div>
 
                         <!-- Row 2: Filters -->
-                        <div class="flex flex-wrap items-center gap-3">
-
-                            <!-- Category Filter -->
-                            <div class="w-full sm:w-auto min-w-[140px]">
-                                <select id="filterCategory"
-                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                    <option value="">Todas las categorías</option>
-                                    <!-- Dynamically populated -->
-                                </select>
+                        <div class="w-full">
+                            <!-- Mobile Filter Toggle -->
+                            <div class="md:hidden mb-2">
+                                <button onclick="document.getElementById('mobileFilters').classList.toggle('hidden')"
+                                    class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">
+                                    <i data-lucide="filter" class="h-4 w-4"></i>
+                                    <span>Mostrar/Ocultar Filtros</span>
+                                </button>
                             </div>
 
-                            <!-- Branch Filter -->
-                            <div class="w-full sm:w-auto min-w-[140px]">
-                                <select id="filterBrand"
-                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                    <option value="">Todas las marcas</option>
-                                    <!-- Dynamically populated -->
-                                </select>
+                            <!-- Filters Container -->
+                            <div id="mobileFilters" class="hidden md:flex flex-wrap items-center gap-3 transition-all">
+
+                                <!-- Category Filter -->
+                                <div class="w-full sm:w-auto min-w-[140px]">
+                                    <select id="filterCategory"
+                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                        <option value="">Todas las categorías</option>
+                                        <!-- Dynamically populated -->
+                                    </select>
+                                </div>
+
+                                <!-- Branch Filter -->
+                                <div class="w-full sm:w-auto min-w-[140px]">
+                                    <select id="filterBrand"
+                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                        <option value="">Todas las marcas</option>
+                                        <!-- Dynamically populated -->
+                                    </select>
+                                </div>
+
+                                <!-- Status Filter -->
+                                <div class="w-full sm:w-auto min-w-[130px]">
+                                    <select id="filterStatus"
+                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                        <option value="">Todos los estados</option>
+                                        <option value="Publicado">Publicado</option>
+                                        <option value="Despublicado">No Publicado</option>
+                                    </select>
+                                </div>
+
+                                <!-- Stock Filter -->
+                                <div class="w-full sm:w-auto min-w-[120px]">
+                                    <select id="filterStock"
+                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                        <option value="">Todo el stock</option>
+                                        <option value="with_stock">Con stock</option>
+                                        <option value="no_stock">Sin stock</option>
+                                    </select>
+                                </div>
+
+                                <!-- Clear Filters -->
+                                <button id="btnClearFilters"
+                                    class="hidden items-center px-3 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 font-medium">
+                                    <i data-lucide="x" class="h-4 w-4 mr-1.5"></i>
+                                    Limpiar filtros
+                                </button>
+
                             </div>
-
-                            <!-- Status Filter -->
-                            <div class="w-full sm:w-auto min-w-[130px]">
-                                <select id="filterStatus"
-                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                    <option value="">Todos los estados</option>
-                                    <option value="Publicado">Publicado</option>
-                                    <option value="Despublicado">No Publicado</option>
-                                </select>
-                            </div>
-
-                            <!-- Stock Filter -->
-                            <div class="w-full sm:w-auto min-w-[120px]">
-                                <select id="filterStock"
-                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                    <option value="">Todo el stock</option>
-                                    <option value="with_stock">Con stock</option>
-                                    <option value="no_stock">Sin stock</option>
-                                </select>
-                            </div>
-
-                            <!-- Clear Filters -->
-                            <button id="btnClearFilters"
-                                class="hidden items-center px-3 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 font-medium">
-                                <i data-lucide="x" class="h-4 w-4 mr-1.5"></i>
-                                Limpiar filtros
-                            </button>
-
                         </div>
                     </div>
 
@@ -561,7 +641,8 @@
                                         <img id="settingsLogoDarkPreview" src="" alt="Logo Oscuro"
                                             class="h-full w-full object-contain hidden">
                                         <span id="settingsLogoDarkPlaceholder"
-                                            class="text-gray-400 text-xs text-center">Sin Logo</span>
+                                            class="text-gray-400 text-xs text-center">Sin
+                                            Logo</span>
                                     </div>
                                     <label
                                         class="cursor-pointer bg-white dark:bg-gray-700 py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
@@ -671,42 +752,22 @@
                                     <tr>
                                         <th
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Producto</th>
                                         <th
-                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Img</th>
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Meli ID</th>
                                         <th
-                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Título / Producto</th>
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Competidor</th>
-                                        <th
-                                            class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Precio</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Cuotas</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Costo API</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Créditos</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Fecha</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Estado</th>
                                         <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Link</th>
+                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Precio</th>
                                         <th
-                                            class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Acciones</th>
+                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Stock</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Link</th>
                                     </tr>
                                 </thead>
                                 <tbody id="meliTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -833,19 +894,31 @@
                                             Img</th>
                                         <th
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Meli ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Título</th>
                                         <th
                                             class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Competidor</th>
                                         <th
+                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                            Precio Comp.</th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                                            Tu Precio</th>
+                                        <th
                                             class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Precio</th>
+                                            Costo Prod.</th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-green-600 dark:text-green-400">
+                                            Ganancia Neta</th>
                                         <th
                                             class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Cuotas</th>
+                                            Margen %</th>
                                         <th
                                             class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Estado</th>
+                                            Markup %</th>
                                         <th
                                             class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Link</th>
@@ -880,8 +953,29 @@
                     </div>
                 </div>
 
+                <!-- Prompts View -->
+                <div id="promptsView"
+                    class="hidden h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
+                    <div class="mb-6 flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Configuración de Prompts AI</h2>
+                        <button onclick="savePrompts()" id="btnSavePrompts"
+                            class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                            <i data-lucide="save" class="h-4 w-4 mr-2"></i>
+                            Guardar Cambios
+                        </button>
+                    </div>
+
+                    <div
+                        class="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+                        <div id="promptsContainer" class="space-y-8 mx-auto">
+                            <!-- Prompts -->
+                        </div>
+                    </div>
+                </div>
+
             </main>
         </div>
+    </div>
     </div>
 
     <!-- Login View (Overlay) -->
@@ -944,8 +1038,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/static/js/utils.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.v121.js?v=146"></script>
     <script src="/static/js/logo-drive.js"></script>
 
 
