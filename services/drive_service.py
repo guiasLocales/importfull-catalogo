@@ -19,18 +19,29 @@ def get_drive_service():
     """Builds and returns the Drive service."""
     creds = None
     
-    # 1. Priorities: Local/User OAuth (token.json)
+    # 1. Priority: Service Account (Recommended for Server-to-Server)
+    service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    if service_account_path and os.path.exists(service_account_path):
+        print(f"Using Service Account credentials from {service_account_path}", flush=True)
+        try:
+            creds = service_account.Credentials.from_service_account_file(
+                service_account_path, scopes=SCOPES)
+            return build('drive', 'v3', credentials=creds)
+        except Exception as e:
+            print(f"Error loading Service Account: {e}", flush=True)
+
+    # 2. Priority: User OAuth Token (Fallback for local dev)
     # Use /tmp for token storage in Cloud Run as the app directory might be read-only
     RUNTIME_TOKEN_FILE = '/tmp/token.json'
     
-    # Copy/Decode token to runtime location
+    # Try to load token from various sources
     if not os.path.exists(RUNTIME_TOKEN_FILE):
         if os.path.exists(TOKEN_FILE):
             import shutil
-            shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
-            print(f"DEBUG: Copied {TOKEN_FILE} to {RUNTIME_TOKEN_FILE}", flush=True)
+            try:
+                shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
+            except: pass
         elif os.path.exists('token.b64'):
-            print("DEBUG: Found token.b64, decoding to /tmp/token.json...", flush=True)
             try:
                 import base64
                 with open('token.b64', 'r') as f:
@@ -38,80 +49,42 @@ def get_drive_service():
                     decoded_data = base64.b64decode(encoded_data).decode('utf-8')
                 with open(RUNTIME_TOKEN_FILE, 'w') as f:
                     f.write(decoded_data)
-                print("DEBUG: Successfully created /tmp/token.json from base64", flush=True)
-            except Exception as e:
-                print(f"ERROR decoding token.b64: {e}", flush=True)
+            except: pass
 
-    print(f"DEBUG: Checking for token at {RUNTIME_TOKEN_FILE}", flush=True)
     if os.path.exists(RUNTIME_TOKEN_FILE):
-        print("DEBUG: Runtime token file FOUND. Attempting to load...", flush=True)
         try:
             creds = Credentials.from_authorized_user_file(RUNTIME_TOKEN_FILE, SCOPES)
-            if creds:
-                print(f"DEBUG: Credentials loaded. Valid={creds.valid}, Expired={creds.expired}, HasRefresh={bool(creds.refresh_token)}", flush=True)
-            
             if creds and creds.expired and creds.refresh_token:
-                print("DEBUG: Token expired, attempting refresh...", flush=True)
                 try:
                     creds.refresh(Request())
-                    print("DEBUG: Token refresh SUCCESSFUL", flush=True)
-                    # Save refreshed token
                     with open(RUNTIME_TOKEN_FILE, 'w') as token:
                         token.write(creds.to_json())
                 except Exception as refresh_err:
-                    print(f"ERROR refreshing token: {refresh_err}", flush=True)
-                    # Don't return here, maybe the expired token still works for some reason? No, it won't.
+                    print(f"DEBUG: Token refresh failed: {refresh_err}", flush=True)
+                    creds = None # Force a new login or move on
             
             if creds and creds.valid:
-                print("Using User Credentials from runtime token", flush=True)
+                print("Using User Credentials from token", flush=True)
                 return build('drive', 'v3', credentials=creds)
-            else:
-                 print("DEBUG: Credentials invalid even after refresh attempt.", flush=True)
-
         except Exception as e:
-            print(f"ERROR loading/using runtime token: {e}", flush=True)
-    else:
-        print("DEBUG: Runtime token.json NOT FOUND.", flush=True)
+            print(f"DEBUG: Error loading token: {e}", flush=True)
 
-    # 2. Service Account (Cloud Run Default)
-    service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-    if service_account_path and os.path.exists(service_account_path):
-        print(f"Using Service Account credentials from {service_account_path}")
-        try:
-            creds = service_account.Credentials.from_service_account_file(
-                service_account_path, scopes=SCOPES)
-            return build('drive', 'v3', credentials=creds)
-        except Exception as e:
-            print(f"Error loading Service Account: {e}")
-            
-    if not creds:
-        # 3. Interactive flow (Local Dev only)
-        if not os.path.exists(CLIENT_SECRET_FILE):
-            # If we are in cloud and no service account worked, this is a critical error
-            if os.getenv('K_SERVICE'): # Variable that exists in Cloud Run
-                print("CRITICAL: Running in Cloud Run but no valid credentials found.")
-                return None
-            
-            print(f"CRITICAL: {CLIENT_SECRET_FILE} not found. Please provide OAuth credentials.")
+    # 3. Interactive flow (Local Dev only)
+    if not os.path.exists(CLIENT_SECRET_FILE):
+        if os.getenv('K_SERVICE'): 
+            print("CRITICAL: Running in Cloud Run but no valid credentials found.")
             return None
-        else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CLIENT_SECRET_FILE, SCOPES)
-                creds = flow.run_local_server(port=0)
-        
-        # Save the credentials for the next run (only locally)
+    else:
         try:
+            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
             with open(TOKEN_FILE, 'w') as token:
                 token.write(creds.to_json())
+            return build('drive', 'v3', credentials=creds)
         except Exception as e:
-             print(f"Warning: Could not save token.json: {e}")
+            print(f"Error building Drive service with flow: {e}")
 
-    try:
-        service = build('drive', 'v3', credentials=creds)
-        return service
-    except Exception as e:
-        print(f"Error building Drive service: {e}")
-        return None
+    return None
 
 def create_folder(service, folder_name, parent_id=None):
     """Create a folder on Google Drive."""
