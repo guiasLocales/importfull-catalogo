@@ -639,8 +639,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
-            const priceLocalEl = document.getElementById('edit_price_local');
-            if (priceLocalEl && priceLocalEl.value !== "") updates.price = parseFloat(priceLocalEl.value);
+            // Precio Local is read-only, so we don't send it in auto-save updates anymore.
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -853,14 +852,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     <!-- Key Stats Grid -->
                     <div class="grid grid-cols-3 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
                             <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
-                            <input type="number" id="edit_price_local" value="${product.price || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
+                            <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-lg font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 mb-1 text-right">Stock Disponible</p>
@@ -1464,14 +1462,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 <!-- Price & Stock -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio ML *</label>
                         <input type="number" name="price_mercadolibre" value="${product.price_mercadolibre !== '' ? product.price_mercadolibre : ''}" required min="0" step="0.01"
-                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Local *</label>
-                        <input type="number" name="price" value="${product.price !== '' ? product.price : ''}" required min="0" step="0.01"
-                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Local (Ref)</label>
+                        <input type="number" name="price" value="${product.price !== '' ? product.price : ''}" readonly
+                            class="w-full rounded-lg border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                     </div>
                     <div>
                         <div class="flex items-center justify-between mb-1">
@@ -2360,6 +2357,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">${linkHtml}</td>
                     </tr>`;
                 }).join('');
+                lucide.createIcons();
             }
         } catch (e) {
             console.error('Error loading MercadoLibre products:', e);
@@ -2459,8 +2457,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 tableBody.innerHTML = items.map(item => {
                     const price = item.price ? `$ ${Number(item.price).toLocaleString('es-AR')}` : '-';
                     const imgHtml = item.image
-                        ? `<img src="${item.image}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600" onerror="this.style.display='none'">`
-                        : `<div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
+                         ? `<img src="${item.image}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600" onerror="this.style.display='none'">`
+                         : `<div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`;
 
                     const statusBadge = getCompStatusBadge(item.status);
 
@@ -2470,10 +2468,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             Ver
                            </a>`
                         : `<span class="text-gray-400 text-xs">-</span>`;
-
-                    const apiCost = item.api_cost_total ? `$${Number(item.api_cost_total).toFixed(4)}` : '-';
-                    const credits = item.remaining_credits ? Number(item.remaining_credits).toFixed(4) : '-';
-                    const dateFormatted = item.timestamp ? new Date(item.timestamp).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                    
                     const prodCode = item.product_code ? `<br><span class="text-xs text-gray-400">Cod: ${item.product_code}</span>` : '';
 
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-800">
@@ -2529,6 +2524,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </td>
                     </tr>`;
                 }).join('');
+                lucide.createIcons();
             }
         } catch (e) {
             console.error('Error loading competence data:', e);
