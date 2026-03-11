@@ -18,30 +18,15 @@ ROOT_FOLDER_ID = os.getenv('ROOT_DRIVE_FOLDER_ID', "1dd2P6OkaFgvkah-sBr_sjagAnCk
 def get_drive_service():
     """Builds and returns the Drive service."""
     creds = None
+    SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
     
-    # 1. Priority: Service Account (Recommended for Server-to-Server)
-    service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-    if service_account_path and os.path.exists(service_account_path):
-        print(f"Using Service Account credentials from {service_account_path}", flush=True)
-        try:
-            creds = service_account.Credentials.from_service_account_file(
-                service_account_path, scopes=SCOPES)
-            return build('drive', 'v3', credentials=creds)
-        except Exception as e:
-            print(f"Error loading Service Account: {e}", flush=True)
-
-    # 2. Priority: User OAuth Token (Fallback for local dev)
-    # Use /tmp for token storage in Cloud Run as the app directory might be read-only
+    # Use /tmp for token storage in Cloud Run
     RUNTIME_TOKEN_FILE = '/tmp/token.json'
     
-    # Try to load token from various sources
+    # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
+    # Try to load token from environment/base64 first
     if not os.path.exists(RUNTIME_TOKEN_FILE):
-        if os.path.exists(TOKEN_FILE):
-            import shutil
-            try:
-                shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
-            except: pass
-        elif os.path.exists('token.b64'):
+        if os.path.exists('token.b64'):
             try:
                 import base64
                 with open('token.b64', 'r') as f:
@@ -49,41 +34,60 @@ def get_drive_service():
                     decoded_data = base64.b64decode(encoded_data).decode('utf-8')
                 with open(RUNTIME_TOKEN_FILE, 'w') as f:
                     f.write(decoded_data)
+                print("DEBUG: Restored token from base64", flush=True)
+            except Exception as e:
+                print(f"DEBUG: Error decoding token.b64: {e}", flush=True)
+        elif os.path.exists(TOKEN_FILE):
+            import shutil
+            try:
+                shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
             except: pass
 
     if os.path.exists(RUNTIME_TOKEN_FILE):
         try:
             creds = Credentials.from_authorized_user_file(RUNTIME_TOKEN_FILE, SCOPES)
             if creds and creds.expired and creds.refresh_token:
+                print("DEBUG: User Token expired, attempting refresh...", flush=True)
                 try:
                     creds.refresh(Request())
                     with open(RUNTIME_TOKEN_FILE, 'w') as token:
                         token.write(creds.to_json())
+                    print("DEBUG: User Token refreshed successfully", flush=True)
                 except Exception as refresh_err:
-                    print(f"DEBUG: Token refresh failed: {refresh_err}", flush=True)
-                    creds = None # Force a new login or move on
+                    print(f"DEBUG: User Token refresh failed: {refresh_err}", flush=True)
+                    creds = None
             
             if creds and creds.valid:
-                print("Using User Credentials from token", flush=True)
+                print(">>> AUTH: Using USER CREDENTIALS (Full Quota)", flush=True)
                 return build('drive', 'v3', credentials=creds)
         except Exception as e:
-            print(f"DEBUG: Error loading token: {e}", flush=True)
+            print(f"DEBUG: Error loading user token: {e}", flush=True)
+
+    # 2. Priority: Service Account (Fallback - May have 0 quota for direct uploads)
+    service_account_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+    if service_account_path and os.path.exists(service_account_path):
+        print(f"DEBUG: Attempting Service Account Fallback...", flush=True)
+        try:
+            creds = service_account.Credentials.from_service_account_file(
+                service_account_path, scopes=SCOPES)
+            print(">>> AUTH: Using SERVICE ACCOUNT (Warning: No individual quota)", flush=True)
+            return build('drive', 'v3', credentials=creds)
+        except Exception as e:
+            print(f"DEBUG: Service Account failed: {e}", flush=True)
 
     # 3. Interactive flow (Local Dev only)
-    if not os.path.exists(CLIENT_SECRET_FILE):
-        if os.getenv('K_SERVICE'): 
-            print("CRITICAL: Running in Cloud Run but no valid credentials found.")
-            return None
-    else:
+    if os.path.exists(CLIENT_SECRET_FILE) and not os.getenv('K_SERVICE'):
         try:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
             with open(TOKEN_FILE, 'w') as token:
                 token.write(creds.to_json())
+            print(">>> AUTH: Using LOCAL INTERACTIVE FLOW", flush=True)
             return build('drive', 'v3', credentials=creds)
         except Exception as e:
-            print(f"Error building Drive service with flow: {e}")
+            print(f"DEBUG: Interactive flow failed: {e}", flush=True)
 
+    print("CRITICAL: No valid authentication found for Google Drive", flush=True)
     return None
 
 def create_folder(service, folder_name, parent_id=None):
@@ -96,7 +100,11 @@ def create_folder(service, folder_name, parent_id=None):
         file_metadata['parents'] = [parent_id]
 
     try:
-        file = service.files().create(body=file_metadata, fields='id, webViewLink').execute()
+        file = service.files().create(
+            body=file_metadata, 
+            fields='id, webViewLink',
+            supportsAllDrives=True
+        ).execute()
         print(f'Folder ID: "{file.get("id")}". Link: {file.get("webViewLink")}')
         return file
     except Exception as e:
@@ -114,6 +122,7 @@ def make_file_public(service, file_id):
             fileId=file_id,
             body=permission,
             fields='id',
+            supportsAllDrives=True
         ).execute()
         print(f"File {file_id} is now public.")
         return True
@@ -133,7 +142,8 @@ def upload_file(service, file_content, file_name, folder_id, content_type='image
         file = service.files().create(
             body=file_metadata,
             media_body=media,
-            fields='id, webViewLink, thumbnailLink, webContentLink'
+            fields='id, webViewLink, thumbnailLink, webContentLink',
+            supportsAllDrives=True
         ).execute()
         print(f'File ID: "{file.get("id")}".')
         
@@ -171,7 +181,9 @@ def list_files(service, folder_id):
         results = service.files().list(
             q=query,
             fields="files(id, name, webViewLink, thumbnailLink, webContentLink)",
-            pageSize=10
+            pageSize=10,
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True
         ).execute()
         return results.get('files', [])
     except Exception as e:
