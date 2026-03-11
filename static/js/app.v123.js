@@ -852,6 +852,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <!-- Key Stats Grid -->
                     <div class="grid grid-cols-3 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
                             <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
@@ -2639,11 +2640,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'DELETE'
             });
 
-            if (!response.ok) throw new Error('Error al eliminar');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Error ${response.status}: Ruta no encontrada o prohibida`);
+            }
             loadCompetenceData();
         } catch (e) {
             console.error('Error deleting competence item:', e);
-            alert('Error: ' + e.message);
+            alert('Error al eliminar: ' + e.message);
         }
     };
 

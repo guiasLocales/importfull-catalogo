@@ -275,9 +275,9 @@ def delete_competence_item(db: Session, product_code: str):
     try:
         from sqlalchemy import text
         sql = text("DELETE FROM mercadolibre.scrapped_competence WHERE product_code = :code")
-        db.execute(sql, {"code": product_code})
+        result = db.execute(sql, {"code": product_code})
         db.commit()
-        return True
+        return result.rowcount > 0
     except Exception as e:
         print(f"Error in delete: {e}")
         db.rollback()

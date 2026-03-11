@@ -144,16 +144,23 @@ def create_competence(request: CompetenceCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 
+@router.delete("/")
 @router.delete("")
 def delete_competence(code: str = Query(..., description="Product code of the item to delete"), db: Session = Depends(get_db)):
     """Delete a competence entry by product code."""
     if not code:
         raise HTTPException(status_code=400, detail="Product code is required")
         
-    success = crud.delete_competence_item(db, code)
-    if not success:
-        raise HTTPException(status_code=404, detail="Competence item not found")
-    return {"status": "deleted", "product_code": code}
+    try:
+        success = crud.delete_competence_item(db, code)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Competence item with code '{code}' not found")
+        return {"status": "deleted", "product_code": code}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Internal error deleting competence: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/start-scraping")
 def start_scraping(db: Session = Depends(get_db)):
