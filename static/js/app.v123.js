@@ -2915,38 +2915,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.startScraping = async function () {
-        if (!confirm('¿Estás seguro de iniciar el proceso de scrapping global? Esto puede tardar varios minutos.')) return;
 
-        const btn = document.getElementById('btnStartScraping');
-        const originalContent = btn.innerHTML;
-
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Iniciando...';
-
-            const response = await authFetch('/api/competence/start-scraping', {
-                method: 'POST'
-            });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.detail || 'Error al iniciar el scrapping');
-            }
-
-            const result = await response.json();
-            alert('Scrapping iniciado correctamente. Los resultados aparecerán gradualmente.');
-            loadCompetenceData();
-
-        } catch (e) {
-            console.error('Error starting scraping:', e);
-            alert('Error al iniciar scrapping: ' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
-            lucide.createIcons();
-        }
-    };
 
     window.triggerAIPrePublish = async function (productId, field) {
         let promptText = prompt(`Ingresa el prompt para generar ${field === 'product_name_meli' ? 'el título' : 'la descripción'}:`);
@@ -3016,13 +2985,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST'
             });
 
+            const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error('Error al iniciar el scrapping');
+                throw new Error(data.detail || 'Error al iniciar el scrapping');
             }
 
-            const result = await response.json();
             alert('Scrapping iniciado correctamente. Los resultados aparecerán gradualmente.');
-            loadCompetenceData(); // Refresh to see specific status updates if any
+            loadCompetenceData();
 
         } catch (e) {
             console.error('Error starting scraping:', e);
