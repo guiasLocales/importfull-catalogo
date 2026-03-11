@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
                     ${product.product_code || '-'}
                 </div>
-                <div class="col-span-5 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
+                <div class="col-span-4 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
                     <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                         <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" 
                              alt="" class="h-full w-full object-cover">
@@ -339,6 +339,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                                step="0.01">
                     </div>
+                </div>
+                <div class="col-span-1 flex items-center justify-end pr-2">
+                    <span class="text-sm font-semibold text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">$ ${product.price !== null && product.price !== undefined && product.price !== '' ? Number(product.price).toLocaleString('es-AR') : '-'}</span>
                 </div>
                 <div class="col-span-1 flex items-center justify-center text-center">
                     ${(() => {
@@ -383,14 +386,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div>
                         <h4 class="font-medium text-gray-900 text-sm line-clamp-1" onclick="openProductDetail(${product.id})">${product.product_name}</h4>
                         <p class="text-xs text-gray-500 mb-1">${product.product_code}</p>
-                        <div class="relative w-24 mt-1">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
-                            <input type="number" 
-                                   value="${product.price_mercadolibre || ''}" 
-                                   onchange="updateProductPriceInline(${product.id}, this.value, this)"
-                                   onclick="event.stopPropagation()"
-                                   class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                                   step="0.01">
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="relative w-24 group/price">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
+                                <input type="number" 
+                                       value="${product.price_mercadolibre || ''}" 
+                                       onchange="updateProductPriceInline(${product.id}, this.value, this)"
+                                       onclick="event.stopPropagation()"
+                                       class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                       step="0.01">
+                            </div>
+                            <span class="text-[10px] text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded font-medium truncate max-w-[80px]" title="Precio Local">L: $${product.price !== null && product.price !== undefined && product.price !== '' ? Number(product.price).toLocaleString('es-AR') : '-'}</span>
                         </div>
                     </div>
                 </div>
@@ -633,6 +639,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
+            const priceLocalEl = document.getElementById('edit_price_local');
+            if (priceLocalEl && priceLocalEl.value !== "") updates.price = parseFloat(priceLocalEl.value);
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -843,11 +851,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="grid grid-cols-2 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                    <div class="grid grid-cols-3 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Venta ($)</label>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
                             <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
+                            <input type="number" id="edit_price_local" value="${product.price || ''}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 mb-1 text-right">Stock Disponible</p>
@@ -1449,11 +1462,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <!-- Price & Stock -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Precio ML *</label>
                         <input type="number" name="price_mercadolibre" value="${product.price_mercadolibre !== '' ? product.price_mercadolibre : ''}" required min="0" step="0.01"
                             class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Local *</label>
+                        <input type="number" name="price" value="${product.price !== '' ? product.price : ''}" required min="0" step="0.01"
+                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                     </div>
                     <div>
                         <div class="flex items-center justify-between mb-1">
