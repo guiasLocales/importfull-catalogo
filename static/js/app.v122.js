@@ -2517,7 +2517,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <button onclick="openCompetenceModal('${item.catalog_link}')" class="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Configurar Costos">
                                     <i data-lucide="calculator" class="h-4 w-4"></i>
                                 </button>
-                                <button onclick="deleteCompetenceItem(this.dataset.url)" data-url="${item.catalog_link}" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
+                                <button onclick="deleteCompetenceItem(this.dataset.code)" data-code="${item.product_code}" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
                                     <i data-lucide="trash-2" class="h-4 w-4"></i>
                                 </button>
                             </div>
@@ -2628,14 +2628,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.deleteCompetenceItem = async function (url) {
-        if (!url) return;
+    window.deleteCompetenceItem = async function (code) {
+        if (!code) return;
         if (!confirm('¿Eliminar este registro de competencia?')) return;
 
         try {
-            // Encode URL for query param
-            const encodedUrl = encodeURIComponent(url);
-            const response = await authFetch(`/api/competence?url=${encodedUrl}`, {
+            // Encode code for query param
+            const encodedCode = encodeURIComponent(code);
+            const response = await authFetch(`/api/competence?code=${encodedCode}`, {
                 method: 'DELETE'
             });
 

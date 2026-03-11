@@ -270,20 +270,15 @@ def create_competence_item(db: Session, url: str, product_code: str = None, prod
         db.rollback()
         raise e
 
-def delete_competence_item(db: Session, item_url: str):
-    item = db.query(ScrappedCompetence).filter(ScrappedCompetence.catalog_link == item_url).first()
-    if not item:
-        return False
-    
-    # Instead of deleting, we set the link to empty to "soft delete" it from the UI
-    # We can't use NULL because it's the Primary Key in the model
+def delete_competence_item(db: Session, product_code: str):
+    """Delete a competence entry by product_code."""
     try:
         from sqlalchemy import text
-        sql = text("UPDATE mercadolibre.scrapped_competence SET catalog_link = '' WHERE catalog_link = :url")
-        db.execute(sql, {"url": item_url})
+        sql = text("DELETE FROM mercadolibre.scrapped_competence WHERE product_code = :code")
+        db.execute(sql, {"code": product_code})
         db.commit()
         return True
     except Exception as e:
-        print(f"Error in soft delete: {e}")
+        print(f"Error in delete: {e}")
         db.rollback()
         return False
