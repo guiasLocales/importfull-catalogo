@@ -62,22 +62,22 @@ class ScrappedCompetence(Base):
     product_name = Column(String(255))
     
     # Financial and Cost columns
-    selling_price = Column(Integer)
-    product_cost = Column(Integer)
+    selling_price = Column(Numeric(12, 2))
+    product_cost = Column(Numeric(12, 2))
     listing_type = Column(String(100))
-    ml_commision_percentage = Column(Numeric(5, 2))
+    ml_commision_percentage = Column(Numeric(10, 2))
     ml_commision = Column(Numeric(10, 2))
     shipping_cost = Column(Numeric(10, 2))
     packaging_cost = Column(Numeric(10, 2))
     advertising_cost = Column(Numeric(10, 2))
-    estimated_returns_percentage = Column(Numeric(5, 2))
+    estimated_returns_percentage = Column(Numeric(10, 2))
     returns_cost = Column(Numeric(10, 2))
     withholdings_gross_income_tax = Column(Numeric(10, 2))
     financial_cost = Column(Numeric(10, 2))
     total_costs = Column(Numeric(10, 2))
     net_profit = Column(Numeric(10, 2))
-    net_margin_percentage = Column(Numeric(5, 2))
-    markup_percentage = Column(Numeric(5, 2))
+    net_margin_percentage = Column(Numeric(10, 2))
+    markup_percentage = Column(Numeric(10, 2))
 
 
 class Prompt(Base):

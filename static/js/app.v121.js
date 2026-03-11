@@ -2677,31 +2677,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                     
                     <!-- Section: Base & Sales -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8">
                         <!-- Selling Price (Calculated / Editable) -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-500 uppercase flex justify-between">Precio de Venta <span class="text-[10px] text-gray-400 font-normal normal-case">Tu Precio</span></label>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-gray-500 uppercase flex justify-between tracking-tight">Precio de Venta <span class="text-[9px] text-blue-500 font-semibold normal-case">Tu Precio</span></label>
                             <div class="relative">
                                 <input type="number" id="comp_selling_price" value="${item.selling_price || ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                                <i data-lucide="dollar-sign" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
+                                    class="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <i data-lucide="dollar-sign" class="absolute left-3 top-3 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
 
                         <!-- Product Cost (Editable) -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Costo del Producto</label>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Costo del Producto</label>
                             <div class="relative">
                                 <input type="number" id="comp_product_cost" value="${item.product_cost || ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                                <i data-lucide="package" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
+                                    class="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <i data-lucide="package" class="absolute left-3 top-3 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
 
                          <!-- Listing Type -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Tipo de Publicación</label>
-                            <select id="comp_listing_type" onchange="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Tipo de Publicación</label>
+                            <select id="comp_listing_type" onchange="calculateCompetenceCosts()" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold">
                                 <option value="Clásica" ${item.listing_type === 'Clásica' ? 'selected' : ''}>Clásica</option>
                                 <option value="Premium" ${item.listing_type === 'Premium' ? 'selected' : ''}>Premium</option>
                             </select>
