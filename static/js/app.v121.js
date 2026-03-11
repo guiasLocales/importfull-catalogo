@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="relative w-24 group/price">
                         <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
                         <input type="number" 
-                               value="${product.price || ''}" 
+                               value="${product.price_mercadolibre || ''}" 
                                onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
                                class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="relative w-24 mt-1">
                             <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
                             <input type="number" 
-                                   value="${product.price || ''}" 
+                                   value="${product.price_mercadolibre || ''}" 
                                    onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                    onclick="event.stopPropagation()"
                                    class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await authFetch(`/api/products/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ price: parsedPrice })
+                body: JSON.stringify({ price_mercadolibre: parsedPrice })
             });
 
             if (!response.ok) throw new Error('Error al guardar precio');
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Update local state
             const productIndex = state.products.findIndex(p => p.id === id);
             if (productIndex >= 0) {
-                state.products[productIndex].price = parsedPrice;
+                state.products[productIndex].price_mercadolibre = parsedPrice;
                 // If detail modal is open for this product, update it too
                 const detailPrice = document.getElementById('edit_price');
                 if (detailPrice && currentDetailIndex === productIndex) {
@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const descEl = document.getElementById('edit_description');
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
-            if (priceEl && priceEl.value !== "") updates.price = parseFloat(priceEl.value);
+            if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -846,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="grid grid-cols-2 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Venta ($)</label>
-                            <input type="number" id="edit_price" value="${product.price || ''}" oninput="triggerAutoSave(${product.id})"
+                            <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
                         </div>
                         <div>
@@ -1418,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 product = await res.json();
                 // Ensure nulls are handled for inputs
                 if (product.stock === null) product.stock = '';
-                if (product.price === null) product.price = '';
+                if (product.price_mercadolibre === null) product.price_mercadolibre = '';
             } catch (e) {
                 console.error(e);
                 alert('Error al cargar el producto');
@@ -1451,8 +1451,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 <!-- Price & Stock -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
-                        <input type="number" name="price" value="${product.price !== '' ? product.price : ''}" required min="0" step="0.01"
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio ML *</label>
+                        <input type="number" name="price_mercadolibre" value="${product.price_mercadolibre !== '' ? product.price_mercadolibre : ''}" required min="0" step="0.01"
                             class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -1641,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const data = Object.fromEntries(formData.entries());
 
         // Fix types & Checkboxes (which are missing from FormData if unchecked)
-        data.price = parseFloat(data.price);
+        data.price_mercadolibre = parseFloat(data.price_mercadolibre);
         data.stock = data.stock ? parseInt(data.stock) : 0;
 
         // Explicitly check boolean fields

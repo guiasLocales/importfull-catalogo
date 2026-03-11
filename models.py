@@ -28,6 +28,7 @@ class Product(Base):
     product_name_meli = Column(String(255))
     cost = Column(Numeric(10, 0))
     catalog_link = Column(Text)
+    price_mercadolibre = Column(Numeric(10, 0))
 
 
 class User(Base):

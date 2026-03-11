@@ -27,6 +27,7 @@ class ProductBase(BaseModel):
     product_name_meli: Optional[str] = None
     cost: Optional[Decimal] = None
     catalog_link: Optional[str] = None
+    price_mercadolibre: Optional[Decimal] = None
 
 class ProductCreate(ProductBase):
     pass
@@ -38,6 +39,7 @@ class ProductUpdate(BaseModel):
     catalog_link: Optional[str] = None
     description: Optional[str] = None
     price: Optional[Decimal] = None
+    price_mercadolibre: Optional[Decimal] = None
     stock: Optional[int] = None
 
 class ProductResponse(ProductBase):

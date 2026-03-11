@@ -175,7 +175,7 @@ def get_brands(db: Session):
 def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
     """Get competition scraping entries with optional search and filter."""
-    query = db.query(ScrappedCompetence, Product.price).outerjoin(
+    query = db.query(ScrappedCompetence, Product.price_mercadolibre).outerjoin(
         Product, ScrappedCompetence.product_code == Product.product_code
     ).filter(
         ScrappedCompetence.catalog_link != '',
