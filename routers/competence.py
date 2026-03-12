@@ -13,7 +13,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-WEBHOOK_SCRAPPING_URL = "https://import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
+WEBHOOK_SCRAPPING_URL = "https://service--import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
 WEBHOOK_SECRET = "mati-gordo"
 
 import httpx
