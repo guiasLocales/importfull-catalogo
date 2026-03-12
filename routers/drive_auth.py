@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse, JSONResponse
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
-import main  # To access app? No, just for path context if needed
+# import main  # Removed to fix circular import
 
 router = APIRouter(prefix="/api/drive", tags=["drive-auth"])
 
