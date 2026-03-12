@@ -592,6 +592,29 @@
                         </div>
                     </div>
 
+                    <!-- Google Drive Connection Section -->
+                    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <i data-lucide="cloud" class="h-5 w-5 mr-2 text-blue-600"></i>
+                            Conexión Google Drive
+                        </h3>
+                        <div class="space-y-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Si tienes problemas para subir fotos (error de cuota), vuelve a conectar tu cuenta de Google Drive aquí.
+                            </p>
+                            <div class="flex items-center gap-4">
+                                <button id="btnConnectDrive"
+                                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm transition-colors">
+                                    <i data-lucide="log-in" class="h-4 w-4"></i>
+                                    Conectar Google Drive
+                                </button>
+                                <div id="driveStatus" class="text-sm font-medium hidden">
+                                    <!-- Status will be updated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Logo Customization Section -->
                     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">

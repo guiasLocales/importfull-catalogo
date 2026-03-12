@@ -73,8 +73,37 @@ document.addEventListener('DOMContentLoaded', function () {
         modalContent: document.getElementById('modalContent'),
         modalBody: document.getElementById('modalBody'),
         pageIndicator: document.getElementById('pageIndicator'),
-        btnNewProduct: document.getElementById('btnNewProduct')
+        btnNewProduct: document.getElementById('btnNewProduct'),
+        btnConnectDrive: document.getElementById('btnConnectDrive')
     };
+
+    // --- Check for Auth Success in URL ---
+    if (window.location.hash.includes('auth=success')) {
+        alert('✅ Google Drive conectado con éxito.');
+        window.location.hash = '#settings';
+    } else if (window.location.hash.includes('auth=error')) {
+        alert('❌ Error al conectar con Google Drive.');
+        window.location.hash = '#settings';
+    }
+
+    if (elements.btnConnectDrive) {
+        elements.btnConnectDrive.addEventListener('click', async () => {
+            try {
+                const response = await authFetch('/api/drive/auth-url');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.auth_url) {
+                        window.location.href = data.auth_url;
+                    }
+                } else {
+                    alert('Error al obtener la URL de autenticación');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error al conectar con el servidor');
+            }
+        });
+    }
 
 
 
