@@ -68,20 +68,10 @@ def list_competence(
 
 @router.get("/item", response_model=CompetenceResponse)
 def get_competence_item(code: str, db: Session = Depends(get_db)):
-    """Get a single competence item by product code, with its current inventory price."""
-    from models import Product
-    result = db.query(ScrappedCompetence, Product.price_mercadolibre).outerjoin(
-        Product, ScrappedCompetence.product_code == Product.product_code
-    ).filter(ScrappedCompetence.product_code == code).first()
-    
-    if not result:
+    """Get a single competence item by product code."""
+    item = crud.get_competence_item_by_code(db, code)
+    if not item:
         raise HTTPException(status_code=404, detail="Competence item not found")
-        
-    item, inventory_price = result
-    # Inject current inventory price as selling_price for the calculator
-    if inventory_price is not None:
-        item.selling_price = float(inventory_price)
-        
     return CompetenceResponse.model_validate(item)
 
 @router.patch("/item", response_model=CompetenceResponse)
@@ -124,29 +114,24 @@ def update_competence_item(code: str, updates: CompetenceUpdate, db: Session = D
     update_data['markup_percentage'] = markup * 100
 
     for key, value in update_data.items():
-        # User requested NOT to save price in competence table, only in inventory.
-        if key == 'selling_price':
-            continue
         setattr(item, key, value)
     
     db.commit()
     db.refresh(item)
     
-    # --- PRICE SYNC LOGIC (ONE-WAY to Inventory) ---
+    # --- PRICE SYNC LOGIC (Update Inventory) ---
     if 'selling_price' in update_data and item.product_code:
         try:
             from models import Product
-            # Update the main catalog price (only in this direction as requested)
+            # Update the main catalog price
             db.query(Product).filter(Product.product_code == item.product_code).update({
-                "price_mercadolibre": selling_price # Use the calculated/extracted val
+                "price_mercadolibre": selling_price
             })
             db.commit()
             print(f"Synced price for {item.product_code} to {selling_price}")
         except Exception as sync_err:
             print(f"Sync error for {item.product_code}: {sync_err}")
     
-    # Inject the actual selling_price (inventory price) back for the response
-    item.selling_price = selling_price
     return CompetenceResponse.model_validate(item)
 
 
