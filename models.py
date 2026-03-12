@@ -77,6 +77,8 @@ class ScrappedCompetence(Base):
     net_profit = Column(Numeric(10, 2))
     net_margin_percentage = Column(Numeric(10, 2))
     markup_percentage = Column(Numeric(10, 2))
+    logistics_type = Column(String(50))
+    installments_plan = Column(String(50))
 
 
 class Prompt(Base):

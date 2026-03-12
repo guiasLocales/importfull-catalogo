@@ -114,6 +114,8 @@ class CompetenceBase(BaseModel):
     net_margin_percentage: Optional[float] = None
     markup_percentage: Optional[float] = None
     internal_price: Optional[float] = None
+    logistics_type: Optional[str] = None
+    installments_plan: Optional[str] = None
 
 class CompetenceCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -139,6 +141,8 @@ class CompetenceUpdate(BaseModel):
     net_profit: Optional[float] = None
     net_margin_percentage: Optional[float] = None
     markup_percentage: Optional[float] = None
+    logistics_type: Optional[str] = None
+    installments_plan: Optional[str] = None
 
 class CompetenceResponse(CompetenceBase):
     model_config = ConfigDict(from_attributes=True)
