@@ -154,11 +154,35 @@ def db_check():
 
 
 @app.on_event("startup")
-def create_default_user():
-    """Create default admin user on startup if it doesn't exist"""
-    # Create default user
+def run_startup_logic():
+    """Run all startup migrations and initializations"""
     try:
         db = SessionLocal()
+        
+        # 1. Database Migrations (Add missing columns to scrapped_competence)
+        from sqlalchemy import text
+        print("Running startup migrations...")
+        try:
+            # Check existing columns
+            result = db.execute(text("DESCRIBE mercadolibre.scrapped_competence"))
+            existing_cols = [row[0] for row in result]
+            
+            needed_cols = [
+                ("logistics_type", "VARCHAR(50)"),
+                ("installments_plan", "VARCHAR(50)")
+            ]
+            
+            for col_name, col_type in needed_cols:
+                if col_name not in existing_cols:
+                    print(f"Adding column {col_name} to scrapped_competence...")
+                    db.execute(text(f"ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN {col_name} {col_type}"))
+                    print(f"Column {col_name} added.")
+            db.commit()
+        except Exception as e:
+            print(f"Migration error: {e}")
+            db.rollback()
+
+        # 2. Create default user
         user = crud.get_user_by_username(db, username="admin")
         if not user:
             print("Creating default user 'admin'...")
@@ -167,7 +191,7 @@ def create_default_user():
             print("Default user 'admin' already exists.")
         db.close()
     except Exception as e:
-        print(f"Error creating default user: {e}")
+        print(f"Error during startup: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
