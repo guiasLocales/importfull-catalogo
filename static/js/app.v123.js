@@ -2574,29 +2574,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    window.initCompetenceDB = async function () {
-        if (!confirm('Esto intentará crear la tabla mercadolibre.scrapped_competence si no existe. ¿Continuar?')) return;
+    window.fixDatabaseSchema = async function () {
+        if (!confirm('Esto agregará las columnas faltantes a la tabla de competencia. ¿Continuar?')) return;
 
         try {
-            const btn = document.querySelector('button[onclick="initCompetenceDB()"]');
+            const btn = document.querySelector('button[onclick="fixDatabaseSchema()"]');
             if (btn) {
                 btn.disabled = true;
-                btn.innerText = 'Inicializando...';
+                btn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Reparando...';
             }
 
-            const response = await authFetch('/api/competence/init-db', {
-                method: 'POST'
-            });
+            const response = await authFetch('/api/competence/fix-db-schema');
             const result = await response.json();
 
             if (!response.ok) throw new Error(result.detail || 'Error desconocido');
 
-            alert('Resultado: ' + (result.message || 'Operación completada'));
+            alert('Sincronización de base de datos finalizada.\n\nResultados:\n' + result.results.join('\n'));
             loadCompetenceData(); // Reload data
         } catch (e) {
-            alert('Error al inicializar: ' + e.message);
+            alert('Error al reparar: ' + e.message);
             console.error(e);
-            // Re-enable button logic if needed, but page reload is safer
+        } finally {
+            const btn = document.querySelector('button[onclick="fixDatabaseSchema()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="wrench" class="h-4 w-4"></i> Reparar Tabla Competencia';
+                lucide.createIcons();
+            }
         }
     };
 
