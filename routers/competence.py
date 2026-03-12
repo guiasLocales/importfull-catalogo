@@ -13,7 +13,7 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-WEBHOOK_SCRAPPING_URL = "https://import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
+WEBHOOK_SCRAPPING_URL = "https://service--import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
 WEBHOOK_SECRET = "mati-gordo"
 
 import httpx
@@ -27,17 +27,11 @@ def migrate_id(db: Session = Depends(get_db)):
         # Check if id already exists by trying to describe
         # Or just try to drop PK and add id
         
-        # Drop PK first (if any)
-        try:
-            db.execute(text("ALTER TABLE mercadolibre.scrapped_competence DROP PRIMARY KEY"))
-            db.commit()
-        except:
-            db.rollback()
-            
-        # Add id column
-        db.execute(text("ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST"))
+        # We don't drop the primary key to avoid conflicts.
+        # We just add a UNIQUE auto-incrementing id.
+        db.execute(text("ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN id INT AUTO_INCREMENT UNIQUE FIRST"))
         db.commit()
-        return {"status": "success", "message": "Column 'id' added and set as PRIMARY KEY"}
+        return {"status": "success", "message": "Column 'id' added as UNIQUE AUTO_INCREMENT"}
     except Exception as e:
         db.rollback()
         # If it already exists, it might error, but we want to know
