@@ -17,6 +17,31 @@ WEBHOOK_SCRAPPING_URL = "https://import-meli-competence-scrapper-402745694567.us
 WEBHOOK_SECRET = "mati-gordo"
 
 import httpx
+from sqlalchemy import text
+
+
+@router.post("/migrate-id")
+def migrate_id(db: Session = Depends(get_db)):
+    """Migration endpoint to add ID column to scrapped_competence."""
+    try:
+        # Check if id already exists by trying to describe
+        # Or just try to drop PK and add id
+        
+        # Drop PK first (if any)
+        try:
+            db.execute(text("ALTER TABLE mercadolibre.scrapped_competence DROP PRIMARY KEY"))
+            db.commit()
+        except:
+            db.rollback()
+            
+        # Add id column
+        db.execute(text("ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY FIRST"))
+        db.commit()
+        return {"status": "success", "message": "Column 'id' added and set as PRIMARY KEY"}
+    except Exception as e:
+        db.rollback()
+        # If it already exists, it might error, but we want to know
+        return {"status": "error", "message": f"Migration failed (it might already be done): {str(e)}"}
 
 
 @router.get("/debug-permissions")
@@ -118,6 +143,23 @@ def update_competence_item(id: int, updates: CompetenceUpdate, db: Session = Dep
     
     db.commit()
     db.refresh(item)
+    
+    # --- PRICE SYNC LOGIC ---
+    # User requested: when selling_price is updated from competence calculator, 
+    # update price_mercadolibre in product_catalog_sync table.
+    if 'selling_price' in update_data and item.product_code:
+        try:
+            from models import Product
+            # Update the main catalog price
+            db.query(Product).filter(Product.product_code == item.product_code).update({
+                "price_mercadolibre": updates.selling_price
+            })
+            db.commit()
+            print(f"Synced price for {item.product_code} to {updates.selling_price}")
+        except Exception as sync_err:
+            print(f"Sync error for {item.product_code}: {sync_err}")
+            # We don't fail the whole request if sync fails, but we commit the competence change
+    
     return CompetenceResponse.model_validate(item)
 
 

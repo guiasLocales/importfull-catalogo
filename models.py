@@ -46,8 +46,8 @@ class ScrappedCompetence(Base):
     __tablename__ = "scrapped_competence"
     __table_args__ = {'schema': 'mercadolibre'}
 
-    # Removed id column to match existing DB
-    product_code = Column(String(100), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_code = Column(String(100))
     catalog_link = Column(Text, nullable=False)
     # meli_id removed as per user request
     title = Column(String(255))
