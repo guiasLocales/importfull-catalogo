@@ -161,7 +161,6 @@ def create_competence(request: CompetenceCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 
-@router.delete("/")
 @router.delete("")
 def delete_competence(code: str = Query(..., description="Product code of the item to delete"), db: Session = Depends(get_db)):
     """Delete a competence entry by product code."""
