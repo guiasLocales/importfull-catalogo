@@ -2868,6 +2868,28 @@ document.addEventListener('DOMContentLoaded', function () {
         if (markupEl) markupEl.innerText = markup.toFixed(1) + '%';
     };
 
+    window.fixCompetenceDB = async function () {
+        if (!confirm('¿Deseas corregir la estructura de la base de datos de competencia? (Esto agregará una columna ID)')) return;
+        
+        setLoading(true);
+        try {
+            const response = await authFetch('/api/competence/migrate-id', { method: 'POST' });
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showToast('Base de datos corregida con éxito', 'success');
+            } else {
+                showToast('Aviso: ' + data.message, 'info');
+            }
+            loadCompetenceData(); // Reload table
+        } catch (error) {
+            console.error('Error fixing DB:', error);
+            showToast('Error al corregir la base de datos', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     window.saveCompetenceData = async function (id) {
         const btn = document.getElementById('btnSaveCompCalc');
         const originalText = btn.innerText;
