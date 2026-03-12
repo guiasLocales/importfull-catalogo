@@ -13,30 +13,11 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-WEBHOOK_SCRAPPING_URL = "https://service--import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
+WEBHOOK_SCRAPPING_URL = "https://import-meli-competence-scrapper-402745694567.us-central1.run.app/webhooks/start_scrapping"
 WEBHOOK_SECRET = "mati-gordo"
 
 import httpx
 from sqlalchemy import text
-
-
-@router.post("/migrate-id")
-def migrate_id(db: Session = Depends(get_db)):
-    """Migration endpoint to add ID column to scrapped_competence."""
-    try:
-        # Check if id already exists by trying to describe
-        # Or just try to drop PK and add id
-        
-        # We don't drop the primary key to avoid conflicts.
-        # We just add a UNIQUE auto-incrementing id.
-        db.execute(text("ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN id INT AUTO_INCREMENT UNIQUE FIRST"))
-        db.commit()
-        return {"status": "success", "message": "Column 'id' added as UNIQUE AUTO_INCREMENT"}
-    except Exception as e:
-        db.rollback()
-        # If it already exists, it might error, but we want to know
-        return {"status": "error", "message": f"Migration failed (it might already be done): {str(e)}"}
-
 
 @router.get("/debug-permissions")
 def debug_permissions(db: Session = Depends(get_db)):
@@ -86,17 +67,17 @@ def list_competence(
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.get("/item", response_model=CompetenceResponse)
-def get_competence_item(id: int, db: Session = Depends(get_db)):
-    """Get a single competence item by ID."""
-    item = crud.get_competence_item_by_id(db, id)
+def get_competence_item(code: str, db: Session = Depends(get_db)):
+    """Get a single competence item by product code."""
+    item = crud.get_competence_item_by_code(db, code)
     if not item:
         raise HTTPException(status_code=404, detail="Competence item not found")
     return CompetenceResponse.model_validate(item)
 
 @router.patch("/item", response_model=CompetenceResponse)
-def update_competence_item(id: int, updates: CompetenceUpdate, db: Session = Depends(get_db)):
-    """Update a competence item by ID."""
-    item = crud.get_competence_item_by_id(db, id)
+def update_competence_item(code: str, updates: CompetenceUpdate, db: Session = Depends(get_db)):
+    """Update a competence item by product code."""
+    item = crud.get_competence_item_by_code(db, code)
     if not item:
         raise HTTPException(status_code=404, detail="Competence item not found")
     

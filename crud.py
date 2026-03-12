@@ -223,8 +223,8 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
         "error_count": error_count
     }
 
-def get_competence_item_by_id(db: Session, item_id: int):
-    return db.query(ScrappedCompetence).filter(ScrappedCompetence.id == item_id).first()
+def get_competence_item_by_code(db: Session, product_code: str):
+    return db.query(ScrappedCompetence).filter(ScrappedCompetence.product_code == product_code).first()
 
 def get_competence_item(db: Session, item_url: str):
     return db.query(ScrappedCompetence).filter(ScrappedCompetence.catalog_link == item_url).first()
