@@ -67,17 +67,17 @@ def list_competence(
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.get("/item", response_model=CompetenceResponse)
-def get_competence_item(url: str, db: Session = Depends(get_db)):
-    """Get a single competence item by URL."""
-    item = crud.get_competence_item(db, url)
+def get_competence_item(id: int, db: Session = Depends(get_db)):
+    """Get a single competence item by ID."""
+    item = crud.get_competence_item_by_id(db, id)
     if not item:
         raise HTTPException(status_code=404, detail="Competence item not found")
     return CompetenceResponse.model_validate(item)
 
 @router.patch("/item", response_model=CompetenceResponse)
-def update_competence_item(url: str, updates: CompetenceUpdate, db: Session = Depends(get_db)):
-    """Update a competence item by URL."""
-    item = crud.get_competence_item(db, url)
+def update_competence_item(id: int, updates: CompetenceUpdate, db: Session = Depends(get_db)):
+    """Update a competence item by ID."""
+    item = crud.get_competence_item_by_id(db, id)
     if not item:
         raise HTTPException(status_code=404, detail="Competence item not found")
     

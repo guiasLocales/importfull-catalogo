@@ -2515,7 +2515,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <!-- Acciones -->
                         <td class="px-4 py-3 text-center">
                             <div class="flex items-center justify-center gap-1">
-                                <button onclick="openCompetenceModal('${item.catalog_link}')" class="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Configurar Costos">
+                                <button onclick="openCompetenceModal(${item.id})" class="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Configurar Costos">
                                     <i data-lucide="calculator" class="h-4 w-4"></i>
                                 </button>
                                 <button onclick="deleteCompetenceItem(this.dataset.code)" data-code="${item.product_code}" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
@@ -2651,11 +2651,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.openCompetenceModal = async function (itemUrl) {
+    window.openCompetenceModal = async function (id) {
         setLoading(true);
         try {
-            const encodedUrl = encodeURIComponent(itemUrl);
-            const response = await authFetch(`/api/competence/item?url=${encodedUrl}`);
+            const response = await authFetch(`/api/competence/item?id=${id}`);
             if (!response.ok) throw new Error('No se pudo obtener la información de competencia');
             const item = await response.json();
 
@@ -2794,7 +2793,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <!-- Footer -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex gap-3">
                     <button onclick="closeModal()" class="flex-1 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Cerrar</button>
-                    <button onclick="saveCompetenceData('${item.catalog_link}')" id="btnSaveCompCalc" 
+                    <button onclick="saveCompetenceData(${item.id})" id="btnSaveCompCalc" 
                         class="flex-[2] py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all active:scale-[0.98]">
                         Guardar Configuración
                     </button>
@@ -2869,7 +2868,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (markupEl) markupEl.innerText = markup.toFixed(1) + '%';
     };
 
-    window.saveCompetenceData = async function (itemUrl) {
+    window.saveCompetenceData = async function (id) {
         const btn = document.getElementById('btnSaveCompCalc');
         const originalText = btn.innerText;
 
@@ -2890,8 +2889,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 financial_cost: parseFloat(document.getElementById('comp_financial_cost').value) || 0
             };
 
-            const encodedUrl = encodeURIComponent(itemUrl);
-            const response = await authFetch(`/api/competence/item?url=${encodedUrl}`, {
+            const response = await authFetch(`/api/competence/item?id=${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
