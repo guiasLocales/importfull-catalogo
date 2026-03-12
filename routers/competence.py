@@ -114,24 +114,30 @@ def update_competence_item(code: str, updates: CompetenceUpdate, db: Session = D
     update_data['markup_percentage'] = markup * 100
 
     for key, value in update_data.items():
+        # User requested NOT to save price in competence table, only in inventory.
+        if key == 'selling_price':
+            continue
         setattr(item, key, value)
     
     db.commit()
     db.refresh(item)
     
-    # --- PRICE SYNC LOGIC (Update Inventory) ---
+    # --- PRICE SYNC LOGIC (Update Inventory ONLY) ---
     if 'selling_price' in update_data and item.product_code:
         try:
             from models import Product
-            # Update the main catalog price
+            # Update the main catalog price (source of truth)
             db.query(Product).filter(Product.product_code == item.product_code).update({
                 "price_mercadolibre": selling_price
             })
             db.commit()
-            print(f"Synced price for {item.product_code} to {selling_price}")
+            print(f"Synced price for {item.product_code} to {selling_price} (Inventory Only)")
         except Exception as sync_err:
             print(f"Sync error for {item.product_code}: {sync_err}")
     
+    # Ensure the response includes the new selling_price (even if not saved in competence table)
+    # The CRUD get function will fetch it from inventory on next reload.
+    item.selling_price = selling_price 
     return CompetenceResponse.model_validate(item)
 
 

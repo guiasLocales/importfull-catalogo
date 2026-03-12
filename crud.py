@@ -174,27 +174,32 @@ def get_brands(db: Session):
 
 def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
-    """Get competition scraping entries with optional search and filter."""
-    query = db.query(ScrappedCompetence).filter(
-        ScrappedCompetence.catalog_link != '',
-        ScrappedCompetence.catalog_link != None
+    """Get competition scraping entries with optional search and filter, joining with inventory for live price."""
+    query = db.query(ScrappedCompetence, Product.price_mercadolibre).outerjoin(
+        Product, ScrappedCompetence.product_code == Product.product_code
+    ).filter(
+        (ScrappedCompetence.catalog_link != '') & 
+        (ScrappedCompetence.catalog_link != None)
     )
     
     if status:
         query = query.filter(ScrappedCompetence.status == status)
     
     if search:
-        search_conditions = [
+        query = query.filter(or_(
             ScrappedCompetence.title.ilike(f"%{search}%"),
             ScrappedCompetence.competitor.ilike(f"%{search}%"),
-            ScrappedCompetence.catalog_link.ilike(f"%{search}%"),
             ScrappedCompetence.product_name.ilike(f"%{search}%"),
-            ScrappedCompetence.product_code.ilike(f"%{search}%"),
-        ]
-        query = query.filter(or_(*search_conditions))
-    
+            ScrappedCompetence.product_code.ilike(f"%{search}%")
+        ))
+        
     total = query.count()
-    items = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+    results = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+    
+    items = []
+    for sc, iprice in results:
+        sc.internal_price = float(iprice) if iprice is not None else None
+        items.append(sc)
     
     # Counts by status
     pending_count = db.query(ScrappedCompetence).filter(
@@ -216,7 +221,17 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
     }
 
 def get_competence_item_by_code(db: Session, product_code: str):
-    return db.query(ScrappedCompetence).filter(ScrappedCompetence.product_code == product_code).first()
+    """Get a single competence item with its current inventory price via join."""
+    result = db.query(ScrappedCompetence, Product.price_mercadolibre).outerjoin(
+        Product, ScrappedCompetence.product_code == Product.product_code
+    ).filter(ScrappedCompetence.product_code == product_code).first()
+    
+    if not result:
+        return None
+        
+    item, iprice = result
+    item.internal_price = float(iprice) if iprice is not None else None
+    return item
 
 def get_competence_item(db: Session, item_url: str):
     return db.query(ScrappedCompetence).filter(ScrappedCompetence.catalog_link == item_url).first()
