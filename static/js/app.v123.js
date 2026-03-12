@@ -2057,17 +2057,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    const btnSaveCredentials = document.getElementById('btnSaveCredentials');
-    if (btnSaveCredentials) {
-        btnSaveCredentials.addEventListener('click', async () => {
+    const credentialsForm = document.getElementById('credentialsForm');
+    if (credentialsForm) {
+        credentialsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const username = document.getElementById('settingsUsername').value;
-            const password = document.getElementById('settingsPassword').value;
+            const currentPassword = document.getElementById('settingsCurrentPassword').value;
+            const newPassword = document.getElementById('settingsNewPassword').value;
+            const confirmPassword = document.getElementById('settingsConfirmPassword').value;
             const token = localStorage.getItem('token');
 
             if (!username) return alert('El usuario es requerido');
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                return alert('Las contraseñas no coinciden');
+            }
 
             const payload = { username };
-            if (password) payload.password = password;
+            if (currentPassword) payload.current_password = currentPassword; // Matching backend expectations if any
+            if (newPassword) payload.password = newPassword;
 
             try {
                 const response = await authFetch('/users/me', {
@@ -2081,9 +2089,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (response.ok) {
                     alert('Credenciales actualizadas correctamente');
+                    credentialsForm.reset();
                     fetchUserMe();
                 } else {
-                    alert('Error al actualizar credenciales');
+                    const data = await response.json();
+                    alert('Error al actualizar credenciales: ' + (data.detail || 'Error desconocido'));
                 }
             } catch (e) {
                 console.error(e);
