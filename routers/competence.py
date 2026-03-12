@@ -38,17 +38,46 @@ def debug_permissions(db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@router.get("/debug-schema")
-def debug_competence_schema(db: Session = Depends(get_db)):
-    """Debug endpoint to inspect table columns since we cannot create tables."""
+@router.get("/fix-db-schema")
+def fix_competence_schema(db: Session = Depends(get_db)):
+    """Temporary endpoint to add missing columns to scrapped_competence."""
     from sqlalchemy import text
-    try:
-        # Try DESCRIBE for MySQL - useful for debugging 500 errors
-        result = db.execute(text("DESCRIBE mercadolibre.scrapped_competence"))
-        columns = [{"Field": row[0], "Type": row[1], "Null": row[2], "Key": row[3]} for row in result]
-        return {"status": "success", "columns": columns}
-    except Exception as e:
-        return {"status": "error", "message": str(e), "hint": "Table might not exist or user lacks SELECT permissions"}
+    cols_to_add = [
+        ("selling_price", "NUMERIC(12, 2)"),
+        ("product_cost", "NUMERIC(12, 2)"),
+        ("listing_type", "VARCHAR(100)"),
+        ("ml_commision_percentage", "NUMERIC(10, 2)"),
+        ("ml_commision", "NUMERIC(10, 2)"),
+        ("shipping_cost", "NUMERIC(10, 2)"),
+        ("packaging_cost", "NUMERIC(10, 2)"),
+        ("advertising_cost", "NUMERIC(10, 2)"),
+        ("estimated_returns_percentage", "NUMERIC(10, 2)"),
+        ("returns_cost", "NUMERIC(10, 2)"),
+        ("withholdings_gross_income_tax", "NUMERIC(10, 2)"),
+        ("financial_cost", "NUMERIC(10, 2)"),
+        ("total_costs", "NUMERIC(10, 2)"),
+        ("net_profit", "NUMERIC(10, 2)"),
+        ("net_margin_percentage", "NUMERIC(10, 2)"),
+        ("markup_percentage", "NUMERIC(10, 2)"),
+        ("product_name", "VARCHAR(255)")
+    ]
+    
+    results = []
+    for col_name, col_type in cols_to_add:
+        try:
+            db.execute(text(f"ALTER TABLE mercadolibre.scrapped_competence ADD COLUMN {col_name} {col_type}"))
+            db.commit()
+            results.append(f"Added {col_name}")
+        except Exception as e:
+            db.rollback()
+            if "Duplicate column name" in str(e):
+                results.append(f"Column {col_name} already exists")
+            else:
+                results.append(f"Error adding {col_name}: {str(e)}")
+    
+    return {"status": "finished", "results": results}
+
+@router.get("/debug-schema")
 
 @router.get("", response_model=CompetenceListResponse)
 def list_competence(

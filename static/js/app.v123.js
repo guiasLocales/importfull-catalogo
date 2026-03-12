@@ -2748,43 +2748,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <option value="Premium" ${item.listing_type === 'Premium' ? 'selected' : ''}>Premium</option>
                             </select>
                         </div>
-
-                        <!-- Logistics Type -->
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Logística</label>
-                            <select id="comp_logistics_type" onchange="calculateCompetenceCosts()" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold">
-                                <option value="Flex/Acuerdo" ${item.logistics_type === 'Flex/Acuerdo' ? 'selected' : ''}>Flex / Acuerdo / Retiro</option>
-                                <option value="Full/Correo" ${item.logistics_type === 'Full/Correo' ? 'selected' : ''}>Full / Correo / Colecta</option>
-                            </select>
-                        </div>
-
-                         <!-- Installments -->
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Plan de Cuotas</label>
-                            <select id="comp_installments_plan" onchange="calculateCompetenceCosts()" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold">
-                                <option value="none" ${item.installments_plan === 'none' || !item.installments_plan ? 'selected' : ''}>Sin Cuotas Especiales</option>
-                                <option value="bajo-interes" ${item.installments_plan === 'bajo-interes' ? 'selected' : ''}>Cuotas con interés bajo (+5%)</option>
-                                <option value="3-cuotas" ${item.installments_plan === '3-cuotas' ? 'selected' : ''}>3 Cuotas al mismo precio (+9.4%)</option>
-                                <option value="6-cuotas" ${item.installments_plan === '6-cuotas' ? 'selected' : ''}>6 Cuotas al mismo precio (+15.1%)</option>
-                                <option value="9-cuotas" ${item.installments_plan === '9-cuotas' ? 'selected' : ''}>9 Cuotas al mismo precio (+20.7%)</option>
-                                <option value="12-cuotas" ${item.installments_plan === '12-cuotas' ? 'selected' : ''}>12 Cuotas al mismo precio (+25.9%)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Min Price Alert -->
-                    <div id="comp_min_price_alert" class="hidden p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-xs font-medium flex items-center gap-2">
-                        <i data-lucide="alert-triangle" class="h-4 w-4"></i>
-                        <span>El precio es inferior al mínimo permitido por Mercado Libre.</span>
                     </div>
 
                     <!-- Section: Commissions & Taxes -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                          <!-- Commission % -->
                         <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Comisión ML (Base)</label>
+                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Comisión ML</label>
                             <div class="relative">
-                                <input type="number" id="comp_ml_commision_percentage" step="0.01" value="${item.ml_commision_percentage || 15}" oninput="calculateCompetenceCosts()"
+                                <input type="number" id="comp_ml_commision_percentage" step="0.01" value="${item.ml_commision_percentage || ''}" oninput="calculateCompetenceCosts()"
                                     class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                                 <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
@@ -2891,75 +2863,28 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.calculateCompetenceCosts = function () {
-        const ML_RULES = {
-            FIXED_COST_THRESHOLD: 33000,
-            FLEX_TIERS: [
-                { upTo: 15999, cost: 1255 },
-                { upTo: 23999, cost: 2500 },
-                { upTo: 32999, cost: 3030 }
-            ],
-            INSTALLMENT_COSTS: {
-                'bajo-interes': 5.0,
-                '3-cuotas': 9.40,
-                '6-cuotas': 15.10,
-                '9-cuotas': 20.70,
-                '12-cuotas': 25.90
-            }
-        };
-
         const sellingPrice = parseFloat(document.getElementById('comp_selling_price').value) || 0;
         const productCost = parseFloat(document.getElementById('comp_product_cost').value) || 0;
         const listingType = document.getElementById('comp_listing_type').value;
-        const logisticsType = document.getElementById('comp_logistics_type').value;
-        const installmentsPlan = document.getElementById('comp_installments_plan').value;
 
-        // 1. Min Price Validation
-        const alertEl = document.getElementById('comp_min_price_alert');
-        if (alertEl) {
-            if (sellingPrice > 0 && sellingPrice < 1000) {
-                alertEl.classList.remove('hidden');
-            } else {
-                alertEl.classList.add('hidden');
-            }
-        }
+        // Auto-set commission % based on listing type if it's empty or we want to force it
+        const commPctInput = document.getElementById('comp_ml_commision_percentage');
+        // If listing type changed and it's a new entry or they haven't touched the % yet
+        // logic... for now let's just use what's there but maybe add a helper
 
-        // 2. Fixed Cost Calculation
-        let fixedCost = 0;
-        if (sellingPrice > 0 && sellingPrice < ML_RULES.FIXED_COST_THRESHOLD) {
-            if (logisticsType === 'Flex/Acuerdo') {
-                const tier = ML_RULES.FLEX_TIERS.find(t => sellingPrice <= t.upTo);
-                fixedCost = tier ? tier.cost : 3030;
-            } else {
-                // Full/Correo usually has a default or user-provided one
-                // For now, let's keep it manual or use a common default if empty
-                const currentFixed = parseFloat(document.getElementById('comp_fixed_unit_cost').value);
-                if (isNaN(currentFixed)) fixedCost = 1255; // Common default
-                else fixedCost = currentFixed;
-            }
-        }
-        document.getElementById('comp_fixed_unit_cost').value = fixedCost;
-
-        // 3. Commission Calculation
-        const baseCommPct = parseFloat(document.getElementById('comp_ml_commision_percentage').value) || 0;
-        let extraCommPct = 0;
-        if (installmentsPlan !== 'none') {
-            extraCommPct = ML_RULES.INSTALLMENT_COSTS[installmentsPlan] || 0;
-        }
-        
-        const totalCommPct = baseCommPct + extraCommPct;
-        const mlComm = sellingPrice * (totalCommPct / 100);
-
-        // 4. Other Costs
+        const mlCommPct = parseFloat(commPctInput.value) || 0;
         const estRetPct = parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0;
+
         const shipCost = parseFloat(document.getElementById('comp_shipping_cost').value) || 0;
         const packCost = parseFloat(document.getElementById('comp_packaging_cost').value) || 0;
         const advCost = parseFloat(document.getElementById('comp_advertising_cost').value) || 0;
         const taxes = parseFloat(document.getElementById('comp_withholdings_gross_income_tax').value) || 0;
         const finCost = parseFloat(document.getElementById('comp_financial_cost').value) || 0;
 
-        // Final Calculations
+        // Calculations
+        const mlComm = sellingPrice * (mlCommPct / 100);
         const retCost = sellingPrice * (estRetPct / 100);
-        const totalCosts = productCost + mlComm + fixedCost + shipCost + packCost + advCost + retCost + taxes + finCost;
+        const totalCosts = productCost + mlComm + shipCost + packCost + advCost + retCost + taxes + finCost;
         const profit = sellingPrice - totalCosts;
         const margin = (profit / sellingPrice) * 100 || 0;
         const markup = (profit / productCost) * 100 || 0;
@@ -2968,16 +2893,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const commAmtInput = document.getElementById('comp_ml_commision_amount');
         if (commAmtInput) commAmtInput.value = mlComm.toFixed(2);
 
-        document.getElementById('comp_display_total_costs').textContent = formatCurrency(totalCosts);
-        
+        const totalCostsEl = document.getElementById('comp_display_total_costs');
         const profitEl = document.getElementById('comp_display_net_profit');
-        profitEl.textContent = formatCurrency(profit);
-        profitEl.className = 'text-xl font-bold ' + (profit >= 0 ? 'text-green-400' : 'text-red-400');
+        const marginEl = document.getElementById('comp_display_margin');
+        const markupEl = document.getElementById('comp_display_markup');
 
-        document.getElementById('comp_display_margin').textContent = margin.toFixed(1) + '%';
-        document.getElementById('comp_display_markup').textContent = isFinite(markup) ? markup.toFixed(1) + '%' : '-';
+        if (totalCostsEl) totalCostsEl.innerText = formatCurrency(totalCosts);
+        if (profitEl) {
+            profitEl.innerText = formatCurrency(profit);
+            profitEl.className = `text-xl font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`;
+        }
+        if (marginEl) marginEl.innerText = margin.toFixed(1) + '%';
+        if (markupEl) markupEl.innerText = markup.toFixed(1) + '%';
     };
-
 
     window.saveCompetenceData = async function (code) {
         const btn = document.getElementById('btnSaveCompCalc');
@@ -2991,8 +2919,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 selling_price: parseFloat(document.getElementById('comp_selling_price').value) || 0,
                 product_cost: parseFloat(document.getElementById('comp_product_cost').value) || 0,
                 listing_type: document.getElementById('comp_listing_type').value,
-                logistics_type: document.getElementById('comp_logistics_type').value,
-                installments_plan: document.getElementById('comp_installments_plan').value,
                 ml_commision_percentage: parseFloat(document.getElementById('comp_ml_commision_percentage').value) || 0,
                 estimated_returns_percentage: parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0,
                 shipping_cost: parseFloat(document.getElementById('comp_shipping_cost').value) || 0,
