@@ -15,20 +15,33 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 TOKEN_JSON_FILE = "token.json"
 TOKEN_B64_FILE = "token.b64"
 
+def get_client_config():
+    env_json = os.environ.get("GOOGLE_CLIENT_SECRET_JSON")
+    if env_json:
+        try:
+            return json.loads(env_json)
+        except Exception as e:
+            print(f"ERROR: Failed to parse GOOGLE_CLIENT_SECRET_JSON env var: {e}")
+    
+    if os.path.exists(CLIENT_SECRETS_FILE):
+        with open(CLIENT_SECRETS_FILE, 'r') as f:
+            return json.load(f)
+    
+    return None
+
 @router.get("/auth-url")
 def get_auth_url(request: Request):
-    if not os.path.exists(CLIENT_SECRETS_FILE):
-        raise HTTPException(status_code=404, detail="client_secret.json not found on server")
+    client_config = get_client_config()
+    if not client_config:
+        raise HTTPException(status_code=404, detail="client_secret.json not found on server and env var not set")
 
-    # Determine redirect URI dynamically or use a fixed one
-    # For Cloud Run, we must ensure it's authorized in Google Console.
-    # Usually it's https://vuestro-dominio.com/api/drive/callback
+    # Determine redirect URI dynamically
     host = request.headers.get("host")
     protocol = "https" if "https" in str(request.url.scheme) or "inventory-app" in host else "http"
     redirect_uri = f"{protocol}://{host}/api/drive/callback"
 
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
+    flow = Flow.from_client_config(
+        client_config,
         scopes=SCOPES,
         redirect_uri=redirect_uri
     )
@@ -46,12 +59,16 @@ def auth_callback(request: Request, code: str):
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
+    client_config = get_client_config()
+    if not client_config:
+        raise HTTPException(status_code=404, detail="client_secret.json not found and env var not set")
+
     host = request.headers.get("host")
     protocol = "https" if "https" in str(request.url.scheme) or "inventory-app" in host else "http"
     redirect_uri = f"{protocol}://{host}/api/drive/callback"
 
-    flow = Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE,
+    flow = Flow.from_client_config(
+        client_config,
         scopes=SCOPES,
         redirect_uri=redirect_uri
     )

@@ -10,6 +10,7 @@ env/
 
 # Credentials
 *.json
+!client_secret.json
 .env
 
 # Database
