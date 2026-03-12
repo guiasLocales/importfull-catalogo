@@ -45,6 +45,7 @@ def get_drive_service():
 
     if os.path.exists(RUNTIME_TOKEN_FILE):
         try:
+            print(f"DEBUG: Found {RUNTIME_TOKEN_FILE}, checking credentials...", flush=True)
             creds = Credentials.from_authorized_user_file(RUNTIME_TOKEN_FILE, SCOPES)
             if creds and creds.expired and creds.refresh_token:
                 print("DEBUG: User Token expired, attempting refresh...", flush=True)
@@ -52,6 +53,11 @@ def get_drive_service():
                     creds.refresh(Request())
                     with open(RUNTIME_TOKEN_FILE, 'w') as token:
                         token.write(creds.to_json())
+                    # Also update base token.json if writable
+                    try:
+                        with open(TOKEN_FILE, 'w') as f:
+                            f.write(creds.to_json())
+                    except: pass
                     print("DEBUG: User Token refreshed successfully", flush=True)
                 except Exception as refresh_err:
                     print(f"DEBUG: User Token refresh failed: {refresh_err}", flush=True)
@@ -60,6 +66,8 @@ def get_drive_service():
             if creds and creds.valid:
                 print(">>> AUTH: Using USER CREDENTIALS (Full Quota)", flush=True)
                 return build('drive', 'v3', credentials=creds)
+            else:
+                print(f"DEBUG: Creds were found but are not valid. Valid: {creds.valid if creds else 'N/A'}", flush=True)
         except Exception as e:
             print(f"DEBUG: Error loading user token: {e}", flush=True)
 
