@@ -114,21 +114,23 @@ def update_competence_item(code: str, updates: CompetenceUpdate, db: Session = D
     update_data['markup_percentage'] = markup * 100
 
     for key, value in update_data.items():
+        if key == 'selling_price':
+            continue
         setattr(item, key, value)
     
     db.commit()
     db.refresh(item)
     
-    # --- PRICE SYNC LOGIC (Update Inventory) ---
+    # --- PRICE SYNC LOGIC (Inventory ONLY) ---
     if 'selling_price' in update_data and item.product_code:
         try:
             from models import Product
-            # Update the main catalog price as requested
+            # Update ONLY the main catalog price as requested
             db.query(Product).filter(Product.product_code == item.product_code).update({
                 "price_mercadolibre": selling_price
             })
             db.commit()
-            print(f"Synced price for {item.product_code} to {selling_price} (Inventory Sync)")
+            print(f"Synced price for {item.product_code} to {selling_price} (Inventory Only)")
         except Exception as sync_err:
             print(f"Sync error for {item.product_code}: {sync_err}")
     
