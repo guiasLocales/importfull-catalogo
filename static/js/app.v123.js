@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
                     ${product.product_code || '-'}
                 </div>
-                <div class="col-span-4 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
+                <div class="col-span-3 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
                     <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                         <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" 
                              alt="" class="h-full w-full object-cover">
@@ -358,6 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
+                <div class="col-span-1 text-sm text-gray-600 font-medium">$ ${product.cost !== null && product.cost !== undefined && product.cost !== '' ? Number(product.cost).toLocaleString('es-AR') : '-'}</div>
                 <div class="col-span-1 flex items-center">
                     <div class="relative w-24 group/price">
                         <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
@@ -668,6 +669,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
+            const costEl = document.getElementById('edit_cost');
+            if (costEl && costEl.value !== "") updates.cost = parseFloat(costEl.value);
             // Precio Local is read-only, so we don't send it in auto-save updates anymore.
 
             try {
@@ -879,7 +882,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="grid grid-cols-3 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                    <div class="grid grid-cols-4 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
+                            <input type="number" id="edit_cost" value="${product.cost || ''}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                        </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
                             <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"

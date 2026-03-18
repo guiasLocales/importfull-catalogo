@@ -40,6 +40,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[Decimal] = None
     price_mercadolibre: Optional[Decimal] = None
+    cost: Optional[Decimal] = None
     stock: Optional[int] = None
 
 class ProductResponse(ProductBase):
