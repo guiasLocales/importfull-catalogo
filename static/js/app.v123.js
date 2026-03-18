@@ -669,9 +669,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
-            const costEl = document.getElementById('edit_cost');
-            if (costEl && costEl.value !== "") updates.cost = parseFloat(costEl.value);
-            // Precio Local is read-only, so we don't send it in auto-save updates anymore.
+            // Cost and Precio Local are read-only, so we don't send them in auto-save updates anymore.
 
             try {
                 const response = await authFetch(`/api/products/${id}`, {
@@ -885,8 +883,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="grid grid-cols-4 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
-                            <input type="number" id="edit_cost" value="${product.cost || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                            <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-lg font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
