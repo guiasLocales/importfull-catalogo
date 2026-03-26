@@ -1,10 +1,12 @@
 import os
-from sqlalchemy import create_engine
+import ssl
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 # RENAMED from database.py to db_conn.py to force update
-# REF 4523
+# REF 4524 - Robust multi-path connection logic
 
 load_dotenv()
 
@@ -17,87 +19,79 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME", "")
 
 # Debug: print all connection variables (hide password)
-print(f"DEBUG DB Config (db_conn.py): DB_USER={DB_USER}, DB_NAME={DB_NAME}, DB_HOST={DB_HOST}")
+print(f"DEBUG DB Config: USER={DB_USER}, DB={DB_NAME}, HOST={DB_HOST}, INSTANCE={INSTANCE_CONNECTION_NAME}")
 
 engine = None
 
+def create_mysql_engine(url, connect_args=None):
+    return create_engine(
+        url,
+        connect_args=connect_args or {},
+        pool_pre_ping=True,
+        pool_recycle=300
+    )
+
 try:
     if DATABASE_URL:
-        # Allow explicit override (e.g. for local SQLite)
-        print(f"Using configured DATABASE_URL")
+        print(f"Attempting connection via DATABASE_URL")
         engine = create_engine(
             DATABASE_URL, 
-            connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL or "sqlite" in str(DATABASE_URL) else {}
+            connect_args={"check_same_thread": False} if "sqlite" in str(DATABASE_URL) else {}
         )
-    elif INSTANCE_CONNECTION_NAME and DB_USER and DB_NAME:
-        print(f"Connecting to MySQL via Unix Socket: {INSTANCE_CONNECTION_NAME}")
-        from urllib.parse import quote_plus
-        
-        content_user = quote_plus(DB_USER)
-        content_pass = quote_plus(DB_PASSWORD)
-        
-        # Socket path is usually /cloudsql/INSTANCE_CONNECTION_NAME
-        socket_path = f"/cloudsql/{INSTANCE_CONNECTION_NAME}"
-        SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{content_user}:{content_pass}@/{DB_NAME}?unix_socket={socket_path}"
-        
-        engine = create_engine(
-            SQLALCHEMY_DATABASE_URL,
-            pool_pre_ping=True,
-            pool_recycle=300
-        )
-        print("Engine created for MySQL (Unix Socket)")
-        
-    elif DB_HOST and DB_USER and DB_NAME:
-        print(f"Connecting to MySQL via Public IP: {DB_HOST}")
-        
-        import ssl
-        from urllib.parse import quote_plus
-        
-        # Create SSL context (Cloud SQL may require SSL)
-        ssl_ctx = ssl.create_default_context()
-        ssl_ctx.check_hostname = False
-        ssl_ctx.verify_mode = ssl.CERT_NONE
-
-        # URL encode credentials to handle special chars
-        content_user = quote_plus(DB_USER) if DB_USER else ""
-        content_pass = quote_plus(DB_PASSWORD) if DB_PASSWORD else ""
-
-        SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{content_user}:{content_pass}@{DB_HOST}/{DB_NAME}"
-        
-        engine = create_engine(
-            SQLALCHEMY_DATABASE_URL,
-            connect_args={"ssl": ssl_ctx},
-            pool_pre_ping=True,
-            pool_recycle=300
-        )
-        print("Engine created for MySQL (Direct IP)")
     else:
-        # No remote database configured, use local SQLite for development
-        print("No DB_HOST or DATABASE_URL configured, using local SQLite")
-        # Use relative path that works in any environment
+        # Try Unix Socket first if in Cloud Run environment
+        if INSTANCE_CONNECTION_NAME and DB_USER and DB_NAME:
+            try:
+                print(f"Attempting connection via Unix Socket: {INSTANCE_CONNECTION_NAME}")
+                socket_path = f"/cloudsql/{INSTANCE_CONNECTION_NAME}"
+                user_enc = quote_plus(DB_USER)
+                pass_enc = quote_plus(DB_PASSWORD)
+                url = f"mysql+pymysql://{user_enc}:{pass_enc}@/{DB_NAME}?unix_socket={socket_path}"
+                
+                test_engine = create_mysql_engine(url)
+                # Test the connection immediately
+                with test_engine.connect() as conn:
+                    conn.execute(text("SELECT 1"))
+                engine = test_engine
+                print("SUCCESS: Connected via Unix Socket")
+            except Exception as socket_err:
+                print(f"Unix Socket connection failed: {socket_err}")
+                engine = None
+
+        # Fallback to Public IP if socket failed or wasn't tried
+        if engine is None and DB_HOST and DB_USER and DB_NAME:
+            try:
+                print(f"Attempting connection via Public IP: {DB_HOST}")
+                ssl_ctx = ssl.create_default_context()
+                ssl_ctx.check_hostname = False
+                ssl_ctx.verify_mode = ssl.CERT_NONE
+                
+                user_enc = quote_plus(DB_USER)
+                pass_enc = quote_plus(DB_PASSWORD)
+                url = f"mysql+pymysql://{user_enc}:{pass_enc}@{DB_HOST}/{DB_NAME}"
+                
+                test_engine = create_mysql_engine(url, connect_args={"ssl": ssl_ctx})
+                with test_engine.connect() as conn:
+                    conn.execute(text("SELECT 1"))
+                engine = test_engine
+                print("SUCCESS: Connected via Public IP")
+            except Exception as ip_err:
+                print(f"Public IP connection failed: {ip_err}")
+                engine = None
+
+    # Final fallback to SQLite if all remote options failed
+    if engine is None:
+        print("Falling back to local SQLite database (inventory.db)")
         SQLALCHEMY_DATABASE_URL = "sqlite:///./inventory.db"
-        engine = create_engine(
-            SQLALCHEMY_DATABASE_URL, 
-            connect_args={"check_same_thread": False}
-        )
+        engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
         print("Engine created for SQLite")
 
 except Exception as e:
-    print(f"Database engine creation error: {e}")
-    print("Falling back to local SQLite database.")
-    # Use relative path that works in any environment (Linux container or Windows)
+    print(f"Critical error in DB engine setup: {e}")
     SQLALCHEMY_DATABASE_URL = "sqlite:///./inventory.db"
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL, 
-        connect_args={"check_same_thread": False}
-    )
-
-if engine is None:
-    print("CRITICAL: No database engine created, using SQLite fallback")
-    engine = create_engine("sqlite:///./inventory.db", connect_args={"check_same_thread": False})
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 def get_db():

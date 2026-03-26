@@ -21,6 +21,8 @@ steps:
       - '--allow-unauthenticated'
       - '--update-env-vars'
       - 'INSTANCE_CONNECTION_NAME=nicoservertest:us-central1:guias-locales-prod,DB_HOST=34.55.226.178'
+      - '--add-cloudsql-instances'
+      - 'nicoservertest:us-central1:guias-locales-prod'
 
 images:
   - 'gcr.io/$PROJECT_ID/inventory-app:$COMMIT_SHA'

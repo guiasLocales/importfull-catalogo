@@ -40,6 +40,9 @@ except Exception as e:
     print(f"ERROR: Failed to import crud/schemas: {e}", file=sys.stderr)
     raise
 
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 # Try to create tables
 # try:
 #     from sqlalchemy import text
@@ -91,7 +94,35 @@ if not os.path.exists("static"):
 # Mount static files ONLY at /static path (not root)
 app.mount("/static", StaticFiles(directory="static"), name="static_dir")
 
-# Explicit route for root - serve index.html
+# --- Diagnostic Content ---
+@app.get("/api/db-status")
+def db_status(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "connected",
+            "host": DB_HOST,
+            "instance": INSTANCE_CONNECTION_NAME,
+            "db": DB_NAME,
+            "user": DB_USER
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "host": DB_HOST,
+            "instance": INSTANCE_CONNECTION_NAME,
+            "db": DB_NAME
+        }
+
+@app.get("/api/test-db-query")
+def test_db_query(query: str = "SELECT 1", db: Session = Depends(get_db)):
+    try:
+        result = db.execute(text(query)).fetchall()
+        return {"status": "success", "rows": [dict(row._mapping) for row in result]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/")
 async def serve_index():
     return FileResponse("static/index.html")
