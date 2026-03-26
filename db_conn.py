@@ -22,6 +22,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 print(f"FORCED DB Config: USER={DB_USER}, DB={DB_NAME}, HOST={DB_HOST}, INSTANCE={INSTANCE_CONNECTION_NAME}")
 
 engine = None
+connection_errors = []
 
 def create_mysql_engine(url, connect_args=None):
     return create_engine(
@@ -55,7 +56,9 @@ try:
                 engine = test_engine
                 print("SUCCESS: Connected via Unix Socket")
             except Exception as socket_err:
-                print(f"Unix Socket connection failed: {socket_err}")
+                msg = f"Unix Socket connection failed: {socket_err}"
+                print(msg)
+                connection_errors.append(msg)
                 engine = None
 
         # Fallback to Public IP if socket failed or wasn't tried
@@ -76,7 +79,9 @@ try:
                 engine = test_engine
                 print("SUCCESS: Connected via Public IP")
             except Exception as ip_err:
-                print(f"Public IP connection failed: {ip_err}")
+                msg = f"Public IP connection failed: {ip_err}"
+                print(msg)
+                connection_errors.append(msg)
                 engine = None
 
     # Final fallback to SQLite if all remote options failed

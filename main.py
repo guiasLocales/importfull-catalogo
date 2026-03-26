@@ -94,6 +94,12 @@ if not os.path.exists("static"):
 # Mount static files ONLY at /static path (not root)
 app.mount("/static", StaticFiles(directory="static"), name="static_dir")
 
+from db_conn import connection_errors
+
+@app.get("/api/db-errors")
+def get_db_errors():
+    return {"connection_errors": connection_errors}
+
 # --- Diagnostic Content ---
 @app.get("/api/db-status")
 def db_status(db: Session = Depends(get_db)):
