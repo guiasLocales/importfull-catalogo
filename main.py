@@ -4,7 +4,7 @@ import os
 print("DEBUG: Starting main.py", file=sys.stderr)
 
 try:
-    from fastapi import FastAPI
+    from fastapi import FastAPI, Depends
     from fastapi.middleware.cors import CORSMiddleware
     print("DEBUG: Imported fastapi", file=sys.stderr)
 except Exception as e:
@@ -12,7 +12,7 @@ except Exception as e:
     raise
 
 try:
-    from db_conn import engine, Base, SessionLocal
+    from db_conn import engine, Base, SessionLocal, get_db, DB_HOST, INSTANCE_CONNECTION_NAME, DB_NAME, DB_USER
     print("DEBUG: Imported db_conn", file=sys.stderr)
 except Exception as e:
     print(f"ERROR: Failed to import db_conn: {e}", file=sys.stderr)
