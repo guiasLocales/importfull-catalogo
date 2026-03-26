@@ -6,17 +6,17 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 # RENAMED from database.py to db_conn.py to force update
-# REF 4524 - Robust multi-path connection logic
+# REF 4525 - Hardcoded defaults for guias-locales-prod migration
 
 load_dotenv()
 
-# Database credentials from environment variables
-DB_USER = os.getenv("DB_USER", "")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "")
-DB_HOST = os.getenv("DB_HOST", "")
+# Database credentials with hardcoded defaults for the new instance
+DB_USER = os.getenv("DB_USER", "leandro_guias")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "!39o.129mAacasu1048x$.")
+DB_NAME = os.getenv("DB_NAME", "app_import")
+DB_HOST = os.getenv("DB_HOST", "34.55.226.178")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
-INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME", "")
+INSTANCE_CONNECTION_NAME = os.getenv("INSTANCE_CONNECTION_NAME", "nicoservertest:us-central1:guias-locales-prod")
 
 # Debug: print all connection variables (hide password)
 print(f"DEBUG DB Config: USER={DB_USER}, DB={DB_NAME}, HOST={DB_HOST}, INSTANCE={INSTANCE_CONNECTION_NAME}")
