@@ -26,7 +26,7 @@ class ProductBase(BaseModel):
     permalink: Optional[str] = None
     product_name_meli: Optional[str] = None
     cost: Optional[Decimal] = None
-    dimensions: Optional[str] = None
+    dimentions: Optional[str] = None
     catalog_link: Optional[str] = None
     price_mercadolibre: Optional[Decimal] = None
 
@@ -42,7 +42,7 @@ class ProductUpdate(BaseModel):
     price: Optional[Decimal] = None
     price_mercadolibre: Optional[Decimal] = None
     cost: Optional[Decimal] = None
-    dimensions: Optional[str] = None
+    dimentions: Optional[str] = None
     stock: Optional[int] = None
 
 class ProductResponse(ProductBase):

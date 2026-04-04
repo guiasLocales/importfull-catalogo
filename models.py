@@ -27,7 +27,7 @@ class Product(Base):
     permalink = Column(String(255))
     product_name_meli = Column(String(255))
     cost = Column(Numeric(10, 0))
-    dimensions = Column(String(100))  # Format: 'HxWxL,weight' e.g. '2x5x10,462'
+    dimentions = Column(String(100))  # Format: 'HxWxL,weight' e.g. '2x5x10,462'
     catalog_link = Column(Text)
     price_mercadolibre = Column(Numeric(10, 0))
 

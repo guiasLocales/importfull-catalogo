@@ -1448,6 +1448,7 @@ document.addEventListener('DOMContentLoaded', function () {
             stock: '',
             category: '',
             brand: '',
+            dimentions: '',
             product_type_path: '',
             product_use_stock: false,
             is_validated: false,
@@ -1536,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Dimensiones</label>
-                        <input type="text" name="dimensions" value="${product.dimensions || ''}" placeholder="Ej: 2x5x10,462"
+                        <input type="text" name="dimentions" value="${product.dimentions || ''}" placeholder="Ej: 2x5x10,462"
                             class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
