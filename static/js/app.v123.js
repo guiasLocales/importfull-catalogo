@@ -669,8 +669,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
-            const dimEl = document.getElementById('edit_dimentions');
-            if (dimEl) updates.dimentions = dimEl.value;
+            // Compose dimentions from separate fields
+            const dH = document.getElementById('dim_h');
+            const dW = document.getElementById('dim_w');
+            const dL = document.getElementById('dim_l');
+            const dWt = document.getElementById('dim_weight');
+            if (dH && dW && dL && dWt) {
+                const h = dH.value.trim(), w = dW.value.trim(), l = dL.value.trim(), wt = dWt.value.trim();
+                if (h || w || l || wt) {
+                    updates.dimentions = `${h || 0}x${w || 0}x${l || 0},${wt || 0}`;
+                } else {
+                    updates.dimentions = '';
+                }
+            }
             // Cost and Precio Local are read-only, so we don't send them in auto-save updates anymore.
 
             try {
@@ -879,17 +890,61 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
 
-                        <!-- Dimentions -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex justify-between items-center">
-                                <span>Dimensiones</span>
-                                <span class="text-[10px] text-gray-400 font-normal normal-case italic">Formato: Altura x Ancho x Largo, Peso</span>
-                            </label>
-                            <input type="text" id="edit_dimentions" 
-                                   value="${product.dimentions || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" 
-                                   placeholder="Ej: 10x20x30,1500">
-                        </div>
+                        <!-- Dimentions (Collapsible) -->
+                        ${(() => {
+                            const raw = product.dimentions || '';
+                            let dH = '', dW = '', dL = '', dWt = '';
+                            if (raw) {
+                                const parts = raw.split(',');
+                                const dims = (parts[0] || '').split('x');
+                                dH = dims[0] || ''; dW = dims[1] || ''; dL = dims[2] || '';
+                                dWt = parts[1] || '';
+                            }
+                            const hasDims = dH || dW || dL || dWt;
+                            return `
+                        <details class="group bg-gray-50 border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm open:bg-white open:border-blue-200" ${hasDims ? 'open' : ''}>
+                            <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-gray-100 transition-colors select-none">
+                                <div class="flex items-center gap-2">
+                                    <div class="bg-gray-200/60 p-1.5 rounded-lg text-gray-500 group-open:bg-blue-100 group-open:text-blue-600 transition-colors">
+                                        <i data-lucide="ruler" class="h-4 w-4"></i>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">Dimensiones</span>
+                                        <span class="text-[10px] text-gray-400 ml-2 font-normal">${hasDims ? dH+'x'+dW+'x'+dL+', '+dWt+'g' : 'Sin cargar'}</span>
+                                    </div>
+                                </div>
+                                <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-3 pt-1 border-t border-gray-100">
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Alto (cm)</label>
+                                        <input type="number" id="dim_h" value="${dH}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               placeholder="0" step="any">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Ancho (cm)</label>
+                                        <input type="number" id="dim_w" value="${dW}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               placeholder="0" step="any">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Largo (cm)</label>
+                                        <input type="number" id="dim_l" value="${dL}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               placeholder="0" step="any">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Peso (g)</label>
+                                        <input type="number" id="dim_weight" value="${dWt}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                               placeholder="0" step="any">
+                                    </div>
+                                </div>
+                            </div>
+                        </details>`;
+                        })()}
 
                     </div>
 
