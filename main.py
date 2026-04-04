@@ -51,41 +51,54 @@ def run_startup_migrations():
         return
     try:
         with engine.connect() as conn:
-            # 1. Add 'dimensions' column to product_catalog_sync
+            # 1. Create mercadolibre schema/database if possible
             try:
-                conn.execute(text("ALTER TABLE app_import.product_catalog_sync ADD COLUMN dimensions VARCHAR(100)"))
-                print("MIGRATION: Added 'dimensions' column", file=sys.stderr)
+                conn.execute(text("CREATE DATABASE IF NOT EXISTS mercadolibre"))
+                conn.commit()
+                print("MIGRATION: Database 'mercadolibre' verified/created", file=sys.stderr)
             except Exception as e:
-                if "Duplicate column name" in str(e):
+                print(f"MIGRATION INFO: Could not create 'mercadolibre' DB (might already exist or lack permissions): {e}", file=sys.stderr)
+
+            # 2. Add 'dimensions' column to product_catalog_sync
+            # We try both with and without schema prefix just in case
+            try:
+                conn.execute(text("ALTER TABLE product_catalog_sync ADD COLUMN dimensions VARCHAR(100)"))
+                conn.commit()
+                print("MIGRATION: Added 'dimensions' column to product_catalog_sync", file=sys.stderr)
+            except Exception as e:
+                if "Duplicate column name" in str(e) or "already exists" in str(e).lower():
                     print("MIGRATION: 'dimensions' column already exists", file=sys.stderr)
                 else:
                     print(f"MIGRATION WARNING (dimensions): {e}", file=sys.stderr)
 
-            # 2. Create selling_calculation table if not exists
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS mercadolibre.selling_calculation (
-                    item_id VARCHAR(50) PRIMARY KEY,
-                    category_id VARCHAR(50),
-                    sale_fee_amount FLOAT,
-                    fixed_fee FLOAT,
-                    financing_add_on_fee FLOAT,
-                    meli_percentage_fee FLOAT,
-                    percentage_fee FLOAT,
-                    gross_amount FLOAT,
-                    listing_fixed_fee FLOAT,
-                    listing_gross_amount FLOAT,
-                    ship_cost_amount FLOAT,
-                    ship_discount FLOAT,
-                    ship_cost_full_amount FLOAT,
-                    total_selling_cost FLOAT
-                )
-            """))
-            print("MIGRATION: selling_calculation table OK", file=sys.stderr)
+            # 3. Create selling_calculation table
+            try:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS mercadolibre.selling_calculation (
+                        item_id VARCHAR(50) PRIMARY KEY,
+                        category_id VARCHAR(50),
+                        sale_fee_amount FLOAT,
+                        fixed_fee FLOAT,
+                        financing_add_on_fee FLOAT,
+                        meli_percentage_fee FLOAT,
+                        percentage_fee FLOAT,
+                        gross_amount FLOAT,
+                        listing_fixed_fee FLOAT,
+                        listing_gross_amount FLOAT,
+                        ship_cost_amount FLOAT,
+                        ship_discount FLOAT,
+                        ship_cost_full_amount FLOAT,
+                        total_selling_cost FLOAT
+                    )
+                """))
+                conn.commit()
+                print("MIGRATION: selling_calculation table OK", file=sys.stderr)
+            except Exception as e:
+                print(f"MIGRATION WARNING (selling_calculation): {e}", file=sys.stderr)
 
-            conn.commit()
-            print("MIGRATION: All startup migrations complete", file=sys.stderr)
+            print("MIGRATION: All startup migrations attempted", file=sys.stderr)
     except Exception as e:
-        print(f"MIGRATION ERROR (non-fatal): {e}", file=sys.stderr)
+        print(f"MIGRATION CRITICAL ERROR (non-fatal for app startup): {e}", file=sys.stderr)
 
 run_startup_migrations()
 
