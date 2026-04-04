@@ -669,6 +669,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
+            const dimEl = document.getElementById('edit_dimentions');
+            if (dimEl) updates.dimentions = dimEl.value;
             // Cost and Precio Local are read-only, so we don't send them in auto-save updates anymore.
 
             try {
@@ -875,6 +877,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                      <i data-lucide="external-link" class="h-5 w-5"></i>
                                 </a>` : ''}
                             </div>
+                        </div>
+
+                        <!-- Dimentions -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex justify-between items-center">
+                                <span>Dimensiones</span>
+                                <span class="text-[10px] text-gray-400 font-normal normal-case italic">Formato: Altura x Ancho x Largo, Peso</span>
+                            </label>
+                            <input type="text" id="edit_dimentions" 
+                                   value="${product.dimentions || ''}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" 
+                                   placeholder="Ej: 10x20x30,1500">
                         </div>
 
                     </div>
