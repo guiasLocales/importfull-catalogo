@@ -1522,16 +1522,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </div>
 
-                <!-- Category & brand -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Category, brand & dimensions -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                      <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
                         <input type="text" name="category" value="${product.category || ''}" required
                             class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                      <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">marca *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Marca *</label>
                         <input type="text" name="brand" value="${product.brand || ''}" required
+                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dimensiones</label>
+                        <input type="text" name="dimensions" value="${product.dimensions || ''}" placeholder="Ej: 2x5x10,462"
                             class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
@@ -2707,6 +2712,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error('No se pudo obtener la información de competencia');
             const item = await response.json();
 
+            let autoCost = null;
+            try {
+                const autoRes = await authFetch(`/api/selling/by-code/${encodeURIComponent(code)}`);
+                if (autoRes.ok) {
+                    autoCost = await autoRes.json();
+                }
+            } catch (e) {
+                console.log("No auto selling cost found.");
+            }
+
             const html = `
             <div class="flex flex-col h-full max-h-[90vh]">
                 <!-- Header -->
@@ -2837,8 +2852,53 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
 
-                </div>
+                    <!-- Meli Auto Calculation -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800 mt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                                <i data-lucide="zap" class="h-5 w-5 text-blue-600"></i>
+                                Costo Automático MercadoLibre
+                            </h3>
+                            <button type="button" onclick="window.triggerAutoSellingCalc('${item.product_code}')" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors">
+                                Recalcular desde Meli
+                            </button>
+                        </div>
+                        ${autoCost ? `
+                        <p class="text-xs text-blue-600 dark:text-blue-300 mb-4">* Los valores son estimados con un margen de corrección de ±0.5% - 1%.</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Costo Envío</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.ship_cost_amount)} <span class="text-xs text-gray-500 font-normal">(-${autoCost.ship_discount}%)</span></p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">PorVenta / Cargo Fijo</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.sale_fee_amount)} / ${formatCurrency(autoCost.fixed_fee)}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Publicidad</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.listing_fixed_fee)}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Por Cuotas</p>
+                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${autoCost.financing_add_on_fee}%</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Comisión Total Meli</p>
+                                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${autoCost.percentage_fee}%</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider">Costo Total Meli</p>
+                                <p class="text-2xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
+                            </div>
+                        </div>
+                        ` : `
+                        <p class="text-sm text-gray-500">No hay cálculo automático generado para este producto aún.</p>
+                        `}
+                    </div>
 
+                </div>
                 <!-- Footer -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 flex gap-3">
                     <button onclick="closeModal()" class="flex-1 py-2.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors">Cerrar</button>
@@ -2869,6 +2929,35 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Error al abrir calculadora: ' + e.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    window.triggerAutoSellingCalc = async function(code) {
+        try {
+            const btn = event.target;
+            const origText = btn.innerText;
+            btn.innerText = 'Calculando...';
+            btn.disabled = true;
+            
+            const res = await authFetch(`/api/selling/by-code/${encodeURIComponent(code)}/calculate`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Error disparando el cálculo');
+            
+            alert(data.message);
+            // After 5s close modal to prompt user to reopen and see new data
+            setTimeout(() => {
+                closeModal();
+            }, 3000);
+            
+        } catch(e) {
+            alert('Error: ' + e.message);
+        } finally {
+            if(event.target) {
+                event.target.innerText = 'Recalcular desde Meli';
+                event.target.disabled = false;
+            }
         }
     };
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime
+from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Float
 from db_conn import Base
 
 class Product(Base):
@@ -27,6 +27,7 @@ class Product(Base):
     permalink = Column(String(255))
     product_name_meli = Column(String(255))
     cost = Column(Numeric(10, 0))
+    dimensions = Column(String(100))  # Format: 'HxWxL,weight' e.g. '2x5x10,462'
     catalog_link = Column(Text)
     price_mercadolibre = Column(Numeric(10, 0))
 
@@ -77,6 +78,26 @@ class ScrappedCompetence(Base):
     net_profit = Column(Numeric(10, 2))
     net_margin_percentage = Column(Numeric(10, 2))
     markup_percentage = Column(Numeric(10, 2))
+
+
+class SellingCalculation(Base):
+    __tablename__ = "selling_calculation"
+    __table_args__ = {'schema': 'mercadolibre'}
+
+    item_id = Column(String(50), primary_key=True)
+    category_id = Column(String(50))
+    sale_fee_amount = Column(Float)
+    fixed_fee = Column(Float)
+    financing_add_on_fee = Column(Float)
+    meli_percentage_fee = Column(Float)
+    percentage_fee = Column(Float)
+    gross_amount = Column(Float)
+    listing_fixed_fee = Column(Float)
+    listing_gross_amount = Column(Float)
+    ship_cost_amount = Column(Float)
+    ship_discount = Column(Float)
+    ship_cost_full_amount = Column(Float)
+    total_selling_cost = Column(Float)
 
 
 class Prompt(Base):

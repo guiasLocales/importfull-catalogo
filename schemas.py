@@ -26,6 +26,7 @@ class ProductBase(BaseModel):
     permalink: Optional[str] = None
     product_name_meli: Optional[str] = None
     cost: Optional[Decimal] = None
+    dimensions: Optional[str] = None
     catalog_link: Optional[str] = None
     price_mercadolibre: Optional[Decimal] = None
 
@@ -41,6 +42,7 @@ class ProductUpdate(BaseModel):
     price: Optional[Decimal] = None
     price_mercadolibre: Optional[Decimal] = None
     cost: Optional[Decimal] = None
+    dimensions: Optional[str] = None
     stock: Optional[int] = None
 
 class ProductResponse(ProductBase):
@@ -172,3 +174,22 @@ class PromptResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# --- Selling Calculation Schemas ---
+class SellingCalculationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    item_id: Optional[str] = None
+    category_id: Optional[str] = None
+    sale_fee_amount: Optional[float] = None
+    fixed_fee: Optional[float] = None
+    financing_add_on_fee: Optional[float] = None
+    meli_percentage_fee: Optional[float] = None
+    percentage_fee: Optional[float] = None
+    gross_amount: Optional[float] = None
+    listing_fixed_fee: Optional[float] = None
+    listing_gross_amount: Optional[float] = None
+    ship_cost_amount: Optional[float] = None
+    ship_discount: Optional[float] = None
+    ship_cost_full_amount: Optional[float] = None
+    total_selling_cost: Optional[float] = None

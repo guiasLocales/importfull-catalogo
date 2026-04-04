@@ -20,7 +20,7 @@ except Exception as e:
     raise
 
 try:
-    from routers import products, metadata, auth, competence, prompts, drive_auth
+    from routers import products, metadata, auth, competence, prompts, drive_auth, selling
     print("DEBUG: Imported routers", file=sys.stderr)
 except Exception as e:
     print(f"ERROR: Failed to import routers: {e}", file=sys.stderr)
@@ -43,22 +43,51 @@ except Exception as e:
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-# Try to create tables
-# try:
-#     from sqlalchemy import text
-#     try:
-#         # Create schema if not exists (MySQL specific)
-#         if 'mysql' in str(engine.url):
-#              with engine.connect() as conn:
-#                  conn.execute(text("CREATE SCHEMA IF NOT EXISTS mercadolibre"))
-#                  conn.commit()
-#     except Exception as e:
-#         print(f"Warning creating schema: {e}")
-#
-#     Base.metadata.create_all(bind=engine)
-# except Exception as e:
-#     print(f"Warning: Could not create all tables: {e}")
-#     print("Continuing with existing tables...")
+# --- Startup Migration (runs on Cloud Run where DB is accessible) ---
+def run_startup_migrations():
+    """Run lightweight migrations at app startup. Safe to re-run."""
+    if 'sqlite' in str(engine.url):
+        print("MIGRATION: Skipping migrations (SQLite fallback)", file=sys.stderr)
+        return
+    try:
+        with engine.connect() as conn:
+            # 1. Add 'dimensions' column to product_catalog_sync
+            try:
+                conn.execute(text("ALTER TABLE app_import.product_catalog_sync ADD COLUMN dimensions VARCHAR(100)"))
+                print("MIGRATION: Added 'dimensions' column", file=sys.stderr)
+            except Exception as e:
+                if "Duplicate column name" in str(e):
+                    print("MIGRATION: 'dimensions' column already exists", file=sys.stderr)
+                else:
+                    print(f"MIGRATION WARNING (dimensions): {e}", file=sys.stderr)
+
+            # 2. Create selling_calculation table if not exists
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS mercadolibre.selling_calculation (
+                    item_id VARCHAR(50) PRIMARY KEY,
+                    category_id VARCHAR(50),
+                    sale_fee_amount FLOAT,
+                    fixed_fee FLOAT,
+                    financing_add_on_fee FLOAT,
+                    meli_percentage_fee FLOAT,
+                    percentage_fee FLOAT,
+                    gross_amount FLOAT,
+                    listing_fixed_fee FLOAT,
+                    listing_gross_amount FLOAT,
+                    ship_cost_amount FLOAT,
+                    ship_discount FLOAT,
+                    ship_cost_full_amount FLOAT,
+                    total_selling_cost FLOAT
+                )
+            """))
+            print("MIGRATION: selling_calculation table OK", file=sys.stderr)
+
+            conn.commit()
+            print("MIGRATION: All startup migrations complete", file=sys.stderr)
+    except Exception as e:
+        print(f"MIGRATION ERROR (non-fatal): {e}", file=sys.stderr)
+
+run_startup_migrations()
 
 app = FastAPI(
     title="Inventory API",
@@ -82,6 +111,7 @@ app.include_router(auth.router)
 app.include_router(competence.router)
 app.include_router(prompts.router)
 app.include_router(drive_auth.router)
+app.include_router(selling.router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
