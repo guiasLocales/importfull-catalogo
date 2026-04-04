@@ -2851,7 +2851,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Comisión ML</label>
                             <div class="relative">
-                                <input type="number" id="comp_ml_commision_percentage" step="0.01" value="${item.ml_commision_percentage || ''}" oninput="calculateCompetenceCosts()"
+                                <input type="number" id="comp_ml_commision_percentage" step="0.01" value="${item.ml_commision_percentage != null ? (Number(item.ml_commision_percentage) * 100).toString().substring(0, 5) : ''}" oninput="calculateCompetenceCosts()"
                                     class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                                 <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
@@ -2871,7 +2871,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Devoluciones Estimado</label>
                             <div class="relative">
-                                <input type="number" id="comp_estimated_returns_percentage" step="0.01" value="${item.estimated_returns_percentage || ''}" oninput="calculateCompetenceCosts()"
+                                <input type="number" id="comp_estimated_returns_percentage" step="0.01" value="${item.estimated_returns_percentage != null ? (Number(item.estimated_returns_percentage) * 100).toString().substring(0, 5) : ''}" oninput="calculateCompetenceCosts()"
                                     class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                                 <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
@@ -3088,8 +3088,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 selling_price: parseFloat(document.getElementById('comp_selling_price').value) || 0,
                 product_cost: parseFloat(document.getElementById('comp_product_cost').value) || 0,
                 listing_type: document.getElementById('comp_listing_type').value,
-                ml_commision_percentage: parseFloat(document.getElementById('comp_ml_commision_percentage').value) || 0,
-                estimated_returns_percentage: parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0,
+                ml_commision_percentage: (parseFloat(document.getElementById('comp_ml_commision_percentage').value) || 0) / 100,
+                estimated_returns_percentage: (parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0) / 100,
                 shipping_cost: parseFloat(document.getElementById('comp_shipping_cost').value) || 0,
                 packaging_cost: parseFloat(document.getElementById('comp_packaging_cost').value) || 0,
                 advertising_cost: parseFloat(document.getElementById('comp_advertising_cost').value) || 0,
