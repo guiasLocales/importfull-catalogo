@@ -35,6 +35,9 @@ def get_client_config():
     
     return None
 
+# In-memory storage for OAuth state (PKCE code verifier)
+OAUTH_STORES = {}
+
 @router.get("/auth-url")
 def get_auth_url(request: Request):
     client_config = get_client_config()
@@ -57,16 +60,20 @@ def get_auth_url(request: Request):
         redirect_uri=redirect_uri
     )
 
-    auth_url, _ = flow.authorization_url(
+    auth_url, state = flow.authorization_url(
         access_type='offline',
         include_granted_scopes='true',
         prompt='consent'
     )
+    
+    # Store PKCE code_verifier using state string as key
+    if hasattr(flow, 'code_verifier'):
+        OAUTH_STORES[state] = flow.code_verifier
 
     return {"auth_url": auth_url}
 
 @router.get("/callback")
-def auth_callback(request: Request, code: str):
+def auth_callback(request: Request, code: str, state: str = None):
     if not code:
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
@@ -81,8 +88,13 @@ def auth_callback(request: Request, code: str):
     flow = Flow.from_client_config(
         client_config,
         scopes=SCOPES,
-        redirect_uri=redirect_uri
+        redirect_uri=redirect_uri,
+        state=state
     )
+    
+    # Recover PKCE code_verifier from memory
+    if state and state in OAUTH_STORES:
+        flow.code_verifier = OAUTH_STORES.pop(state)
 
     try:
         flow.fetch_token(code=code)
