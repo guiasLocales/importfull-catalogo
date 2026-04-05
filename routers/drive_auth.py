@@ -43,8 +43,13 @@ def get_auth_url(request: Request):
 
     # Determine redirect URI dynamically
     host = request.headers.get("host")
-    protocol = "https" if "https" in str(request.url.scheme) or "inventory-app" in host else "http"
+    forwarded_proto = request.headers.get("x-forwarded-proto", "http")
+    protocol = "https" if forwarded_proto == "https" or "inventory-app" in host else "http"
     redirect_uri = f"{protocol}://{host}/api/drive/callback"
+    
+    # Required for some OAuth libraries when behind proxies
+    if protocol == "https":
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
     flow = Flow.from_client_config(
         client_config,
@@ -99,5 +104,7 @@ def auth_callback(request: Request, code: str):
         return RedirectResponse(url="/#settings?auth=success")
         
     except Exception as e:
+        error_msg = str(e).replace(' ', '_')
         print(f"ERROR in Drive auth callback: {e}")
-        return RedirectResponse(url="/#settings?auth=error")
+        # Send error message in URL for debugging
+        return RedirectResponse(url=f"/#settings?auth=error&info={error_msg[:100]}")
