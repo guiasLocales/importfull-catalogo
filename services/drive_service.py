@@ -10,7 +10,14 @@ import io
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 CLIENT_SECRET_FILE = 'client_secret.json'
-TOKEN_FILE = 'token.json'
+
+# Use /tmp for token storage in Cloud Run (read-only filesystem)
+if os.getenv('K_SERVICE') or os.name != 'nt':
+    TOKEN_FILE = '/tmp/token.json'
+    RUNTIME_TOKEN_FILE = '/tmp/token.json'
+else:
+    TOKEN_FILE = 'token.json'
+    RUNTIME_TOKEN_FILE = '/tmp/token.json' # Always use /tmp for runtime behavior
 
 # ROOT FOLDER ID: Get from Env Var or use default
 ROOT_FOLDER_ID = os.getenv('ROOT_DRIVE_FOLDER_ID', "1dd2P6OkaFgvkah-sBr_sjagAnCk31n-v")

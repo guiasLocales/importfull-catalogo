@@ -12,8 +12,14 @@ router = APIRouter(prefix="/api/drive", tags=["drive-auth"])
 # Constants
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/drive']
-TOKEN_JSON_FILE = "token.json"
-TOKEN_B64_FILE = "token.b64"
+
+# Use /tmp for token storage in Cloud Run (read-only filesystem)
+if os.getenv('K_SERVICE') or os.name != 'nt':
+    TOKEN_JSON_FILE = "/tmp/token.json"
+    TOKEN_B64_FILE = "/tmp/token.b64"
+else:
+    TOKEN_JSON_FILE = "token.json"
+    TOKEN_B64_FILE = "token.b64"
 
 def get_client_config():
     env_json = os.environ.get("GOOGLE_CLIENT_SECRET_JSON")
