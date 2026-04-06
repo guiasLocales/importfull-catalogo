@@ -2905,47 +2905,55 @@ document.addEventListener('DOMContentLoaded', function () {
                             </button>
                         </div>
                         ${autoCost ? `
-                        <p class="text-xs text-blue-600 dark:text-blue-300 mb-4">* Los valores son estimados con un margen de corrección de ±0.5% - 1%.</p>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="space-y-1">
-                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Costo Envío</p>
-                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.ship_cost_amount)} <span class="text-xs text-gray-500 font-normal">(-${autoCost.ship_discount}%)</span></p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">PorVenta / Cargo Fijo</p>
-                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.sale_fee_amount)} / ${formatCurrency(autoCost.fixed_fee)}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Publicidad</p>
-                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${formatCurrency(autoCost.listing_fixed_fee)}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Por Cuotas</p>
-                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100">${autoCost.financing_add_on_fee}%</p>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800 flex justify-between items-center">
+                        <div class="mb-4 bg-white/50 dark:bg-black/20 rounded-xl p-5 flex justify-between items-center border border-blue-100 dark:border-blue-800 shadow-sm">
                             <div>
-                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Comisión Total Meli</p>
-                                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${autoCost.percentage_fee}%</p>
+                                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Costo Total Meli</p>
+                                <p class="text-3xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider">Costo Total Meli</p>
-                                <p class="text-2xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
+                                <p class="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider">Comisión Total</p>
+                                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${autoCost.percentage_fee ? autoCost.percentage_fee + '%' : '-'}</p>
                             </div>
                         </div>
-                        
-                        <details class="mt-4 border-t border-blue-200 dark:border-blue-800/50 pt-3">
-                            <summary class="text-xs text-blue-700 dark:text-blue-400 cursor-pointer font-semibold hover:text-blue-800 transition-colors">
-                                Ver todos los detalles técnicos (Tabla Completa)
+
+                        <details class="text-xs text-gray-700 dark:text-gray-300">
+                            <summary class="font-bold text-blue-600 dark:text-blue-400 cursor-pointer hover:underline mb-2 transition-colors">
+                                Desplegar Detalles (Conceptos en Español)
                             </summary>
-                            <div class="mt-3 text-[11px] bg-white/50 dark:bg-black/20 p-3 rounded-lg overflow-x-auto text-blue-900 dark:text-blue-200 font-mono grid grid-cols-2 gap-x-4 gap-y-2 border border-blue-100 dark:border-blue-800">
-                               ${Object.entries(autoCost).map(([k, v]) => `
-                                  <div class="flex justify-between border-b border-blue-100/50 dark:border-gray-700/50 pb-1">
-                                     <span class="font-bold opacity-70 uppercase">${k}</span>
-                                     <span>${v}</span>
-                                  </div>
-                               `).join('')}
+                            <div class="p-4 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-blue-50 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                ${Object.entries(autoCost).map(([k, v]) => {
+                                    const meliDict = {
+                                        'item_id': 'ID de Ítem (Bitcram)',
+                                        'category_id': 'ID Categoría (Meli)',
+                                        'sale_fee_amount': 'Costo por unidad vendida',
+                                        'fixed_fee': 'Costo fijo por unidad',
+                                        'financing_add_on_fee': '% Costo por cuotas',
+                                        'meli_percentage_fee': '% Venta (aplica a MLA)',
+                                        'percentage_fee': '% Comisión total',
+                                        'gross_amount': 'Valor bruto comisión',
+                                        'listing_fixed_fee': 'Cargo fijo por publicar',
+                                        'listing_gross_amount': 'Valor bruto de comisión publicar',
+                                        'ship_cost_amount': 'Costo envío (con desc)',
+                                        'ship_discount': '% Descuento envío',
+                                        'ship_cost_full_amount': 'Costo envío (bruto)',
+                                        'total_selling_cost': 'Costo total por unidad vendida',
+                                        'last_updated': 'Última actualización'
+                                    };
+                                    const title = meliDict[k] || k;
+                                    let val = v;
+                                    if (typeof v === 'number') {
+                                        if (k.includes('percentage') || k === 'ship_discount' || k === 'financing_add_on_fee') {
+                                            val = v + '%';
+                                        } else if (k !== 'item_id' && k !== 'category_id') {
+                                            val = formatCurrency(v);
+                                        }
+                                    }
+                                    return `
+                                    <div class="flex justify-between items-end border-b border-gray-200/60 dark:border-gray-700 pb-1">
+                                        <span class="font-medium text-[10px] text-gray-500 uppercase flex-1 pr-2 tracking-wider" title="${title}">${title}</span>
+                                        <span class="font-bold text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">${val}</span>
+                                    </div>`;
+                                }).join('')}
                             </div>
                         </details>
                         ` : `
