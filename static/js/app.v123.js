@@ -726,6 +726,47 @@ document.addEventListener('DOMContentLoaded', function () {
         debouncedSave(id);
     };
 
+    window.triggerMeliCalculation = async (productCode) => {
+        try {
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-blue-600"></i>';
+            if (window.lucide) lucide.createIcons();
+            
+            const response = await authFetch(`/api/selling/by-code/${productCode}/calculate`, {
+                method: 'POST'
+            });
+            
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Error al iniciar cálculo');
+            }
+            
+            const data = await response.json();
+            alert(data.message || 'Cálculo iniciado. Vuelve a abrir el modal en unos segundos.');
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-green-500"></i>';
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    if (window.lucide) lucide.createIcons();
+                    // Auto refresh the modal to show the new costs after 3 seconds
+                    if (currentDetailIndex !== -1) {
+                         const currentProduct = state.products[currentDetailIndex];
+                         if (currentProduct) refreshProductDetail(currentProduct.id);
+                    }
+                }, 3000);
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Error calculando costos ML:', error);
+            alert('Error: ' + error.message);
+            event.currentTarget.innerHTML = '<i data-lucide="calculator" class="w-4 h-4"></i>';
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
     // Refresh product detail without closing the modal
     window.refreshProductDetail = async function (productId) {
         try {
@@ -761,6 +802,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!resProduct.ok) throw new Error('Error fetching product details');
             const product = await resProduct.json();
             const files = resFiles.ok ? await resFiles.json() : [];
+            
+            // Try to fetch automated ML costs
+            let meliCosts = null;
+            if (product.product_code) {
+                try {
+                    const resCosts = await authFetch(\`/api/selling/by-code/\${product.product_code}\`);
+                    if (resCosts.ok) {
+                        meliCosts = await resCosts.json();
+                    }
+                } catch(e) {
+                    console.warn("No automated meli costs found");
+                }
+            }
 
             // Determine if product is active based on MercadoLibre status
             const isActive = product.status && product.status.toLowerCase() === 'active';
@@ -949,29 +1003,42 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="grid grid-cols-4 gap-4 mb-6 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                        <div>
+                    <div class="grid grid-cols-4 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                        <!-- Costo -->
+                        <div class="flex flex-col justify-end">
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
                             <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
-                                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-lg font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                   class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
-                        <div>
+                        
+                        <!-- Precio ML -->
+                        <div class="flex flex-col justify-end relative">
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
-                            <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                            <div class="relative flex items-center">
+                                <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
+                                       class="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1 w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                                    <i data-lucide="calculator" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div>
+                        
+                        <!-- Precio Local -->
+                        <div class="flex flex-col justify-end">
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
                             <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
-                                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-lg font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                   class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1 text-right">Stock Disponible</p>
-                            <span class="text-xl font-bold text-gray-900 block text-right">
-                                ${product.stock || 0}
-                            </span>
+                        
+                        <!-- Stock -->
+                        <div class="flex flex-col justify-end">
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock</label>
+                            <div class="w-full h-10 flex items-center justify-end px-3">
+                                <span class="text-xl font-bold text-gray-900">${product.stock || 0}</span>
+                            </div>
                         </div>
-                         <div class="col-span-2 pt-3 border-t border-gray-100 flex justify-between items-center">
+
+                         <div class="col-span-4 pt-3 mt-1 border-t border-gray-100 flex justify-between items-center">
                             <div class="text-sm">
                                 <span class="text-gray-500">Marca:</span>
                                 <span class="font-medium text-gray-900 ml-1">${product.brand || '-'}</span>
@@ -986,8 +1053,42 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
 
-
-                    <!-- MercadoLibre Info Section -->
+                    <!-- Meli Costs (Collapsible) -->
+                    ${meliCosts ? `
+                    <div class="mb-6">
+                        <details class="group bg-yellow-50 border border-yellow-200 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
+                            <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-yellow-100/50 transition-colors select-none">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-yellow-200/50 p-1.5 rounded-lg text-yellow-700">
+                                        <i data-lucide="calculator" class="h-4 w-4"></i>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-yellow-800 uppercase tracking-wider">Costo Mercado Libre</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="font-mono font-bold text-yellow-800">$ ${Number(meliCosts.total_selling_cost).toLocaleString('es-AR')}</span>
+                                    <i data-lucide="chevron-down" class="h-4 w-4 text-yellow-600 transition-transform group-open:rotate-180"></i>
+                                </div>
+                            </summary>
+                            <div class="p-4 pt-2 border-t border-yellow-200/50">
+                                <div class="space-y-2 text-sm text-yellow-800/80">
+                                    <div class="flex justify-between">
+                                        <span>Comisión por Venta:</span>
+                                        <span class="font-medium">$ ${Number(meliCosts.sale_fee_amount || 0).toLocaleString('es-AR')}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Costo Fijo (Meli):</span>
+                                        <span class="font-medium">$ ${Number(meliCosts.listing_fixed_fee || 0).toLocaleString('es-AR')}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Envío:</span>
+                                        <span class="font-medium">$ ${Number(meliCosts.ship_cost_amount || 0).toLocaleString('es-AR')}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>` : ''}
                     ${product.meli_id ? `
                     <div class="mb-6 bg-yellow-50 border border-yellow-300 rounded-xl p-4 flex items-center gap-4">
                         <div class="flex-shrink-0">
