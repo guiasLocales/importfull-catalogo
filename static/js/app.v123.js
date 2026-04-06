@@ -2576,6 +2576,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (emptyState) emptyState.classList.remove('hidden');
             } else {
                 tableBody.innerHTML = items.map(item => {
+                    // Financial Calculations for the list view
+                    const sellPrice = Number(item.selling_price || item.internal_price || 0);
+                    const prodCost = Number(item.product_cost || 0);
+                    const costMeli = Number(item.ml_commision || 0) + Number(item.shipping_cost || 0);
+                    const totalExtras = Number(item.packaging_cost || 0) + 
+                                       Number(item.financial_cost || 0) + 
+                                       Number(item.returns_cost || 0);
+                    
+                    const totalCost = prodCost + costMeli + totalExtras;
+                    const profit = sellPrice > 0 ? (sellPrice - totalCost) : 0;
+                    const margin = sellPrice > 0 ? (profit / sellPrice) * 100 : 0;
+
                     const price = item.price ? `$ ${Number(item.price).toLocaleString('es-AR')}` : '-';
                     const imgHtml = item.image
                          ? `<img src="${item.image}" alt="" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600" onerror="this.style.display='none'">`
@@ -2619,18 +2631,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         </td>
 
                         <!-- RESULTADOS FINANCIEROS -->
-                        <!-- RESULTADOS FINANCIEROS -->
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost != null ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">${prodCost > 0 ? '$ ' + Number(prodCost).toLocaleString('es-AR') : '-'}</span>
+                        </td>
+                        <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-red-50/5 dark:bg-red-900/5">
+                            <span class="text-sm font-medium text-red-600 dark:text-red-400">${costMeli > 0 ? '$ ' + Number(costMeli).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-green-50/5 dark:bg-green-900/5">
-                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.net_profit != null ? '$ ' + Number(item.net_profit).toLocaleString('es-AR') : '-'}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center border-r border-gray-100 dark:border-gray-800">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.net_margin_percentage != null ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
+                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${profit != 0 ? '$ ' + Number(profit).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">
-                            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 font-bold">${item.ml_commision_percentage != null ? Number(item.ml_commision_percentage).toFixed(1) + '%' : '-'}</span>
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${margin != 0 ? margin.toFixed(1) + '%' : '-'}</span>
                         </td>
 
                         <!-- Acciones -->
