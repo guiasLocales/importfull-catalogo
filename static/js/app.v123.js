@@ -807,7 +807,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let meliCosts = null;
             if (product.product_code) {
                 try {
-                    const resCosts = await authFetch(\`/api/selling/by-code/\${product.product_code}\`);
+                    const resCosts = await authFetch(`/api/selling/by-code/${product.product_code}`);
                     if (resCosts.ok) {
                         meliCosts = await resCosts.json();
                     }
