@@ -2877,19 +2877,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="bg-gray-900 rounded-2xl p-6 text-white grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div class="space-y-1">
                             <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Total Costos</p>
-                            <p id="comp_display_total_costs" class="text-xl font-bold">${formatCurrency(item.total_costs)}</p>
+                            <p id="comp_display_total_costs" class="text-xl font-bold">-</p>
                         </div>
                         <div class="space-y-1">
                             <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ganancia Neta</p>
-                            <p id="comp_display_net_profit" class="text-xl font-bold ${Number(item.net_profit) >= 0 ? 'text-green-400' : 'text-red-400'}">${formatCurrency(item.net_profit)}</p>
+                            <p id="comp_display_net_profit" class="text-xl font-bold">-</p>
                         </div>
                         <div class="space-y-1">
                             <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Margen Neto</p>
-                            <p id="comp_display_margin" class="text-xl font-bold">${item.net_margin_percentage ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</p>
+                            <p id="comp_display_margin" class="text-xl font-bold">-</p>
                         </div>
                         <div class="space-y-1">
                             <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Markup</p>
-                            <p id="comp_display_markup" class="text-xl font-bold">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</p>
+                            <p id="comp_display_markup" class="text-xl font-bold">-</p>
                         </div>
                     </div>
 
@@ -2934,6 +2934,20 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <p class="text-2xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
                             </div>
                         </div>
+                        
+                        <details class="mt-4 border-t border-blue-200 dark:border-blue-800/50 pt-3">
+                            <summary class="text-xs text-blue-700 dark:text-blue-400 cursor-pointer font-semibold hover:text-blue-800 transition-colors">
+                                Ver todos los detalles técnicos (Tabla Completa)
+                            </summary>
+                            <div class="mt-3 text-[11px] bg-white/50 dark:bg-black/20 p-3 rounded-lg overflow-x-auto text-blue-900 dark:text-blue-200 font-mono grid grid-cols-2 gap-x-4 gap-y-2 border border-blue-100 dark:border-blue-800">
+                               ${Object.entries(autoCost).map(([k, v]) => `
+                                  <div class="flex justify-between border-b border-blue-100/50 dark:border-gray-700/50 pb-1">
+                                     <span class="font-bold opacity-70 uppercase">${k}</span>
+                                     <span>${v}</span>
+                                  </div>
+                               `).join('')}
+                            </div>
+                        </details>
                         ` : `
                         <p class="text-sm text-gray-500">No hay cálculo automático generado para este producto aún.</p>
                         `}
@@ -2964,6 +2978,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             openModal('', html);
             lucide.createIcons();
+
+            // Trigger math once the DOM is definitely rendered
+            setTimeout(() => {
+                if(typeof calculateCompetenceCosts === 'function'){
+                    calculateCompetenceCosts();
+                }
+            }, 50);
 
         } catch (e) {
             console.error(e);
