@@ -35,9 +35,6 @@ def get_client_config():
     
     return None
 
-# In-memory storage for OAuth state (PKCE code verifier)
-OAUTH_STORES = {}
-
 @router.get("/auth-url")
 def get_auth_url(request: Request):
     client_config = get_client_config()
@@ -66,11 +63,19 @@ def get_auth_url(request: Request):
         prompt='consent'
     )
     
-    # Store PKCE code_verifier using state string as key
+    response = JSONResponse(content={"auth_url": auth_url})
+    # Store PKCE code_verifier securely in a cookie (Solves stateless Cloud Run instance switching)
     if hasattr(flow, 'code_verifier'):
-        OAUTH_STORES[state] = flow.code_verifier
+        response.set_cookie(
+            key="oauth_cv", 
+            value=flow.code_verifier, 
+            httponly=True, 
+            secure=True, 
+            samesite="lax",
+            max_age=600 # 10 minutes
+        )
 
-    return {"auth_url": auth_url}
+    return response
 
 @router.get("/callback")
 def auth_callback(request: Request, code: str, state: str = None):
@@ -92,9 +97,10 @@ def auth_callback(request: Request, code: str, state: str = None):
         state=state
     )
     
-    # Recover PKCE code_verifier from memory
-    if state and state in OAUTH_STORES:
-        flow.code_verifier = OAUTH_STORES.pop(state)
+    # Recover PKCE code_verifier from the browser cookie
+    cv_cookie = request.cookies.get("oauth_cv")
+    if cv_cookie:
+        flow.code_verifier = cv_cookie
 
     try:
         flow.fetch_token(code=code)
