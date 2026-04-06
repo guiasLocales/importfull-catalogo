@@ -2619,17 +2619,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         </td>
 
                         <!-- RESULTADOS FINANCIEROS -->
+                        <!-- RESULTADOS FINANCIEROS -->
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">${item.product_cost != null ? '$ ' + Number(item.product_cost).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-green-50/5 dark:bg-green-900/5">
-                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.net_profit ? '$ ' + Number(item.net_profit).toLocaleString('es-AR') : '-'}</span>
+                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.net_profit != null ? '$ ' + Number(item.net_profit).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-center border-r border-gray-100 dark:border-gray-800">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.net_margin_percentage ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.net_margin_percentage != null ? Number(item.net_margin_percentage).toFixed(1) + '%' : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${item.markup_percentage ? Number(item.markup_percentage).toFixed(1) + '%' : '-'}</span>
+                            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 font-bold">${item.ml_commision_percentage != null ? Number(item.ml_commision_percentage).toFixed(1) + '%' : '-'}</span>
                         </td>
 
                         <!-- Acciones -->
@@ -2832,8 +2833,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="space-y-2">
                             <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Costo del Producto</label>
                             <div class="relative">
-                                <input type="number" id="comp_product_cost" value="${item.product_cost || ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <input type="number" id="comp_product_cost" value="${item.product_cost || ''}" readonly
+                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-gray-50 dark:bg-gray-800 text-gray-500 cursor-not-allowed transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                                 <i data-lucide="package" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
@@ -3081,18 +3082,34 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = true;
             btn.innerText = 'Guardando...';
 
+            // Identify costs to save back to DB so they show in the list view
+            let autoMeliCost = 0;
+            let meliCommPct = 0;
+            if (window._currentAutoCost) {
+                autoMeliCost = parseFloat(window._currentAutoCost.total_selling_cost) || 0;
+                meliCommPct = parseFloat(window._currentAutoCost.percentage_fee) || 0;
+            }
+
+            const sellPrice = parseFloat(document.getElementById('comp_selling_price').value) || 0;
+            const ml_comm_local = sellPrice * (meliCommPct / 100);
+
             const payload = {
-                selling_price: parseFloat(document.getElementById('comp_selling_price').value) || 0,
+                selling_price: sellPrice,
                 product_cost: parseFloat(document.getElementById('comp_product_cost').value) || 0,
                 listing_type: document.getElementById('comp_listing_type').value,
-                ml_commision_percentage: 0,
+                ml_commision_percentage: meliCommPct,
                 estimated_returns_percentage: (parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0) / 100,
-                shipping_cost: 0,
+                shipping_cost: Math.max(0, autoMeliCost - ml_comm_local), // Store the remainder of Meli cost as shipping
                 packaging_cost: parseFloat(document.getElementById('comp_packaging_cost').value) || 0,
                 advertising_cost: 0,
                 withholdings_gross_income_tax: 0,
                 financial_cost: parseFloat(document.getElementById('comp_financial_cost').value) || 0
             };
+
+            // Recalculate ml_commision to ensure total matches automation
+            // The backend calculates: ml_comm = selling_price * (ml_comm_pct / 100)
+            // So we send the correct meliCommPct to ensure the gain matches the modal.
+
 
             const response = await authFetch(`/api/competence/item?code=${encodeURIComponent(code)}`, {
                 method: 'PATCH',
