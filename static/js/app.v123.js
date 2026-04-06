@@ -2814,17 +2814,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <!-- Content -->
-                <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                <div class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
                     
                     <!-- Section: Base & Sales -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8">
                         <!-- Selling Price (Calculated / Editable) -->
                         <div class="space-y-2">
                             <label class="text-[11px] font-bold text-gray-500 uppercase flex justify-between tracking-tight">Precio de Venta <span class="text-[9px] text-blue-500 font-semibold normal-case">Tu Precio</span></label>
                             <div class="relative">
                                 <input type="number" id="comp_selling_price" value="${item.selling_price || ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                <i data-lucide="dollar-sign" class="absolute left-3 top-3 h-4 w-4 text-gray-400"></i>
+                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <i data-lucide="dollar-sign" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
 
@@ -2833,15 +2833,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Costo del Producto</label>
                             <div class="relative">
                                 <input type="number" id="comp_product_cost" value="${item.product_cost || ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                <i data-lucide="package" class="absolute left-3 top-3 h-4 w-4 text-gray-400"></i>
+                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <i data-lucide="package" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
 
                          <!-- Listing Type -->
                         <div class="space-y-2">
                             <label class="text-[11px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">Tipo de Publicación</label>
-                            <select id="comp_listing_type" onchange="calculateCompetenceCosts()" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold">
+                            <select id="comp_listing_type" onchange="calculateCompetenceCosts()" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all font-semibold">
                                 <option value="Clásica" ${item.listing_type === 'Clásica' ? 'selected' : ''}>Clásica</option>
                                 <option value="Premium" ${item.listing_type === 'Premium' ? 'selected' : ''}>Premium</option>
                             </select>
@@ -2849,70 +2849,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Section: Costos Extras -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-3 border-t border-gray-100 dark:border-gray-700">
                          <!-- Returns % -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Devoluciones Estimado</label>
                             <div class="relative">
                                 <input type="number" id="comp_estimated_returns_percentage" step="0.01" value="${item.estimated_returns_percentage != null ? (Number(item.estimated_returns_percentage) * 100).toString().substring(0, 5) : ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                                <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
+                                    class="w-full pl-8 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
+                                <i data-lucide="percent" class="absolute left-2.5 top-2 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
 
                         <!-- Packaging -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Packaging</label>
-                            <input type="number" id="comp_packaging_cost" value="${item.packaging_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
+                            <input type="number" id="comp_packaging_cost" value="${item.packaging_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                         </div>
 
                         <!-- Costo Financiero -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Costo Financiero</label>
-                            <input type="number" id="comp_financial_cost" value="${item.financial_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                        </div>
-                    </div>
-
-                    <!-- Section: Final Totals (Calculated) -->
-                    <div class="bg-gray-900 rounded-2xl p-6 text-white grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div class="space-y-1">
-                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Total Costos</p>
-                            <p id="comp_display_total_costs" class="text-xl font-bold">-</p>
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ganancia Neta</p>
-                            <p id="comp_display_net_profit" class="text-xl font-bold">-</p>
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Margen Neto</p>
-                            <p id="comp_display_margin" class="text-xl font-bold">-</p>
-                        </div>
-                        <div class="space-y-1">
-                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Markup</p>
-                            <p id="comp_display_markup" class="text-xl font-bold">-</p>
+                            <input type="number" id="comp_financial_cost" value="${item.financial_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                         </div>
                     </div>
 
                     <!-- Meli Auto Calculation -->
-                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800 mt-6">
-                        <div class="flex justify-between items-center mb-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border border-blue-100 dark:border-blue-800">
+                        <div class="flex justify-between items-center mb-3">
                             <h3 class="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                                 <i data-lucide="zap" class="h-5 w-5 text-blue-600"></i>
                                 Costo Automático MercadoLibre
                             </h3>
-                            <button type="button" onclick="window.triggerAutoSellingCalc('${item.product_code}')" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors">
+                            <button type="button" onclick="window.triggerAutoSellingCalc('${item.product_code}')" class="px-4 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors">
                                 Recalcular desde Meli
                             </button>
                         </div>
                         ${autoCost ? `
-                        <div class="mb-4 bg-white/50 dark:bg-black/20 rounded-xl p-5 flex justify-between items-center border border-blue-100 dark:border-blue-800 shadow-sm">
+                        <div class="mb-3 bg-white/50 dark:bg-black/20 rounded-xl p-4 flex justify-between items-center border border-blue-100 dark:border-blue-800 shadow-sm">
                             <div>
                                 <p class="text-[10px] uppercase font-bold text-blue-500 tracking-wider">Costo Total Meli</p>
-                                <p class="text-3xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
+                                <p class="text-2xl md:text-3xl font-black text-blue-700 dark:text-blue-400">${formatCurrency(autoCost.total_selling_cost)}</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] uppercase font-bold text-blue-800 dark:text-blue-300 tracking-wider">Comisión Total</p>
-                                <p class="text-lg font-bold text-gray-900 dark:text-gray-100">${autoCost.percentage_fee ? autoCost.percentage_fee + '%' : '-'}</p>
+                                <p class="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">${autoCost.percentage_fee ? autoCost.percentage_fee + '%' : '-'}</p>
                             </div>
                         </div>
 
@@ -2959,6 +2939,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         ` : `
                         <p class="text-sm text-gray-500">No hay cálculo automático generado para este producto aún.</p>
                         `}
+                    </div>
+
+                    <!-- Section: Final Totals (Calculated) -->
+                    <div class="bg-gray-900 rounded-2xl p-5 text-white grid grid-cols-2 md:grid-cols-4 gap-6 relative overflow-hidden shadow-xl">
+                        <!-- Decorator gradient -->
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full pointer-events-none"></div>
+                        <div class="space-y-1 z-10">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Total Costos</p>
+                            <p id="comp_display_total_costs" class="text-xl font-bold">-</p>
+                        </div>
+                        <div class="space-y-1 z-10">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ganancia Neta</p>
+                            <p id="comp_display_net_profit" class="text-xl font-bold">-</p>
+                        </div>
+                        <div class="space-y-1 z-10">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Margen Neto</p>
+                            <p id="comp_display_margin" class="text-xl font-bold">-</p>
+                        </div>
+                        <div class="space-y-1 z-10">
+                            <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Markup</p>
+                            <p id="comp_display_markup" class="text-xl font-bold">-</p>
+                        </div>
                     </div>
 
                 </div>
