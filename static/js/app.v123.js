@@ -2638,10 +2638,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="text-sm font-medium text-red-600 dark:text-red-400">${costMeli > 0 ? '$ ' + Number(costMeli).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-right border-r border-gray-100 dark:border-gray-800 bg-green-50/5 dark:bg-green-900/5">
-                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${profit != 0 ? '$ ' + Number(profit).toLocaleString('es-AR') : '-'}</span>
+                            <span class="text-sm font-bold text-green-600 dark:text-green-400">${(sellPrice > 0 && totalCost > 0) ? '$ ' + Number(profit).toLocaleString('es-AR') : '-'}</span>
                         </td>
                         <td class="px-4 py-3 text-center border-r border-gray-200 dark:border-gray-700">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${margin != 0 ? margin.toFixed(1) + '%' : '-'}</span>
+                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">${(sellPrice > 0 && totalCost > 0) ? margin.toFixed(1) + '%' : '-'}</span>
                         </td>
 
                         <!-- Acciones -->
