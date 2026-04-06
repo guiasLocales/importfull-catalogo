@@ -2579,7 +2579,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Financial Calculations for the list view
                     const sellPrice = Number(item.selling_price || item.internal_price || 0);
                     const prodCost = Number(item.product_cost || 0);
-                    const costMeli = Number(item.ml_commision || 0) + Number(item.shipping_cost || 0);
+                    // Use automated Meli cost from JOIN if manual ones are missing
+                    const costMeli = Number(item.auto_meli_cost || (Number(item.ml_commision || 0) + Number(item.shipping_cost || 0)));
+                    
                     const totalExtras = Number(item.packaging_cost || 0) + 
                                        Number(item.financial_cost || 0) + 
                                        Number(item.returns_cost || 0);

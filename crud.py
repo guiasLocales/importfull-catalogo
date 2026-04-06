@@ -175,7 +175,16 @@ def get_brands(db: Session):
 def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
     """Get competition scraping entries with optional search and filter."""
-    query = db.query(ScrappedCompetence).filter(
+    from models import Product, SellingCalculation
+    
+    query = db.query(
+        ScrappedCompetence, 
+        SellingCalculation.total_selling_cost.label("auto_meli_cost")
+    ).outerjoin(
+        Product, ScrappedCompetence.product_code == Product.product_code
+    ).outerjoin(
+        SellingCalculation, Product.meli_id == SellingCalculation.item_id
+    ).filter(
         (ScrappedCompetence.catalog_link != '') & 
         (ScrappedCompetence.catalog_link != None)
     )
@@ -192,7 +201,13 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
         ))
         
     total = query.count()
-    items = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+    results = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
+    
+    # Process results to add auto_meli_cost attribute
+    items = []
+    for comp, auto_cost in results:
+        comp.auto_meli_cost = auto_cost
+        items.append(comp)
     
     # Counts by status
     pending_count = db.query(ScrappedCompetence).filter(

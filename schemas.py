@@ -113,6 +113,7 @@ class CompetenceBase(BaseModel):
     withholdings_gross_income_tax: Optional[float] = None
     financial_cost: Optional[float] = None
     total_costs: Optional[float] = None
+    auto_meli_cost: Optional[float] = None
     net_profit: Optional[float] = None
     net_margin_percentage: Optional[float] = None
     markup_percentage: Optional[float] = None
