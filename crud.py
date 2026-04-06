@@ -176,6 +176,7 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
                          search: str = None, status: str = None):
     """Get competition scraping entries with optional search and filter."""
     from models import Product, SellingCalculation
+    from sqlalchemy import cast, String
     
     query = db.query(
         ScrappedCompetence, 
@@ -183,7 +184,7 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
     ).outerjoin(
         Product, ScrappedCompetence.product_code == Product.product_code
     ).outerjoin(
-        SellingCalculation, Product.meli_id == SellingCalculation.item_id
+        SellingCalculation, cast(Product.id, String) == SellingCalculation.item_id
     ).filter(
         (ScrappedCompetence.catalog_link != '') & 
         (ScrappedCompetence.catalog_link != None)
