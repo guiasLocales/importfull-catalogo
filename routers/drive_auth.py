@@ -118,6 +118,23 @@ def auth_callback(request: Request, code: str, state: str = None):
             
         print(f"DEBUG: Successfully updated {TOKEN_JSON_FILE} and {TOKEN_B64_FILE} via web flow")
         
+        # Guardar en base de datos de manera persistente
+        try:
+            from db_conn import engine
+            from sqlalchemy import text
+            with engine.begin() as conn:
+                try:
+                    conn.execute(text("ALTER TABLE inventory_users ADD COLUMN drive_token_b64 TEXT"))
+                except:
+                    pass # Column might already exist
+                conn.execute(
+                    text("UPDATE inventory_users SET drive_token_b64 = :token WHERE username = 'admin' OR role = 'admin'"),
+                    {"token": token_b64}
+                )
+            print("DEBUG: Token saved persistently to the database!")
+        except Exception as db_err:
+            print(f"DEBUG: Could not save token to DB: {db_err}")
+        
         # Redirect back to settings with a success param
         return RedirectResponse(url="/#settings?auth=success")
         

@@ -33,7 +33,24 @@ def get_drive_service():
     # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
     # Try to load token from environment/base64 first
     if not os.path.exists(RUNTIME_TOKEN_FILE):
-        if os.path.exists('token.b64'):
+        # Primero intentar desde base de datos (Persistente)
+        try:
+            from db_conn import engine
+            from sqlalchemy import text
+            import base64
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT drive_token_b64 FROM inventory_users WHERE drive_token_b64 IS NOT NULL LIMIT 1")).fetchone()
+                if result and result[0]:
+                    encoded_data = result[0]
+                    decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+                    with open(RUNTIME_TOKEN_FILE, 'w') as f:
+                        f.write(decoded_data)
+                    print("DEBUG: Restored token from database", flush=True)
+        except Exception as e:
+            print(f"DEBUG: Error reading token from DB: {e}", flush=True)
+
+        # Segundo intentar archivo local base64
+        if not os.path.exists(RUNTIME_TOKEN_FILE) and os.path.exists('token.b64'):
             try:
                 import base64
                 with open('token.b64', 'r') as f:
@@ -41,10 +58,11 @@ def get_drive_service():
                     decoded_data = base64.b64decode(encoded_data).decode('utf-8')
                 with open(RUNTIME_TOKEN_FILE, 'w') as f:
                     f.write(decoded_data)
-                print("DEBUG: Restored token from base64", flush=True)
+                print("DEBUG: Restored token from base64 disk file", flush=True)
             except Exception as e:
                 print(f"DEBUG: Error decoding token.b64: {e}", flush=True)
-        elif os.path.exists(TOKEN_FILE):
+        # Tercero copiar el token.json estatico
+        elif not os.path.exists(RUNTIME_TOKEN_FILE) and os.path.exists(TOKEN_FILE):
             import shutil
             try:
                 shutil.copy(TOKEN_FILE, RUNTIME_TOKEN_FILE)
