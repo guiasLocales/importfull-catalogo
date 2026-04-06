@@ -203,11 +203,17 @@ def get_competence_items(db: Session, skip: int = 0, limit: int = 100,
     total = query.count()
     results = query.order_by(desc(ScrappedCompetence.timestamp)).offset(skip).limit(limit).all()
     
-    # Process results to add auto_meli_cost attribute
+    # Map results into dictionaries to ensure extra fields are preserved for Pydantic
     items = []
     for comp, auto_cost in results:
-        comp.auto_meli_cost = auto_cost
-        items.append(comp)
+        # Create a dictionary of all columns
+        item_dict = {
+            column.name: getattr(comp, column.name)
+            for column in comp.__table__.columns
+        }
+        # Add the joined automated cost
+        item_dict["auto_meli_cost"] = auto_cost
+        items.append(item_dict)
     
     # Counts by status
     pending_count = db.query(ScrappedCompetence).filter(
