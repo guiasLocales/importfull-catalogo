@@ -2792,6 +2792,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log("No auto selling cost found.");
             }
 
+            // Expose globally for dynamic calculations
+            window._currentAutoCost = autoCost;
+
             const html = `
             <div class="flex flex-col h-full max-h-[90vh]">
                 <!-- Header -->
@@ -2845,28 +2848,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
 
-                    <!-- Section: Commissions & Taxes -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                         <!-- Commission % -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Comisión ML</label>
-                            <div class="relative">
-                                <input type="number" id="comp_ml_commision_percentage" step="0.01" value="${item.ml_commision_percentage != null ? (Number(item.ml_commision_percentage) * 100).toString().substring(0, 5) : ''}" oninput="calculateCompetenceCosts()"
-                                    class="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                                <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
-                            </div>
-                        </div>
-
-                         <!-- Commission Amount (Calculated) -->
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-500 uppercase flex justify-between">Comisión ML ($) <span class="text-[10px] text-blue-500 font-normal normal-case">Automático</span></label>
-                            <div class="relative">
-                                <input type="number" disabled id="comp_ml_commision_amount" value="${item.ml_commision || ''}" 
-                                    class="w-full pl-8 pr-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-semibold opacity-70">
-                                <i data-lucide="coins" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
-                            </div>
-                        </div>
-
+                    <!-- Section: Costos Extras -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                          <!-- Returns % -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">% Devoluciones Estimado</label>
@@ -2876,26 +2859,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i data-lucide="percent" class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Section: Physical Costs -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Costo Envío</label>
-                            <input type="number" id="comp_shipping_cost" value="${item.shipping_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                        </div>
+                        <!-- Packaging -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Packaging</label>
                             <input type="number" id="comp_packaging_cost" value="${item.packaging_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Publicidad</label>
-                            <input type="number" id="comp_advertising_cost" value="${item.advertising_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">IIBB / Retenciones</label>
-                            <input type="number" id="comp_withholdings_gross_income_tax" value="${item.withholdings_gross_income_tax || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
-                        </div>
+
+                        <!-- Costo Financiero -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Costo Financiero</label>
                             <input type="number" id="comp_financial_cost" value="${item.financial_cost || ''}" oninput="calculateCompetenceCosts()" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700">
@@ -3036,31 +3007,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const productCost = parseFloat(document.getElementById('comp_product_cost').value) || 0;
         const listingType = document.getElementById('comp_listing_type').value;
 
-        // Auto-set commission % based on listing type if it's empty or we want to force it
-        const commPctInput = document.getElementById('comp_ml_commision_percentage');
-        // If listing type changed and it's a new entry or they haven't touched the % yet
-        // logic... for now let's just use what's there but maybe add a helper
-
-        const mlCommPct = parseFloat(commPctInput.value) || 0;
         const estRetPct = parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0;
-
-        const shipCost = parseFloat(document.getElementById('comp_shipping_cost').value) || 0;
         const packCost = parseFloat(document.getElementById('comp_packaging_cost').value) || 0;
-        const advCost = parseFloat(document.getElementById('comp_advertising_cost').value) || 0;
-        const taxes = parseFloat(document.getElementById('comp_withholdings_gross_income_tax').value) || 0;
         const finCost = parseFloat(document.getElementById('comp_financial_cost').value) || 0;
 
+        let autoMeliCost = 0;
+        if (window._currentAutoCost && typeof window._currentAutoCost.total_selling_cost !== 'undefined') {
+            autoMeliCost = parseFloat(window._currentAutoCost.total_selling_cost) || 0;
+        }
+
         // Calculations
-        const mlComm = sellingPrice * (mlCommPct / 100);
         const retCost = sellingPrice * (estRetPct / 100);
-        const totalCosts = productCost + mlComm + shipCost + packCost + advCost + retCost + taxes + finCost;
+        // Costo Total = Costo del producto + Costo Automático Meli (incluye comisión, envío, etc) + Devoluciones estimadas + Packaging + Financiero
+        const totalCosts = productCost + autoMeliCost + retCost + packCost + finCost;
         const profit = sellingPrice - totalCosts;
-        const margin = (profit / sellingPrice) * 100 || 0;
-        const markup = (profit / productCost) * 100 || 0;
+        const margin = sellingPrice > 0 ? (profit / sellingPrice) * 100 : 0;
+        const markup = productCost > 0 ? (profit / productCost) * 100 : 0;
 
         // Update UI
         const commAmtInput = document.getElementById('comp_ml_commision_amount');
-        if (commAmtInput) commAmtInput.value = mlComm.toFixed(2);
+        if (commAmtInput) commAmtInput.value = (autoMeliCost).toFixed(2); // Deprecated explicitly, but fallback if DOM exists
 
         const totalCostsEl = document.getElementById('comp_display_total_costs');
         const profitEl = document.getElementById('comp_display_net_profit');
@@ -3088,12 +3054,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 selling_price: parseFloat(document.getElementById('comp_selling_price').value) || 0,
                 product_cost: parseFloat(document.getElementById('comp_product_cost').value) || 0,
                 listing_type: document.getElementById('comp_listing_type').value,
-                ml_commision_percentage: (parseFloat(document.getElementById('comp_ml_commision_percentage').value) || 0) / 100,
+                ml_commision_percentage: 0,
                 estimated_returns_percentage: (parseFloat(document.getElementById('comp_estimated_returns_percentage').value) || 0) / 100,
-                shipping_cost: parseFloat(document.getElementById('comp_shipping_cost').value) || 0,
+                shipping_cost: 0,
                 packaging_cost: parseFloat(document.getElementById('comp_packaging_cost').value) || 0,
-                advertising_cost: parseFloat(document.getElementById('comp_advertising_cost').value) || 0,
-                withholdings_gross_income_tax: parseFloat(document.getElementById('comp_withholdings_gross_income_tax').value) || 0,
+                advertising_cost: 0,
+                withholdings_gross_income_tax: 0,
                 financial_cost: parseFloat(document.getElementById('comp_financial_cost').value) || 0
             };
 
