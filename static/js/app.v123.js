@@ -2755,7 +2755,10 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             const html = `
-                <div class="p-6">
+                <div class="p-6 relative">
+                    <button onclick="closeModal()" class="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full z-20" title="Cerrar">
+                        <i data-lucide="x" class="h-6 w-6"></i>
+                    </button>
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gray-100 pb-6">
                         <div>
                             <h2 class="text-xl font-bold text-gray-900">${productName || 'Auditoría de Calidad'}</h2>
