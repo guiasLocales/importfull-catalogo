@@ -111,3 +111,32 @@ class Prompt(Base):
     ai_inventory_search = Column(Text)
     ai_improving_human_reply = Column(Text)
     rules = Column(Text)
+
+
+class Performance(Base):
+    __tablename__ = "performance"
+    __table_args__ = {'schema': 'mercadolibre'}
+
+    id = Column(Integer, primary_key=True)
+    quality_level = Column(String(50))
+    meli_id = Column(String(50), index=True)
+    entity_type = Column(String(50))
+    overall_score = Column(Integer)
+    level_wording = Column(String(100))
+    item_calculated_at = Column(DateTime)
+    bucket_key = Column(String(100))
+    bucket_title = Column(String(255))
+    bucket_score = Column(Integer)
+    bucket_status = Column(String(50))
+    variable_key = Column(String(100))
+    variable_title = Column(Text)
+    variable_score = Column(Integer)
+    variable_status = Column(String(50))
+    rule_key = Column(String(100))
+    rule_status = Column(String(50))
+    rule_progress = Column(Float)
+    rule_mode = Column(String(50))
+    rule_calculated_at = Column(DateTime)
+    wording_title = Column(Text)
+    wording_label = Column(String(255))
+    wording_link = Column(Text)

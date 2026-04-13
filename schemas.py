@@ -194,3 +194,47 @@ class SellingCalculationResponse(BaseModel):
     ship_discount: Optional[float] = None
     ship_cost_full_amount: Optional[float] = None
     total_selling_cost: Optional[float] = None
+
+
+# --- Performance / Quality Score Schemas ---
+
+class PerformanceRuleRow(BaseModel):
+    """A single rule row as returned by the DB query."""
+    model_config = ConfigDict(from_attributes=True)
+
+    meli_id: Optional[str] = None
+    quality_level: Optional[str] = None
+    overall_score: Optional[int] = None
+    level_wording: Optional[str] = None
+    bucket_title: Optional[str] = None
+    bucket_status: Optional[str] = None
+    rule_status: Optional[str] = None
+    rule_mode: Optional[str] = None
+    rule_progress: Optional[float] = None
+    wording_title: Optional[str] = None
+    wording_label: Optional[str] = None
+    wording_link: Optional[str] = None
+    item_calculated_at: Optional[datetime] = None
+
+
+class PerformanceSummary(BaseModel):
+    """Top-level quality summary for a product."""
+    meli_id: str
+    quality_level: Optional[str] = None
+    overall_score: Optional[int] = None
+    level_wording: Optional[str] = None
+    item_calculated_at: Optional[datetime] = None
+
+
+class PerformanceResponse(BaseModel):
+    """Full performance data: summary + ordered rule rows."""
+    summary: Optional[PerformanceSummary] = None
+    rows: List[PerformanceRuleRow] = []
+
+
+class PerformanceScoreItem(BaseModel):
+    """Lightweight score for display in the MeLi product table."""
+    meli_id: str
+    overall_score: Optional[int] = None
+    quality_level: Optional[str] = None
+    level_wording: Optional[str] = None

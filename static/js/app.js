@@ -1935,6 +1935,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="text-sm font-semibold text-gray-900 dark:text-white">${price}</span>
                         </td>
                         <td class="px-4 py-3 text-center">${stockBadge}</td>
+                        <td class="px-4 py-3 text-center">
+                            ${p.meli_id ? `
+                                <button onclick="event.stopPropagation(); window.openPerformanceModal('${p.meli_id}', '${p.product_name.replace(/'/g, "\\'")}')" 
+                                    class="px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-700 transition-all border border-gray-200">
+                                    Ver Auditoría
+                                </button>
+                            ` : '-'}
+                        </td>
                         <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">${linkHtml}</td>
                     </tr>`;
                 }).join('');
@@ -1987,6 +1995,125 @@ document.addEventListener('DOMContentLoaded', function () {
     if (meliStatusFilter) {
         meliStatusFilter.addEventListener('change', loadMeliProducts);
     }
+
+    // === Performance Modal Logic ===
+    window.openPerformanceModal = async (meliId, productName) => {
+        setLoading(true);
+        try {
+            const response = await authFetch(`/api/performance/${meliId}`);
+            if (!response.ok) throw new Error('Error al cargar datos de performance');
+            
+            const data = await response.json();
+            
+            let summary = data.summary;
+            let rows = data.rows || [];
+            
+            if (!summary && rows.length === 0) {
+                alert('No se encontraron datos de performance para esta publicación. Recuerda que solo funciona para productos activos.');
+                setLoading(false);
+                return;
+            }
+
+            const getScoreColor = (score) => {
+                if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
+                if (score >= 70) return 'text-blue-600 bg-blue-50 border-blue-200';
+                if (score >= 40) return 'text-orange-600 bg-orange-50 border-orange-200';
+                return 'text-red-600 bg-red-50 border-red-200';
+            };
+
+            const html = `
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">${productName}</h2>
+                            <p class="text-sm text-gray-500 font-mono mt-1">${meliId}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-center px-4 py-2 rounded-xl border ${getScoreColor(summary?.overall_score || 0)}">
+                                <p class="text-[10px] uppercase font-bold tracking-wider opacity-70">Calidad Total</p>
+                                <p class="text-2xl font-black">${summary?.overall_score || 0}%</p>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-bold text-gray-900">${summary?.level_wording || '-'}</p>
+                                <p class="text-xs text-gray-500 uppercase">${summary?.quality_level || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sección</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sugerencia de Mejora</th>
+                                    <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${rows.map(row => `
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-bold text-gray-900">${row.bucket_title}</div>
+                                            <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${row.rule_mode || ''}</div>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
+                                                row.rule_status === 'PENDING' 
+                                                ? 'bg-amber-100 text-amber-700 border-amber-200' 
+                                                : 'bg-green-100 text-green-700 border-green-200'
+                                            }">
+                                                ${row.rule_status === 'PENDING' ? 'Pendiente' : 'Completado'}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <p class="text-sm text-gray-700 leading-tight">${row.wording_title}</p>
+                                        </td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-right">
+                                            ${row.wording_link ? `
+                                                <a href="${row.wording_link}" target="_blank" 
+                                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                                                    Corregir <i data-lucide="external-link" class="h-3 w-3"></i>
+                                                </a>
+                                            ` : '-'}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            // Adjust modal width
+            const modalContent = document.getElementById('modalContent');
+            if (modalContent) {
+                modalContent.classList.remove('max-w-lg', 'max-w-4xl');
+                modalContent.classList.add('max-w-5xl');
+            }
+
+            // Save original close function to reset width
+            const originalClose = window.closeModal;
+            window.closeModal = () => {
+                const mc = document.getElementById('modalContent');
+                if (mc) {
+                    mc.classList.remove('max-w-5xl');
+                    mc.classList.add('max-w-lg');
+                }
+                originalClose();
+                window.closeModal = originalClose;
+            };
+
+            openModal('', html);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        } catch (e) {
+            console.error('Error opening performance modal:', e);
+            alert('Error: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // === End MercadoLibre ===
 
