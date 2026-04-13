@@ -1945,11 +1945,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const permalink = p.permalink;
                     const linkHtml = permalink
-                        ? `<a href="${permalink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-xs font-medium" title="Ver en MercadoLibre">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                            Meli
+                        ? `<a href="${permalink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white transition-all text-xs font-bold shadow-sm" title="Abrir en MercadoLibre">
+                            Ir a ML <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                            </a>`
-                        : `<span class="text-gray-400 text-xs">Sin link</span>`;
+                        : `<span class="text-gray-400 text-xs italic">Sin link</span>`;
 
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="openProductDetail(${p.id})">
                         <td class="px-4 py-3">
@@ -1975,8 +1974,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             ${p.meli_id ? `
                                 <div id="score-cell-${p.meli_id}" class="flex flex-col items-center gap-1">
                                     <button onclick="event.stopPropagation(); window.openPerformanceModal('${p.meli_id}', '${p.product_name.replace(/'/g, "\\'")}')" 
-                                        class="px-2 py-1 rounded text-[10px] font-black bg-white text-gray-500 hover:bg-blue-600 hover:text-white transition-all border border-gray-200 shadow-sm leading-none flex items-center gap-1">
-                                        <i data-lucide="target" class="h-3 w-3"></i> AUDITORÍA
+                                        class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-gray-900 text-white hover:bg-blue-600 transition-all shadow-md flex items-center gap-1.5">
+                                        <i data-lucide="target" class="h-3.5 w-3.5"></i> AUDITORÍA
                                     </button>
                                 </div>
                             ` : '-'}
