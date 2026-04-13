@@ -894,6 +894,61 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h2 class="text-xl font-bold text-gray-900 leading-tight mb-1">
                             ${product.product_name}
                         </h2>
+                        
+                        ${product.meli_id ? `
+                        <div class="mb-4 bg-yellow-50 rounded-lg border border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-700/30 overflow-hidden">
+                            <div class="p-3 flex items-center justify-between border-b border-yellow-200/50">
+                                <div class="flex items-center gap-3">
+                                    <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-10 object-contain dark:hidden">
+                                    <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-10 object-contain hidden dark:block">
+                                    <div>
+                                        <p class="text-[10px] text-yellow-700 dark:text-yellow-500 uppercase font-bold tracking-wider">MercadoLibre ID</p>
+                                        <a href="${product.permalink || 'https://www.mercadolibre.com.ar/p/' + product.meli_id}" 
+                                           target="_blank" 
+                                           class="text-blue-600 font-bold hover:underline dark:text-blue-400 text-sm">
+                                            ${product.meli_id}
+                                        </a>
+                                    </div>
+                                </div>
+                                <button onclick="window.openPerformanceModal('${product.meli_id}', '${product.product_name.replace(/'/g, "\\'")}')"
+                                        class="px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-xs font-bold shadow-sm transition-all flex items-center gap-2">
+                                    <i data-lucide="target" class="h-3.5 w-3.5"></i> Ver Auditoría
+                                </button>
+                            </div>
+                            <div id="detail-performance-summary-${product.id}" class="p-3 bg-white/50 dark:bg-black/20 flex items-center justify-between">
+                                <span class="text-xs text-gray-500 italic">Cargando calidad...</span>
+                            </div>
+                        </div>
+                        
+                        <script>
+                            // Small inline script to fetch score for this specific modal
+                            (async () => {
+                                try {
+                                    const res = await fetch('/api/performance/scores/bulk?meli_ids=${product.meli_id}', {
+                                        headers: {'Authorization': 'Bearer ' + localStorage.getItem('token')}
+                                    });
+                                    if (res.ok) {
+                                        const scores = await res.json();
+                                        const container = document.getElementById('detail-performance-summary-${product.id}');
+                                        if (scores.length > 0 && container) {
+                                            const s = scores[0];
+                                            const color = s.overall_score >= 90 ? 'text-green-600' : (s.overall_score >= 70 ? 'text-blue-600' : 'text-orange-600');
+                                            container.innerHTML = \`
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-bold text-gray-600 capitalize">\${s.quality_level || ''} \${s.level_wording || ''}</span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-lg font-black \${color}">\${s.overall_score}%</span>
+                                                </div>
+                                            \`;
+                                        } else if (container) {
+                                            container.innerHTML = '<span class="text-xs text-gray-400">Sin datos de calidad publicados</span>';
+                                        }
+                                    }
+                                } catch(e) {}
+                            })();
+                        </script>` : ''}
+
                         <div class="flex items-center gap-3 text-sm text-gray-500">
                              <span>ID: ${product.id}</span>
                              <span class="text-gray-300">|</span>
@@ -2550,11 +2605,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const permalink = p.permalink;
                     const linkHtml = permalink
-                        ? `<a href="${permalink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-xs font-medium">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                            Ver
+                        ? `<a href="${permalink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white transition-all text-xs font-bold shadow-sm" title="Abrir en MercadoLibre">
+                            Ir a ML <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                            </a>`
-                        : `<span class="text-gray-400 text-xs">Sin link</span>`;
+                        : `<span class="text-gray-400 text-xs italic">Sin link</span>`;
 
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="openProductDetail(${p.id})">
                         <td class="px-4 py-3">
@@ -2576,10 +2630,27 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="text-sm font-semibold text-gray-900 dark:text-white">${price}</span>
                         </td>
                         <td class="px-4 py-3 text-center">${stockBadge}</td>
+                        <td class="px-4 py-3 text-center">
+                            ${p.meli_id ? `
+                                <div id="score-cell-${p.meli_id}" class="flex flex-col items-center gap-1">
+                                    <button onclick="event.stopPropagation(); window.openPerformanceModal('${p.meli_id}', '${p.product_name.replace(/'/g, "\\'")}')" 
+                                        class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-gray-900 text-white hover:bg-blue-600 transition-all shadow-md flex items-center gap-1.5">
+                                        <i data-lucide="target" class="h-3.5 w-3.5"></i> AUDITORÍA
+                                    </button>
+                                </div>
+                            ` : '-'}
+                        </td>
                         <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">${linkHtml}</td>
                     </tr>`;
                 }).join('');
-                lucide.createIcons();
+
+                // After rendering rows, fetch scores in bulk
+                const meliIds = products.map(p => p.meli_id).filter(id => id && id.startsWith('MLA')).join(',');
+                if (meliIds) {
+                    fetchMeliScoresBulk(meliIds);
+                }
+                
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         } catch (e) {
             console.error('Error loading MercadoLibre products:', e);
@@ -2629,6 +2700,155 @@ document.addEventListener('DOMContentLoaded', function () {
     if (meliStatusFilter) {
         meliStatusFilter.addEventListener('change', loadMeliProducts);
     }
+
+    async function fetchMeliScoresBulk(meliIds) {
+        try {
+            const response = await authFetch(`/api/performance/scores/bulk?meli_ids=${meliIds}`);
+            if (!response.ok) return;
+            const scores = await response.json();
+            
+            scores.forEach(s => {
+                const cell = document.getElementById(`score-cell-${s.meli_id}`);
+                if (cell) {
+                    const color = s.overall_score >= 90 ? 'text-green-600' : (s.overall_score >= 70 ? 'text-blue-600' : 'text-orange-600');
+                    const bgColor = s.overall_score >= 90 ? 'bg-green-50/50' : (s.overall_score >= 70 ? 'bg-blue-50/50' : 'bg-orange-50/50');
+                    
+                    const scoreHtml = `
+                        <span class="text-sm font-black ${color}">${s.overall_score}%</span>
+                        <button onclick="event.stopPropagation(); window.openPerformanceModal('${s.meli_id}', '')" 
+                            class="px-2 py-0.5 rounded-[4px] text-[9px] font-bold bg-white text-gray-400 hover:bg-blue-600 hover:text-white transition-all border border-gray-100 shadow-sm leading-none flex items-center gap-1">
+                            AUDITORÍA
+                        </button>
+                    `;
+                    cell.innerHTML = scoreHtml;
+                    cell.closest('td').classList.add(bgColor);
+                }
+            });
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        } catch(e) {
+            console.error("Error bulk fetching scores", e);
+        }
+    }
+
+    window.openPerformanceModal = async (meliId, productName) => {
+        setLoading(true);
+        try {
+            const response = await authFetch(`/api/performance/${meliId}`);
+            if (!response.ok) throw new Error('Error al cargar datos de performance');
+            
+            const data = await response.json();
+            
+            let summary = data.summary;
+            let rows = data.rows || [];
+            
+            if (!summary && rows.length === 0) {
+                alert('No se encontraron datos de performance para esta publicación. Recuerda que solo funciona para productos activos.');
+                setLoading(false);
+                return;
+            }
+
+            const getScoreColor = (score) => {
+                if (score >= 90) return 'text-green-600 bg-green-50 border-green-200';
+                if (score >= 70) return 'text-blue-600 bg-blue-50 border-blue-200';
+                if (score >= 40) return 'text-orange-600 bg-orange-50 border-orange-200';
+                return 'text-red-600 bg-red-50 border-red-200';
+            };
+
+            const html = `
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-gray-100 pb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">${productName || 'Auditoría de Calidad'}</h2>
+                            <p class="text-sm text-gray-500 font-mono mt-1">${meliId}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-center px-4 py-2 rounded-xl border ${getScoreColor(summary?.overall_score || 0)}">
+                                <p class="text-[10px] uppercase font-bold tracking-wider opacity-70">Calidad Total</p>
+                                <p class="text-2xl font-black">${summary?.overall_score || 0}%</p>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-bold text-gray-900">${summary?.level_wording || '-'}</p>
+                                <p class="text-xs text-gray-500 uppercase">${summary?.quality_level || '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm">
+                        <div class="max-h-[60vh] overflow-y-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sección</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sugerencia de Mejora</th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    ${rows.map(row => `
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-bold text-gray-900">${row.bucket_title}</div>
+                                                <div class="text-[10px] text-gray-400 uppercase tracking-tighter">${row.rule_mode || ''}</div>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
+                                                    row.rule_status === 'PENDING' 
+                                                    ? 'bg-amber-100 text-amber-700 border-amber-200' 
+                                                    : 'bg-green-100 text-green-700 border-green-200'
+                                                }">
+                                                    ${row.rule_status === 'PENDING' ? 'Pendiente' : 'Completado'}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-4">
+                                                <p class="text-sm text-gray-700 leading-tight">${row.wording_title}</p>
+                                            </td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-right">
+                                                ${row.wording_link ? `
+                                                    <a href="${row.wording_link}" target="_blank" 
+                                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                                                        Corregir <i data-lucide="external-link" class="h-3 w-3"></i>
+                                                    </a>
+                                                ` : '-'}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Adjust modal width
+            const modalContent = document.getElementById('modalContent');
+            if (modalContent) {
+                modalContent.classList.remove('max-w-lg', 'max-w-4xl');
+                modalContent.classList.add('max-w-5xl');
+            }
+
+            // Save original close function to reset width
+            const originalClose = window.closeModal;
+            window.closeModal = () => {
+                const mc = document.getElementById('modalContent');
+                if (mc) {
+                    mc.classList.remove('max-w-5xl');
+                    mc.classList.add('max-w-lg');
+                }
+                originalClose();
+                window.closeModal = originalClose;
+            };
+
+            openModal('', html);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        } catch (e) {
+            console.error('Error opening performance modal:', e);
+            alert('Error: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // === End MercadoLibre ===
 
