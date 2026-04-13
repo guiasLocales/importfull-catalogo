@@ -37,3 +37,23 @@ def get_performance(meli_id: str, db: Session = Depends(get_db)):
     rows = [PerformanceRuleRow.model_validate(r) for r in rows_db]
 
     return PerformanceResponse(summary=summary, rows=rows)
+
+@router.get("/scores/bulk", response_model=List[PerformanceScoreItem])
+def get_bulk_scores(meli_ids: str, db: Session = Depends(get_db)):
+    """Fetch only the overall score/level for a list of meli_ids."""
+    id_list = meli_ids.split(",")
+    
+    # Subquery to get one row per meli_id (the columns are denormalized anyway)
+    # We use MAX(id) to get the latest row or any row for that meli_id
+    subq = db.query(Performance.meli_id, Performance.overall_score, Performance.quality_level, Performance.level_wording) \
+             .filter(Performance.meli_id.in_(id_list)) \
+             .group_by(Performance.meli_id).all()
+    
+    return [
+        PerformanceScoreItem(
+            meli_id=row.meli_id,
+            overall_score=row.overall_score,
+            quality_level=row.quality_level,
+            level_wording=row.level_wording
+        ) for row in subq
+    ]
