@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
 from models import Performance
-from schemas import PerformanceResponse, PerformanceSummary, PerformanceRuleRow
+from schemas import PerformanceResponse, PerformanceSummary, PerformanceRuleRow, PerformanceScoreItem
 from routers.auth import get_current_user
 
 router = APIRouter(
