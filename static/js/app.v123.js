@@ -703,11 +703,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 if (!response.ok) throw new Error('Error al guardar');
+                const updatedProduct = await response.json();
 
-                // Update local state
+                // Update local state con el producto real devuelto por la base de datos
                 const productIndex = state.products.findIndex(p => p.id === id);
                 if (productIndex >= 0) {
-                    state.products[productIndex] = { ...state.products[productIndex], ...updates };
+                    state.products[productIndex] = updatedProduct;
                 }
 
                 if (statusEl) {
@@ -1704,6 +1705,20 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.modalContent.classList.add('scale-95');
         setTimeout(() => {
             elements.modalBackdrop.classList.add('hidden');
+            
+            // Sincronizar el estado de la vista atras del modal
+            const iv = document.getElementById('inventoryView');
+            if (iv && !iv.classList.contains('hidden') && typeof renderProducts === 'function') {
+                renderProducts();
+            }
+            const mv = document.getElementById('meliView');
+            if (mv && !mv.classList.contains('hidden') && typeof loadMeliProducts === 'function') {
+                loadMeliProducts();
+            }
+            const cv = document.getElementById('competenceView');
+            if (cv && !cv.classList.contains('hidden') && typeof loadCompetenceData === 'function') {
+                loadCompetenceData();
+            }
         }, 300);
     };
 
