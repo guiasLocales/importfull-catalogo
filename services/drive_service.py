@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 import io
 
-# If modifying these scopes, delete the file token.json.
+# SCOPES required for Drive access
 SCOPES = ['https://www.googleapis.com/auth/drive']
 CLIENT_SECRET_FILE = 'client_secret.json'
 
@@ -25,7 +25,8 @@ ROOT_FOLDER_ID = os.getenv('ROOT_DRIVE_FOLDER_ID', "1dd2P6OkaFgvkah-sBr_sjagAnCk
 def get_drive_service():
     """Builds and returns the Drive service."""
     creds = None
-    SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    # SCOPES must strictly match the ones authorized in OAuth Playground
+    SCOPES = ['https://www.googleapis.com/auth/drive']
     
     # Use /tmp for token storage in Cloud Run
     RUNTIME_TOKEN_FILE = '/tmp/token.json'
