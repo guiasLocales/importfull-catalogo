@@ -30,6 +30,41 @@ def get_drive_service():
     # Use /tmp for token storage in Cloud Run
     RUNTIME_TOKEN_FILE = '/tmp/token.json'
     
+    # 0. Priority: Permanent Refresh Token from Environment Variable
+    # This is the most reliable method for headless servers
+    refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
+    if refresh_token:
+        try:
+            print("DEBUG: Using permanent GOOGLE_DRIVE_REFRESH_TOKEN from environment", flush=True)
+            from google.oauth2.credentials import Credentials
+            import json
+            
+            # We need client_id and client_secret to use the refresh_token
+            from routers.drive_auth import get_client_config
+            client_config = get_client_config()
+            
+            if client_config:
+                # client_config usually has 'web' or 'installed' as the root key
+                config = client_config.get('web') or client_config.get('installed')
+                if config:
+                    creds = Credentials(
+                        token=None,
+                        refresh_token=refresh_token,
+                        token_uri=config.get('token_uri', "https://oauth2.googleapis.com/token"),
+                        client_id=config.get('client_id'),
+                        client_secret=config.get('client_secret'),
+                        scopes=SCOPES
+                    )
+                    
+                    # Refresh to get a valid access token
+                    creds.refresh(Request())
+                    
+                    if creds and creds.valid:
+                        print(">>> AUTH: Using PERMANENT REFRESH TOKEN (Success)", flush=True)
+                        return build('drive', 'v3', credentials=creds)
+        except Exception as e:
+            print(f"DEBUG: Permanent Refresh Token failed: {e}", flush=True)
+
     # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
     # Try to load token from environment/base64 first
     if not os.path.exists(RUNTIME_TOKEN_FILE):
