@@ -34,8 +34,9 @@ def get_drive_service():
     # This is the most reliable method for headless servers
     refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
     if refresh_token:
+        refresh_token = refresh_token.strip() # Clean potential whitespace
         try:
-            print("DEBUG: Using permanent GOOGLE_DRIVE_REFRESH_TOKEN from environment", flush=True)
+            print(f"DEBUG: Attempting login with permanent REFRESH_TOKEN (Starts with: {refresh_token[:5]}...)", flush=True)
             from google.oauth2.credentials import Credentials
             import json
             
@@ -43,9 +44,15 @@ def get_drive_service():
             from routers.drive_auth import get_client_config
             client_config = get_client_config()
             
+            if not client_config:
+                print("CRITICAL DEBUG: client_config is NONE. Check GOOGLE_CLIENT_SECRET_JSON env var.", flush=True)
+            
             if client_config:
                 # client_config usually has 'web' or 'installed' as the root key
                 config = client_config.get('web') or client_config.get('installed')
+                if not config:
+                    print(f"CRITICAL DEBUG: Root key 'web' or 'installed' not found in config. Keys present: {list(client_config.keys())}", flush=True)
+                
                 if config:
                     creds = Credentials(
                         token=None,
@@ -62,8 +69,13 @@ def get_drive_service():
                     if creds and creds.valid:
                         print(">>> AUTH: Using PERMANENT REFRESH TOKEN (Success)", flush=True)
                         return build('drive', 'v3', credentials=creds)
+                    else:
+                        print("DEBUG: Credentials created but not valid after refresh.", flush=True)
         except Exception as e:
-            print(f"DEBUG: Permanent Refresh Token failed: {e}", flush=True)
+            print(f"CRITICAL DEBUG: Permanent Refresh Token flow FAILED: {e}", flush=True)
+            # If the user provided a token and it failed, we DON'T want to fallback to Service Account
+            # because that causes confusing 403 errors.
+            return None 
 
     # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
     # Try to load token from environment/base64 first
