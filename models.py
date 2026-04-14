@@ -30,6 +30,9 @@ class Product(Base):
     dimentions = Column(String(100))  # Format: 'HxWxL,weight' e.g. '2x5x10,462'
     catalog_link = Column(Text)
     price_mercadolibre = Column(Numeric(10, 0))
+    listing_type_id = Column(String(50))
+    free_shipping = Column(Integer)
+    mode_shipping = Column(String(50))
 
 
 class User(Base):

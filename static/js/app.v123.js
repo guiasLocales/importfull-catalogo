@@ -669,6 +669,17 @@ document.addEventListener('DOMContentLoaded', function () {
             if (descEl) updates.description = descEl.value;
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
+
+            // MercadoLibre Business Fields
+            const listingEl = document.getElementById('edit_listing_type_id');
+            if (listingEl) updates.listing_type_id = listingEl.value;
+            
+            const modeEl = document.getElementById('edit_mode_shipping');
+            if (modeEl) updates.mode_shipping = modeEl.value;
+            
+            const freeEl = document.getElementById('edit_free_shipping');
+            if (freeEl) updates.free_shipping = freeEl.checked ? 1 : 0;
+
             // Compose dimentions from separate fields
             const dH = document.getElementById('dim_h');
             const dW = document.getElementById('dim_w');
@@ -1055,6 +1066,41 @@ document.addEventListener('DOMContentLoaded', function () {
                         </details>`;
                         })()}
 
+                    </div>
+
+                    <!-- MercadoLibre Business Config -->
+                    <div class="mb-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                             <i data-lucide="settings" class="h-3 w-3"></i> Configuración de Publicación
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <!-- Listing Type -->
+                            <div>
+                                <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Publicación</label>
+                                <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
+                                        class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
+                                    <option value="gold_special" ${product.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
+                                    <option value="gold_pro" ${product.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
+                                </select>
+                            </div>
+                            <!-- Shipping Mode -->
+                            <div>
+                                <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Logística</label>
+                                <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
+                                        class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
+                                    <option value="me2" ${product.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
+                                    <option value="me1" ${product.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
+                                </select>
+                            </div>
+                            <!-- Free Shipping -->
+                            <div class="flex items-end">
+                                <label class="flex items-center gap-2 cursor-pointer p-2 w-full h-10 rounded-lg hover:bg-white transition-colors border border-gray-200 shadow-sm">
+                                    <input type="checkbox" id="edit_free_shipping" ${product.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
+                                           class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
+                                    <span class="text-xs font-bold text-gray-700">Envío Gratis</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Key Stats Grid -->
@@ -2552,6 +2598,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === MercadoLibre View Logic ===
     let meliDebounceTimer = null;
+
 
     async function loadMeliProducts() {
         const loading = document.getElementById('meliLoadingOverlay');
