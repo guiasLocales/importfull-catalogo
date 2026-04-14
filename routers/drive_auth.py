@@ -143,3 +143,26 @@ def auth_callback(request: Request, code: str, state: str = None):
         print(f"ERROR in Drive auth callback: {e}")
         # Send error message in URL for debugging
         return RedirectResponse(url=f"/#settings?auth=error&info={error_msg[:100]}")
+
+@router.get("/debug")
+def debug_drive_config():
+    """Diagnostic endpoint to check if env vars are loaded correctly"""
+    client_config = get_client_config()
+    refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
+    
+    debug_info = {
+        "GOOGLE_DRIVE_REFRESH_TOKEN_exists": refresh_token is not None,
+        "GOOGLE_DRIVE_REFRESH_TOKEN_length": len(refresh_token) if refresh_token else 0,
+        "GOOGLE_DRIVE_REFRESH_TOKEN_prefix": refresh_token[:5] if refresh_token else None,
+        "GOOGLE_CLIENT_SECRET_JSON_exists": os.getenv("GOOGLE_CLIENT_SECRET_JSON") is not None,
+        "client_config_parsed": client_config is not None,
+    }
+    
+    if client_config:
+        config = client_config.get('web') or client_config.get('installed')
+        debug_info["config_type"] = "web" if 'web' in client_config else ("installed" if 'installed' in client_config else "unknown")
+        if config:
+            debug_info["client_id_exists"] = config.get('client_id') is not None
+            debug_info["client_id_prefix"] = config.get('client_id')[:15] if config.get('client_id') else None
+    
+    return debug_info
