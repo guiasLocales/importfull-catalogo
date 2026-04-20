@@ -24,14 +24,17 @@ WEBHOOK_SECRET = "mati-gordo"
 
 def send_webhook(item_id: int, event_type: str, site: Optional[str] = None, extra_data: dict = None):
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
+    # Default to 'mercadolibre' if no site is provided, as the external service
+    # now requires this parameter for all events.
+    effective_site = site if site else "mercadolibre"
+    
     data = {
         "event_type": event_type,
         "item_id": item_id,
-        "secret": WEBHOOK_SECRET
+        "secret": WEBHOOK_SECRET,
+        "site": effective_site
     }
-    if site:
-        data["site"] = site
-        
+    
     if extra_data:
         data["data"] = extra_data
     try:
