@@ -294,17 +294,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         // Load data for the view
-        if (viewName === 'mercadolibre') {
-            loadMeliProducts();
-        }
-        if (viewName === 'competence') {
-            loadCompetenceData();
-        }
-        if (viewName === 'prompts') {
-            loadPrompts();
-        }
-        if (viewName === 'tiendanube') {
-            loadTiendaNubeProducts();
+        console.log("Switching to view:", viewName);
+        try {
+            if (viewName === 'mercadolibre' && typeof loadMeliProducts === 'function') loadMeliProducts();
+            if (viewName === 'competence' && typeof loadCompetenceData === 'function') loadCompetenceData();
+            if (viewName === 'prompts' && typeof loadPrompts === 'function') loadPrompts();
+            if (viewName === 'tiendanube' && typeof loadTiendaNubeProducts === 'function') loadTiendaNubeProducts();
+        } catch (e) {
+            console.error("Error loading view data:", e);
         }
 
         // Refresh icons
