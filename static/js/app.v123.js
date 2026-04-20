@@ -123,7 +123,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return new Response(null, { status: 401 });
         }
 
-        // Merge auth header with any existing headers
         const mergedHeaders = {
             ...(options.headers || {}),
             'Authorization': `Bearer ${token}`
@@ -139,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return response;
     }
+    window.authFetch = authFetch;
 
     // --- API ---
 
@@ -249,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const views = {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
+            tiendanube: document.getElementById('tiendaNubeView'),
             competence: document.getElementById('competenceView'),
             settings: document.getElementById('settingsView'),
             prompts: document.getElementById('promptsView')
@@ -256,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const navButtons = {
             inventory: document.getElementById('navInventory'),
             mercadolibre: document.getElementById('navMeli'),
+            tiendanube: document.getElementById('navTiendaNube'),
             competence: document.getElementById('navCompetence'),
             settings: document.getElementById('navSettings'),
             prompts: document.getElementById('navPrompts')
@@ -266,6 +268,8 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.values(navButtons).forEach(b => {
             if (b) {
                 b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700');
+                b.style.background = '';
+                b.style.color = '';
                 b.classList.add('text-gray-700', 'hover:bg-gray-50');
             }
         });
@@ -280,6 +284,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 navButtons[viewName].classList.add('bg-yellow-50', 'text-yellow-700');
             } else if (viewName === 'competence') {
                 navButtons[viewName].classList.add('bg-purple-50', 'text-purple-700');
+            } else if (viewName === 'tiendanube') {
+                navButtons[viewName].style.background = '#EEF0FF';
+                navButtons[viewName].style.color = '#1B2160';
             } else {
                 navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
             }
@@ -295,6 +302,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (viewName === 'prompts') {
             loadPrompts();
+        }
+        if (viewName === 'tiendanube') {
+            loadTiendaNubeProducts();
         }
 
         // Refresh icons
@@ -382,12 +392,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="col-span-1 flex items-center justify-end">
                     ${product.status && product.status.toLowerCase() === 'active'
-                    ? `<button onclick="togglePublish(${product.id}, false, this)" class="px-2 py-1 text-[10px] font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap" title="Pausar">
-                            Pausar
-                       </button>`
-                    : `<button onclick="togglePublish(${product.id}, true, this)" class="px-2 py-1 text-[10px] font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap" title="Publicar">
-                            Publicar
-                       </button>`}
+                    ? `<div class="flex flex-col gap-1">
+                            <button onclick="togglePublish(${product.id}, false, this)" 
+                                class="px-2 py-1 text-[10px] font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap" title="Pausar">
+                                Pausar
+                            </button>
+                            <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                class="px-2 py-1 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors whitespace-nowrap" title="Eliminar de ML">
+                                Eliminar
+                            </button>
+                       </div>`
+                    : `<div class="flex flex-col gap-1">
+                            <button onclick="togglePublish(${product.id}, true, this)" 
+                                class="px-2 py-1 text-[10px] font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap" title="Publicar">
+                                Publicar
+                            </button>
+                            ${product.status && product.status.toLowerCase() !== 'eliminando' ? `
+                            <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                class="px-2 py-1 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors whitespace-nowrap" title="Eliminar de ML">
+                                Eliminar
+                            </button>` : ''}
+                       </div>`}
                 </div>
             </div>
         `;
@@ -577,6 +602,57 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (originalHover) inputEl.classList.add(originalHover);
                 // Revert to old valid value? Not strictly necessary, but could be nice.
             }, 1500);
+        }
+    };
+
+    // Global function for product deletion from MercadoLibre (Direct Frontend Call)
+    window.deleteMeliProduct = async (id, buttonElement) => {
+        if (!confirm('¿Estás seguro de que deseas eliminar esta publicación de MercadoLibre? Esta acción no se puede deshacer.')) return;
+
+        const button = buttonElement || (event && event.currentTarget);
+        const originalHTML = button ? button.innerHTML : '';
+
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>';
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            // Llamada directa al webhook externo (Frontend Only)
+            const response = await fetch('https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: "delete",
+                    item_id: id,
+                    secret: "mati-gordo"
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Error al enviar solicitud al webhook');
+            }
+
+            alert('Solicitud de eliminación enviada con éxito.');
+
+            // Update local state (in-memory only since we don't touch backend)
+            const productIndex = state.products.findIndex(p => p.id === id);
+            if (productIndex >= 0) {
+                state.products[productIndex].status = 'eliminando';
+            }
+            renderProducts();
+
+        } catch (e) {
+            console.error('Error deleting product from ML:', e);
+            alert('Error al eliminar: ' + e.message + '\n\nNota: Es posible que existan restricciones de CORS para llamadas directas desde el navegador.');
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+            }
         }
     };
 
@@ -1341,18 +1417,32 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="w-px h-auto bg-gray-200 mx-1"></div>
 
                         ${isActive
-                    ? `<button onclick="togglePublishFromDetail(${product.id}, false)" 
-                               class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors flex items-center gap-2"
-                               title="Pausar publicación">
-                                <i data-lucide="pause-circle" class="h-5 w-5"></i>
-                                <span>Pausar</span>
-                               </button>`
-                    : `<button onclick="togglePublishFromDetail(${product.id}, true)" 
-                               class="px-5 py-2.5 bg-[#fff159] text-[#2d3277] border border-yellow-400 rounded-lg hover:bg-[#fdd835] font-medium transition-colors flex items-center gap-2 shadow-sm"
-                               title="Publicar en MercadoLibre">
-                                <i data-lucide="shopping-bag" class="h-5 w-5"></i>
-                                <span class="font-bold">Publicar</span>
-                               </button>`}
+                    ? `<div class="flex gap-2">
+                                <button onclick="togglePublishFromDetail(${product.id}, false)" 
+                                   class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors flex items-center gap-2"
+                                   title="Pausar publicación">
+                                    <i data-lucide="pause-circle" class="h-5 w-5"></i>
+                                    <span>Pausar</span>
+                                </button>
+                                <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                   class="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center gap-2 shadow-sm"
+                                   title="Eliminar de MercadoLibre">
+                                    <i data-lucide="trash-2" class="h-5 w-5"></i>
+                                </button>
+                               </div>`
+                    : `<div class="flex gap-2">
+                                <button onclick="togglePublishFromDetail(${product.id}, true)" 
+                                   class="px-5 py-2.5 bg-[#fff159] text-[#2d3277] border border-yellow-400 rounded-lg hover:bg-[#fdd835] font-medium transition-colors flex items-center gap-2 shadow-sm"
+                                   title="Publicar en MercadoLibre">
+                                    <i data-lucide="shopping-bag" class="h-5 w-5"></i>
+                                    <span class="font-bold">Publicar</span>
+                                </button>
+                                <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                   class="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center gap-2 shadow-sm"
+                                   title="Eliminar de MercadoLibre">
+                                    <i data-lucide="trash-2" class="h-5 w-5"></i>
+                                </button>
+                               </div>`}
                     </div>
 
                 </div>
