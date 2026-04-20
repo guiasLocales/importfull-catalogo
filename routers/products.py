@@ -36,13 +36,17 @@ def send_webhook(item_id: int, event_type: str, site: Optional[str] = None, extr
         data["data"] = extra_data
     try:
         print(f"DEBUG: Sending webhook to {WEBHOOK_URL} with data: {data}")
-        with httpx.Client(timeout=10.0) as client:
+        # Increased timeout to 30s as publication services can be slow
+        with httpx.Client(timeout=30.0) as client:
             response = client.post(WEBHOOK_URL, json=data)
             print(f"Webhook sent for item {item_id}: {data['event_type']} - Status: {response.status_code}")
+            
             if response.status_code in (200, 202):
                 return True, "Success"
             else:
-                return False, f"Status: {response.status_code} - {response.text[:200]}"
+                # Return more of the error body to help debugging (up to 500 chars)
+                error_body = response.text[:500]
+                return False, f"Status: {response.status_code} - {error_body}"
     except Exception as e:
         print(f"Webhook error for item {item_id}: {e}")
         return False, str(e)
