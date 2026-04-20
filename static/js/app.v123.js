@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Navigation Logic ---
     window.switchView = (viewName) => {
         console.log("Switching to view:", viewName);
+        
         const views = {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
@@ -255,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
             settings: document.getElementById('settingsView'),
             prompts: document.getElementById('promptsView')
         };
+        
         const navButtons = {
             inventory: document.getElementById('navInventory'),
             mercadolibre: document.getElementById('navMeli'),
@@ -264,16 +266,18 @@ document.addEventListener('DOMContentLoaded', function () {
             prompts: document.getElementById('navPrompts')
         };
 
-        // Hide all views by adding .hidden and removing any inline display
+        // 1. Hide ALL views and clear styles
         Object.keys(views).forEach(key => {
             const v = views[key];
             if (v) {
                 v.classList.add('hidden');
-                v.style.display = ''; 
+                v.style.display = 'none';
+                v.style.width = '0';
+                v.style.height = '0';
             }
         });
 
-        // Deactivate all nav buttons
+        // 2. Deactivate all nav buttons
         Object.keys(navButtons).forEach(key => {
             const b = navButtons[key];
             if (b) {
@@ -284,16 +288,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Show selected view
+        // 3. Show selected view with forced layout
         const currentView = views[viewName];
         if (currentView) {
             currentView.classList.remove('hidden');
-            console.log("View shown:", viewName);
+            currentView.style.display = 'flex';
+            currentView.style.width = '100%';
+            currentView.style.height = '100%';
+            currentView.style.flexDirection = 'column';
+            console.log("View ACTIVATED:", viewName);
         } else {
-            console.error("View not found in DOM:", viewName);
+            console.error("CRITICAL: View ID not found for:", viewName);
         }
 
-        // Highlight active nav button
+        // 4. Highlight active nav button
         const currentBtn = navButtons[viewName];
         if (currentBtn) {
             currentBtn.classList.remove('text-gray-700', 'hover:bg-gray-50');
@@ -304,22 +312,36 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (viewName === 'tiendanube') {
                 currentBtn.style.background = '#EEF0FF';
                 currentBtn.style.color = '#1B2160';
+            } else if (viewName === 'prompts') {
+                currentBtn.classList.add('bg-indigo-50', 'text-indigo-700');
             } else {
                 currentBtn.classList.add('bg-blue-50', 'text-blue-700');
             }
         }
 
-        // Load data for the view
+        // 5. Load data with error handling per view
         try {
-            if (viewName === 'mercadolibre') loadMeliProducts();
-            if (viewName === 'competence') loadCompetenceData();
-            if (viewName === 'prompts') loadPrompts();
-            if (viewName === 'tiendanube' && typeof loadTiendaNubeProducts === 'function') loadTiendaNubeProducts();
+            if (viewName === 'mercadolibre') {
+                if (typeof loadMeliProducts === 'function') loadMeliProducts();
+                else console.warn("loadMeliProducts function missing");
+            }
+            if (viewName === 'competence') {
+                if (typeof loadCompetenceData === 'function') loadCompetenceData();
+                else console.warn("loadCompetenceData function missing");
+            }
+            if (viewName === 'prompts') {
+                if (typeof loadPrompts === 'function') loadPrompts();
+                else console.warn("loadPrompts function missing");
+            }
+            if (viewName === 'tiendanube') {
+                if (typeof loadTiendaNubeProducts === 'function') loadTiendaNubeProducts();
+                else console.warn("loadTiendaNubeProducts function missing");
+            }
         } catch (e) {
-            console.error("Error loading data for", viewName, e);
+            console.error("Error loading specific view data:", e);
         }
 
-        // Refresh icons
+        // 6. Refresh icons
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
