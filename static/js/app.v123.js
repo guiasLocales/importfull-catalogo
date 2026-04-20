@@ -296,9 +296,24 @@ document.addEventListener('DOMContentLoaded', function () {
             currentView.style.width = '100%';
             currentView.style.height = '100%';
             currentView.style.flexDirection = 'column';
+            currentView.style.opacity = '1';
+            currentView.style.visibility = 'visible';
             console.log("View ACTIVATED:", viewName);
+            
+            // Trigger specific loaders
+            if (viewName === 'mercadolibre' && typeof loadMeliProducts === 'function') {
+                loadMeliProducts();
+            } else if (viewName === 'tiendanube' && typeof loadTiendaNubeProducts === 'function') {
+                loadTiendaNubeProducts();
+            } else if (viewName === 'competence' && typeof loadCompetenceData === 'function') {
+                loadCompetenceData();
+            } else if (viewName === 'inventory' && typeof renderProducts === 'function') {
+                renderProducts();
+            }
         } else {
             console.error("CRITICAL: View ID not found for:", viewName);
+            // Fallback to inventory if error
+            if (viewName !== 'inventory') window.switchView('inventory');
         }
 
         // 4. Highlight active nav button
