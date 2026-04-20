@@ -2,12 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
-from schemas import ProductResponse, PublishRequest, ProductUpdate
+from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse
 from routers.auth import get_current_user
 import crud
 import httpx
 import asyncio
 from services import drive_service
+import models
+from pydantic import BaseModel
+import os
 
 router = APIRouter(
     prefix="/api/products",
@@ -224,9 +227,7 @@ def notify_product_update(product_id: int, db: Session = Depends(get_db)):
         
     return {"status": "success", "message": "Update notification sent"}
 
-from pydantic import BaseModel
-import os
-import models
+
 
 class PrePublishRequest(BaseModel):
     prompt: str
