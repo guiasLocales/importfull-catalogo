@@ -1530,6 +1530,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         <div id="auto-save-status" class="flex-1 flex items-center px-2"></div>
 
+                        <!-- Tienda Nube Quick Action -->
+                        <button onclick="event.stopPropagation(); openTiendaNubeDetail(${product.id})" 
+                                class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition-all shadow-md flex items-center gap-2"
+                                title="Gestionar Tienda Nube">
+                            <svg class="h-5 w-5" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+                                <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+                            </svg>
+                            <span class="hidden sm:inline">${product.price_tienda_nube && product.price_tienda_nube > 0 ? 'Pausar TN' : 'Publicar TN'}</span>
+                        </button>
+
                         ${product.meli_id ? `
                         <button onclick="triggerProductUpdate(${product.id}, this)" 
                                 class="px-4 py-2.5 bg-green-50 text-green-700 border border-green-300 rounded-lg hover:bg-green-100 font-medium transition-colors flex items-center gap-2"
@@ -1555,14 +1566,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </button>
                                </div>`
                     : `<div class="flex gap-2">
-                                <button onclick="toggleTNPublish(${product.id}, '${product.price_tienda_nube && product.price_tienda_nube > 0 ? 'pause' : 'publish'}')" 
-                                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                    <svg class="h-5 w-5" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
-                                        <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
-                                    </svg>
-                                    ${product.price_tienda_nube && product.price_tienda_nube > 0 ? 'Pausar TN' : 'Publicar TN'}
-                                </button>
                                 <button onclick="togglePublishFromDetail(${product.id}, true)" 
                                    class="px-5 py-2.5 bg-[#fff159] text-[#2d3277] border border-yellow-400 rounded-lg hover:bg-[#fdd835] font-medium transition-colors flex items-center gap-2 shadow-sm"
                                    title="Publicar en MercadoLibre">
