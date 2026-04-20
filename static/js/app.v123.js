@@ -536,12 +536,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="text-xs">
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'Sin Cat'}</span>
                     </div>
-                    ${(() => {
-                    if (product.meli_id) return `<span class="text-[9px] font-mono text-green-600 font-bold">${product.meli_id}</span>`;
-                    const s = product.status ? product.status.toLowerCase() : '';
-                    if (s === 'en proceso') return '<span class="text-xs font-bold text-blue-600 animate-pulse">En Proceso</span>';
-                    return '';
-                })()}
+                    <div class="flex items-center gap-2">
+                        ${product.meli_id ? `<img src="/static/img/meli-logo-light.png" alt="ML" class="h-4 object-contain">` : ''}
+                        ${product.price_tienda_nube && product.price_tienda_nube > 0 ? `
+                            <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="18" cy="26" r="13" stroke="#1B2160" stroke-width="3" fill="none"/>
+                                <circle cx="36" cy="18" r="15" stroke="#1B2160" stroke-width="3" fill="none"/>
+                            </svg>` : ''}
+                    </div>
                 </div>
             </div>
         `;
