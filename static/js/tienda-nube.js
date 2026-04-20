@@ -168,10 +168,9 @@
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                         <div class="flex items-center gap-3">
                             <div class="p-2 rounded-lg" style="background:#EEF0FF">
-                                <svg class="h-6 w-6" viewBox="0 0 100 60" fill="none">
-                                  <ellipse cx="30" cy="35" rx="28" ry="22" fill="#1B2160"/>
-                                  <ellipse cx="70" cy="35" rx="28" ry="22" fill="#1B2160"/>
-                                  <ellipse cx="50" cy="28" rx="22" ry="18" fill="#1B2160"/>
+                                <svg class="h-6 w-6" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle cx="18" cy="26" r="13" stroke="#1B2160" stroke-width="5" fill="none"/>
+                                  <circle cx="36" cy="18" r="15" stroke="#1B2160" stroke-width="5" fill="none"/>
                                 </svg>
                             </div>
                             <div>

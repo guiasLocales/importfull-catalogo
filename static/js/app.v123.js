@@ -263,8 +263,15 @@ document.addEventListener('DOMContentLoaded', function () {
             prompts: document.getElementById('navPrompts')
         };
 
-        // Hide all views, deactivate all nav buttons
-        Object.values(views).forEach(v => { if (v) v.classList.add('hidden'); });
+        // Hide all views using display:none explicitly
+        Object.values(views).forEach(v => {
+            if (v) {
+                v.classList.add('hidden');
+                v.style.display = 'none';
+            }
+        });
+
+        // Deactivate all nav buttons
         Object.values(navButtons).forEach(b => {
             if (b) {
                 b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700');
@@ -274,8 +281,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Show selected view
-        if (views[viewName]) views[viewName].classList.remove('hidden');
+        // Show selected view with explicit display:flex
+        if (views[viewName]) {
+            views[viewName].classList.remove('hidden');
+            views[viewName].style.display = 'flex';
+        }
 
         // Highlight active nav button
         if (navButtons[viewName]) {
@@ -291,7 +301,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
             }
         }
-
 
         // Load data for the view
         console.log("Switching to view:", viewName);
