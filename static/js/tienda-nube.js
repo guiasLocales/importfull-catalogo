@@ -155,12 +155,16 @@
             if (!response.ok) throw new Error('Error al cargar detalle');
             const product = await response.json();
 
-            // Fetch TN specific attributes if they exist
+            // Fetch TN specific attributes and status if they exist
             let attributes = {};
+            let statusInfo = null;
             try {
                 const attrRes = await authFetch(`/api/products/${productId}/tienda-nube-attributes`);
                 if (attrRes.ok) attributes = await attrRes.json();
-            } catch(e) { console.warn("No extra attributes found"); }
+                
+                const statusRes = await authFetch(`/api/products/${productId}/tienda-nube-status`);
+                if (statusRes.ok) statusInfo = await statusRes.json();
+            } catch(e) { console.warn("No extra attributes or status found"); }
 
             const html = `
                 <div class="flex flex-col h-full max-h-[90vh]">
@@ -245,6 +249,17 @@
                                     </div>
                                 </div>
                             </div>
+
+                            ${statusInfo && statusInfo.response ? `
+                            <!-- API Response Status -->
+                            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
+                                <h4 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <i data-lucide="info" class="h-3 w-3"></i> Respuesta del Sistema
+                                </h4>
+                                <p class="text-sm text-blue-900">${statusInfo.response}</p>
+                                <p class="text-[10px] text-blue-400 mt-2">Última actualización: ${new Date(statusInfo.updated_at).toLocaleString()}</p>
+                            </div>
+                            ` : ''}
 
                             <!-- Segmentation -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
