@@ -50,6 +50,8 @@ def read_products(
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = 'asc',
     q: Optional[str] = None,
+    status: Optional[str] = None,
+    site: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     products = crud.get_products(
@@ -57,6 +59,8 @@ def read_products(
         category=category, brand=brand, 
         search=q,
         stock_filter=stock_filter,
+        status=status,
+        site=site,
         sort_by=sort_by, sort_order=sort_order
     )
     return products

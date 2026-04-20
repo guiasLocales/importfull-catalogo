@@ -10,8 +10,16 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
                  category: str = None, brand: str = None, 
                  search: str = None,
                  stock_filter: str = None,
+                 status: str = None,
+                 site: str = None,
                  sort_by: str = None, sort_order: str = 'asc'):
     query = db.query(Product)
+    
+    if site == 'tienda-nube':
+        if status == 'active':
+            query = query.filter(Product.price_tienda_nube > 0)
+        elif status == 'unpublished':
+            query = query.filter((Product.price_tienda_nube == 0) | (Product.price_tienda_nube == None))
     
     if category:
         query = query.filter(Product.product_type_path == category)
