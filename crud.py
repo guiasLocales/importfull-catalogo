@@ -163,11 +163,8 @@ def update_product(db: Session, product_id: int, updates: dict):
     db.refresh(db_product)
     return db_product
 
-def get_categories(db: Session):
-    return [r[0] for r in db.query(distinct(Product.product_type_path)).filter(Product.product_type_path != None).all()]
-
 def get_brands(db: Session):
-    return [r[0] for r in db.query(distinct(Product.brand)).filter(Product.brand != None).all()]
+    return [r[0] for r in db.query(distinct(Product.brand)).filter(Product.brand != None, Product.brand != '').all()]
 
 
 # --- Competence CRUD ---

@@ -107,8 +107,8 @@ def update_publish_status(
 ):
     """Trigger publish/pause webhook and update status in DB"""
     print(f"DEBUG: Received action='{request.action}'")
-    if request.action not in ["publish", "pause"]:
-        raise HTTPException(status_code=400, detail="action must be 'publish' or 'pause'")
+    if request.action not in ["publish", "pause", "delete"]:
+        raise HTTPException(status_code=400, detail="action must be 'publish', 'pause', or 'delete'")
     
     # Verify product exists
     db_product = crud.get_product(db, product_id)
@@ -116,7 +116,13 @@ def update_publish_status(
         raise HTTPException(status_code=404, detail="Product not found")
     
     # Write intermediate status to DB
-    new_status = "en proceso" if request.action == "publish" else "pausando"
+    if request.action == "publish":
+        new_status = "en proceso"
+    elif request.action == "pause":
+        new_status = "pausando"
+    else:  # delete
+        new_status = "eliminando"
+        
     db_product.status = new_status
     db.commit()
     db.refresh(db_product)

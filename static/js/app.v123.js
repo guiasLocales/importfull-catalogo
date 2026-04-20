@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function () {
         filters: {
             category: '',
             brand: '',
-            publish_event: '',
             stock_filter: ''
         }
     };
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
         searchInput: document.getElementById('searchInput'),
         filterCategory: document.getElementById('filterCategory'),
         filterBrand: document.getElementById('filterBrand'),
-        filterStatus: document.getElementById('filterStatus'),
         filterStock: document.getElementById('filterStock'),
         limitSelector: document.getElementById('limitSelector'),
         btnClearFilters: document.getElementById('btnClearFilters'),
@@ -161,9 +159,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.append('q', state.search);
             }
             if (state.filters.category) params.append('category', state.filters.category);
-            if (state.filters.publish_event) {
-                params.append('publish_event', state.filters.publish_event);
-            }
             if (state.filters.stock_filter) {
                 params.append('stock_filter', state.filters.stock_filter);
             }
@@ -324,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Check filter active state for UI
-        const hasFilters = state.search || state.filters.category || state.filters.brand || state.filters.publish_event || state.filters.stock_filter;
+        const hasFilters = state.search || state.filters.category || state.filters.brand || state.filters.stock_filter;
         if (hasFilters) {
             elements.btnClearFilters.classList.remove('hidden');
             elements.btnClearFilters.classList.add('flex');
@@ -462,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.pageEnd.textContent = end;
 
         // Update total text based on filters
-        const hasFilters = state.search || state.filters.category || state.filters.brand || state.filters.publish_event || state.filters.stock_filter;
+        const hasFilters = state.search || state.filters.category || state.filters.brand || state.filters.stock_filter;
         if (hasFilters) {
             elements.totalItems.textContent = `${state.products.length} (Filtrados)`;
         } else {
