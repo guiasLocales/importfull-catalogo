@@ -446,21 +446,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                 class="px-2 py-1 text-[10px] font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap" title="Pausar">
                                 Pausar
                             </button>
-                            <button onclick="deleteMeliProduct(${product.id}, this)" 
-                                class="px-2 py-1 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors whitespace-nowrap" title="Eliminar de ML">
-                                Eliminar
-                            </button>
                        </div>`
                     : `<div class="flex flex-col gap-1">
                             <button onclick="togglePublish(${product.id}, true, this)" 
                                 class="px-2 py-1 text-[10px] font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap" title="Publicar">
                                 Publicar
                             </button>
-                            ${product.status && product.status.toLowerCase() !== 'eliminando' ? `
-                            <button onclick="deleteMeliProduct(${product.id}, this)" 
-                                class="px-2 py-1 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors whitespace-nowrap" title="Eliminar de ML">
-                                Eliminar
-                            </button>` : ''}
                        </div>`}
                 </div>
             </div>
@@ -2836,7 +2827,16 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             ` : '-'}
                         </td>
-                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">${linkHtml}</td>
+                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center gap-2">
+                                ${linkHtml}
+                                <button onclick="deleteMeliProduct(${p.id}, this)" 
+                                    class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
+                                    title="Eliminar de MercadoLibre">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>`;
                 }).join('');
 

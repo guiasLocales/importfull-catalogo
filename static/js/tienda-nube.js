@@ -10,7 +10,7 @@
         limit: 50,
         total: 0,
         search: '',
-        status: '',
+        status: 'active',
         category: '',
         isLoading: false
     };
@@ -511,6 +511,9 @@
     // Initialize module
     document.addEventListener('DOMContentLoaded', () => {
         loadTNCategories();
+        if (tnElements.statusFilter) {
+            tnElements.statusFilter.value = 'active';
+        }
     });
 
 })();
