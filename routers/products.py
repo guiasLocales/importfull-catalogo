@@ -19,14 +19,16 @@ router = APIRouter(
 WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications"
 WEBHOOK_SECRET = "mati-gordo"
 
-def send_webhook(item_id: int, event_type: str, meli_id: str = None, extra_data: dict = None):
+def send_webhook(item_id: int, event_type: str, site: Optional[str] = None, extra_data: dict = None):
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
     data = {
         "event_type": event_type,
         "item_id": item_id,
-        "meli_id": meli_id,
         "secret": WEBHOOK_SECRET
     }
+    if site:
+        data["site"] = site
+        
     if extra_data:
         data["data"] = extra_data
     try:
@@ -133,10 +135,10 @@ def update_publish_status(
     request: PublishRequest, 
     db: Session = Depends(get_db)
 ):
-    """Trigger publish/pause webhook and update status in DB"""
-    print(f"DEBUG: Received action='{request.action}'")
-    if request.action not in ["publish", "pause"]:
-        raise HTTPException(status_code=400, detail="action must be 'publish' or 'pause'")
+    """Trigger publish/pause/delete webhook and update status in DB"""
+    print(f"DEBUG: Received action='{request.action}', site='{request.site}'")
+    if request.action not in ["publish", "pause", "delete"]:
+        raise HTTPException(status_code=400, detail="action must be 'publish', 'pause' or 'delete'")
     
     # Verify product exists
     db_product = crud.get_product(db, product_id)
@@ -144,14 +146,17 @@ def update_publish_status(
         raise HTTPException(status_code=404, detail="Product not found")
     
     # Write intermediate status to DB
-    new_status = "en proceso" if request.action == "publish" else "pausando"
+    new_status = "en proceso"
+    if request.action == "publish": new_status = "en proceso"
+    elif request.action == "pause": new_status = "pausando"
+    elif request.action == "delete": new_status = "eliminando"
+    
     db_product.status = new_status
     db.commit()
     db.refresh(db_product)
     
     # Send webhook notification (external service will set final status)
-    event_type = request.action
-    send_webhook(product_id, event_type, meli_id=db_product.meli_id)
+    send_webhook(product_id, request.action, site=request.site)
     
     return db_product
 
@@ -168,7 +173,7 @@ def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
     db.refresh(db_product)
     
     # Trigger webhook
-    success, msg = send_webhook(product_id, "delete", meli_id=db_product.meli_id)
+    success, msg = send_webhook(product_id, "delete")
     if not success:
         raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
         
@@ -213,7 +218,7 @@ def notify_product_update(product_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(product)
         
-    success, msg = send_webhook(product_id, "update", meli_id=product.meli_id)
+    success, msg = send_webhook(product_id, "update")
     if not success:
         raise HTTPException(status_code=500, detail=f"Failed to send webhook: {msg}")
         
@@ -243,7 +248,7 @@ def trigger_pre_publish(
         "field": request.field
     }
     
-    success, msg = send_webhook(product_id, "pre-publish", meli_id=product.meli_id, extra_data=extra_data)
+    success, msg = send_webhook(product_id, "pre-publish", extra_data=extra_data)
     
     if not success:
         raise HTTPException(status_code=500, detail=f"Error enviando al servicio de AI: {msg}")
@@ -344,16 +349,35 @@ def get_product_files(
     
     return files
 
-@router.get("/{product_id}/tienda-nube-attributes")
-def get_tn_attributes(product_id: int, db: Session = Depends(get_db)):
-    # Return empty attributes for now to satisfy the frontend
-    return {}
+@router.get("/{product_id}/tienda-nube-attributes", response_model=TiendaNubeAttributeSchema)
+def get_tienda_nube_attributes(product_id: int, db: Session = Depends(get_db)):
+    """Fetch extra attributes for Tienda Nube (SEO, tags, etc.)"""
+    attrs = crud.get_tn_attributes(db, product_id)
+    if not attrs:
+        # Return empty attributes if not found, but with item_id
+        return TiendaNubeAttributeSchema(item_id=product_id)
+    return attrs
 
-@router.put("/{product_id}/tienda-nube-attributes")
-def update_tn_attributes(product_id: int, data: dict, db: Session = Depends(get_db)):
-    # Stub for saving TN attributes. 
-    # Since we can't ALTER the table to add specific SEO columns, we just acknowledge.
-    return {"status": "success"}
+@router.put("/{product_id}/tienda-nube-attributes", response_model=TiendaNubeAttributeSchema)
+def update_tienda_nube_attributes(
+    product_id: int, 
+    request: TiendaNubeAttributeSchema, 
+    db: Session = Depends(get_db)
+):
+    """Update or create extra attributes for Tienda Nube"""
+    updates = request.dict(exclude_unset=True)
+    # Ensure item_id is correct
+    updates['item_id'] = product_id
+    attrs = crud.update_tn_attributes(db, product_id, updates)
+    return attrs
+
+@router.get("/{product_id}/tienda-nube-status", response_model=Optional[TiendaNubeStatusResponse])
+def get_tienda_nube_status(product_id: int, db: Session = Depends(get_db)):
+    """Get the specific API response status for Tienda Nube publication"""
+    attrs = crud.get_tn_attributes(db, product_id)
+    if not attrs:
+        return None
+    return crud.get_tn_product_status(db, attrs.id)
 
 @router.get("/drive-image/{file_id}")
 def get_drive_image(file_id: str, size: str = "thumbnail"):

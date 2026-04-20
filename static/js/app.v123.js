@@ -2407,6 +2407,38 @@ document.addEventListener('DOMContentLoaded', function () {
         checkAuth();
     };
 
+    // --- Modal Management (Global) ---
+    window.openModal = function(title, content) {
+        const backdrop = document.getElementById('modalBackdrop');
+        const body = document.getElementById('modalBody');
+        if (!backdrop || !body) {
+            console.error('Modal elements not found');
+            return;
+        }
+
+        body.innerHTML = content;
+        backdrop.classList.remove('hidden');
+        
+        setTimeout(() => {
+            backdrop.classList.add('opacity-100');
+            const contentEl = document.getElementById('modalContent');
+            if (contentEl) contentEl.classList.add('scale-100');
+        }, 10);
+    };
+
+    window.closeModal = function() {
+        const backdrop = document.getElementById('modalBackdrop');
+        const content = document.getElementById('modalContent');
+        if (!backdrop || !content) return;
+
+        backdrop.classList.remove('opacity-100');
+        content.classList.remove('scale-100');
+        
+        setTimeout(() => {
+            backdrop.classList.add('hidden');
+        }, 300);
+    };
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();

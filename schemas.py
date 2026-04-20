@@ -100,7 +100,8 @@ class Token(BaseModel):
     token_type: str
 
 class PublishRequest(BaseModel):
-    action: str  # 'publish' or 'pause'
+    action: str  # 'publish' or 'pause' or 'delete'
+    site: Optional[str] = None
 
 
 # --- Competence Schemas ---
@@ -258,3 +259,31 @@ class PerformanceScoreItem(BaseModel):
     overall_score: Optional[int] = None
     quality_level: Optional[str] = None
     level_wording: Optional[str] = None
+
+
+# --- Tienda Nube Schemas ---
+class TiendaNubeAttributeSchema(BaseModel):
+    id: Optional[int] = None
+    item_id: Optional[int] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    barcode: Optional[str] = None
+    video_url: Optional[str] = None
+    tags: Optional[str] = None
+    promotional_price: Optional[Decimal] = None
+    mpn: Optional[str] = None
+    age_group: Optional[str] = None
+    gender: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class TiendaNubeStatusResponse(BaseModel):
+    attribute_id: int
+    product_id: Optional[int] = None
+    variant_id: Optional[int] = None
+    response: Optional[str] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

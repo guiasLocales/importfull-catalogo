@@ -303,3 +303,27 @@ def delete_competence_item(db: Session, product_code: str):
         print(f"Error in delete: {e}")
         db.rollback()
         return False
+
+# --- Tienda Nube Attributes CRUD ---
+from models import TiendaNubeAttribute, TiendaNubeProductStatus
+
+def get_tn_attributes(db: Session, item_id: int):
+    return db.query(TiendaNubeAttribute).filter(TiendaNubeAttribute.item_id == item_id).first()
+
+def update_tn_attributes(db: Session, item_id: int, updates: dict):
+    db_attr = db.query(TiendaNubeAttribute).filter(TiendaNubeAttribute.item_id == item_id).first()
+    if not db_attr:
+        # Create new if doesn't exist
+        db_attr = TiendaNubeAttribute(item_id=item_id)
+        db.add(db_attr)
+    
+    for key, value in updates.items():
+        if hasattr(db_attr, key):
+            setattr(db_attr, key, value)
+    
+    db.commit()
+    db.refresh(db_attr)
+    return db_attr
+
+def get_tn_product_status(db: Session, attribute_id: int):
+    return db.query(TiendaNubeProductStatus).filter(TiendaNubeProductStatus.attribute_id == attribute_id).first()

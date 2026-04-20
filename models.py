@@ -35,6 +35,32 @@ class Product(Base):
     mode_shipping = Column(String(50))
     price_tienda_nube = Column(Numeric(10, 0))
     
+class TiendaNubeAttribute(Base):
+    __tablename__ = "attributes"
+    __table_args__ = {"schema": "tienda_nube"}
+
+    id = Column(Integer, primary_key=True, index=True)
+    item_id = Column(Integer, index=True)
+    seo_title = Column(String(100))
+    seo_description = Column(String(100))
+    barcode = Column(String(100))
+    video_url = Column(String(100))
+    tags = Column(String(100))
+    promotional_price = Column(Numeric(10, 0))
+    mpn = Column(String(100))
+    age_group = Column(String(100))
+    gender = Column(String(100))
+
+class TiendaNubeProductStatus(Base):
+    __tablename__ = "product_status"
+    __table_args__ = {"schema": "tienda_nube"}
+
+    attribute_id = Column(Integer, primary_key=True)
+    product_id = Column(Integer)
+    variant_id = Column(Integer)
+    response = Column(String(1000))
+    updated_at = Column(DateTime)
+
 
 
 class User(Base):
