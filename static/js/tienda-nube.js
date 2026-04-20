@@ -189,6 +189,11 @@
 
                     <!-- Body -->
                     <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                        <div class="mb-6 flex justify-center bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                            <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}" 
+                                 class="max-h-48 object-contain rounded-lg"
+                                 onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
+                        </div>
                         <form id="tnAttributesForm" class="space-y-6">
                             <!-- SEO Section -->
                             <div>
