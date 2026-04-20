@@ -94,6 +94,26 @@ def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
         "paused_count": paused_count
     }
 
+def get_products_summary(db: Session, site: str = None):
+    """Get total, active and unpublished counts for a specific site"""
+    if site == 'tienda-nube':
+        total = db.query(Product).filter(Product.tienda_nube_id != None, Product.tienda_nube_id != '').count()
+        active = db.query(Product).filter(Product.tienda_nube_status == 'active').count()
+        unpublished = db.query(Product).filter(
+            (Product.tienda_nube_status == None) | (Product.tienda_nube_status == '') | (Product.tienda_nube_status == 'Sin Publicar')
+        ).count()
+    else:
+        # Default to all products or Meli
+        total = db.query(Product).count()
+        active = db.query(Product).filter(Product.status == 'active').count()
+        unpublished = total - active
+        
+    return {
+        "total": total,
+        "active": active,
+        "unpublished": unpublished
+    }
+
 def search_products(db: Session, query_str: str, skip: int = 0, limit: int = 50):
     search_conditions = [
         Product.product_name.ilike(f"%{query_str}%"),

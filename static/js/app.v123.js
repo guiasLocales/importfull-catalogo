@@ -268,24 +268,30 @@ document.addEventListener('DOMContentLoaded', function () {
             if (v) {
                 v.classList.add('hidden');
                 v.style.display = 'none';
+                v.style.visibility = 'hidden'; // Extra safety
             }
         });
 
-        // Deactivate all nav buttons
+        // Deactivate all nav buttons - ensure we remove ALL possible active classes
         Object.values(navButtons).forEach(b => {
             if (b) {
-                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700');
+                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700', 'bg-indigo-50', 'text-indigo-700');
                 b.style.background = '';
                 b.style.color = '';
                 b.classList.add('text-gray-700', 'hover:bg-gray-50');
             }
         });
 
-        // Show selected view with explicit display:flex
+        // Show selected view with explicit display:flex and visibility
         if (views[viewName]) {
+            console.log(`Actually showing view: ${viewName}`);
             views[viewName].classList.remove('hidden');
             views[viewName].style.display = 'flex';
+            views[viewName].style.visibility = 'visible';
+            views[viewName].style.height = '100%';
+            views[viewName].style.width = '100%';
         }
+    
 
         // Highlight active nav button
         if (navButtons[viewName]) {
