@@ -264,12 +264,12 @@ document.addEventListener('DOMContentLoaded', function () {
             prompts: document.getElementById('navPrompts')
         };
 
-        // Hide all views and reset styles
+        // Hide all views by adding .hidden and removing any inline display
         Object.keys(views).forEach(key => {
             const v = views[key];
             if (v) {
                 v.classList.add('hidden');
-                v.style.display = 'none';
+                v.style.display = ''; 
             }
         });
 
@@ -288,10 +288,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const currentView = views[viewName];
         if (currentView) {
             currentView.classList.remove('hidden');
-            currentView.style.display = 'flex'; // Most views use flex-col
-            console.log("View activated:", viewName);
+            console.log("View shown:", viewName);
         } else {
-            console.error("View not found:", viewName);
+            console.error("View not found in DOM:", viewName);
         }
 
         // Highlight active nav button
