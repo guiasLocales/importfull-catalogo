@@ -660,25 +660,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            // Llamada directa al webhook externo (Frontend Only)
-            const response = await fetch('https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    event_type: "delete",
-                    item_id: id,
-                    secret: "mati-gordo"
-                })
+            const response = await authFetch(`/api/products/${id}/delete-meli`, {
+                method: 'DELETE'
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Error al enviar solicitud al webhook');
+                const errData = await response.json();
+                throw new Error(errData.detail || 'Error al eliminar');
             }
 
             alert('Solicitud de eliminación enviada con éxito.');
 
-            // Update local state (in-memory only since we don't touch backend)
+            // Update local state
             const productIndex = state.products.findIndex(p => p.id === id);
             if (productIndex >= 0) {
                 state.products[productIndex].status = 'eliminando';
@@ -687,7 +680,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error('Error deleting product from ML:', e);
-            alert('Error al eliminar: ' + e.message + '\n\nNota: Es posible que existan restricciones de CORS para llamadas directas desde el navegador.');
+            alert('Error al eliminar: ' + e.message);
         } finally {
             if (button) {
                 button.disabled = false;

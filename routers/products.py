@@ -149,6 +149,25 @@ def update_publish_status(
     
     return db_product
 
+@router.delete("/{product_id}/delete-meli")
+def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
+    """Proxy deletion request to webhook to avoid CORS issues"""
+    db_product = crud.get_product(db, product_id)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Set intermediate status
+    db_product.status = 'eliminando'
+    db.commit()
+    db.refresh(db_product)
+    
+    # Trigger webhook
+    success, msg = send_webhook(product_id, "delete")
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
+        
+    return {"status": "success", "message": "Solicitud de eliminación enviada"}
+
 @router.patch("/{product_id}", response_model=ProductResponse)
 def patch_product(
     product_id: int, 
