@@ -180,7 +180,7 @@ def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
     db.refresh(db_product)
     
     # Trigger webhook
-    success, msg = send_webhook(product_id, "delete")
+    success, msg = send_webhook(product_id, "delete", site="mercadolibre")
     if not success:
         raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
         
