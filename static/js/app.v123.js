@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Navigation Logic ---
     window.switchView = (viewName) => {
+        console.log("Switching to view:", viewName);
         const views = {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
@@ -263,17 +264,18 @@ document.addEventListener('DOMContentLoaded', function () {
             prompts: document.getElementById('navPrompts')
         };
 
-        // Hide all views using display:none explicitly
-        Object.values(views).forEach(v => {
+        // Hide all views and reset styles
+        Object.keys(views).forEach(key => {
+            const v = views[key];
             if (v) {
                 v.classList.add('hidden');
                 v.style.display = 'none';
-                v.style.visibility = 'hidden'; // Extra safety
             }
         });
 
-        // Deactivate all nav buttons - ensure we remove ALL possible active classes
-        Object.values(navButtons).forEach(b => {
+        // Deactivate all nav buttons
+        Object.keys(navButtons).forEach(key => {
+            const b = navButtons[key];
             if (b) {
                 b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700', 'bg-indigo-50', 'text-indigo-700');
                 b.style.background = '';
@@ -282,41 +284,40 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Show selected view with explicit display:flex and visibility
-        if (views[viewName]) {
-            console.log(`Actually showing view: ${viewName}`);
-            views[viewName].classList.remove('hidden');
-            views[viewName].style.display = 'flex';
-            views[viewName].style.visibility = 'visible';
-            views[viewName].style.height = '100%';
-            views[viewName].style.width = '100%';
+        // Show selected view
+        const currentView = views[viewName];
+        if (currentView) {
+            currentView.classList.remove('hidden');
+            currentView.style.display = 'flex'; // Most views use flex-col
+            console.log("View activated:", viewName);
+        } else {
+            console.error("View not found:", viewName);
         }
-    
 
         // Highlight active nav button
-        if (navButtons[viewName]) {
-            navButtons[viewName].classList.remove('text-gray-700', 'hover:bg-gray-50');
+        const currentBtn = navButtons[viewName];
+        if (currentBtn) {
+            currentBtn.classList.remove('text-gray-700', 'hover:bg-gray-50');
             if (viewName === 'mercadolibre') {
-                navButtons[viewName].classList.add('bg-yellow-50', 'text-yellow-700');
+                currentBtn.classList.add('bg-yellow-50', 'text-yellow-700');
             } else if (viewName === 'competence') {
-                navButtons[viewName].classList.add('bg-purple-50', 'text-purple-700');
+                currentBtn.classList.add('bg-purple-50', 'text-purple-700');
             } else if (viewName === 'tiendanube') {
-                navButtons[viewName].style.background = '#EEF0FF';
-                navButtons[viewName].style.color = '#1B2160';
+                currentBtn.style.background = '#EEF0FF';
+                currentBtn.style.color = '#1B2160';
             } else {
-                navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
+                currentBtn.classList.add('bg-blue-50', 'text-blue-700');
             }
         }
 
         // Load data for the view
-        console.log("Switching to view:", viewName);
         try {
-            if (viewName === 'mercadolibre' && typeof loadMeliProducts === 'function') loadMeliProducts();
-            if (viewName === 'competence' && typeof loadCompetenceData === 'function') loadCompetenceData();
-            if (viewName === 'prompts' && typeof loadPrompts === 'function') loadPrompts();
+            if (viewName === 'mercadolibre') loadMeliProducts();
+            if (viewName === 'competence') loadCompetenceData();
+            if (viewName === 'prompts') loadPrompts();
             if (viewName === 'tiendanube' && typeof loadTiendaNubeProducts === 'function') loadTiendaNubeProducts();
         } catch (e) {
-            console.error("Error loading view data:", e);
+            console.error("Error loading data for", viewName, e);
         }
 
         // Refresh icons
