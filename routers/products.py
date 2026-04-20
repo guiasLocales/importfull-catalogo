@@ -19,16 +19,18 @@ router = APIRouter(
 WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications"
 WEBHOOK_SECRET = "mati-gordo"
 
-def send_webhook(item_id: int, event_type: str, extra_data: dict = None):
+def send_webhook(item_id: int, event_type: str, meli_id: str = None, extra_data: dict = None):
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
     data = {
         "event_type": event_type,
         "item_id": item_id,
+        "meli_id": meli_id,
         "secret": WEBHOOK_SECRET
     }
     if extra_data:
         data["data"] = extra_data
     try:
+        print(f"DEBUG: Sending webhook to {WEBHOOK_URL} with data: {data}")
         with httpx.Client(timeout=10.0) as client:
             response = client.post(WEBHOOK_URL, json=data)
             print(f"Webhook sent for item {item_id}: {data['event_type']} - Status: {response.status_code}")
@@ -149,7 +151,7 @@ def update_publish_status(
     
     # Send webhook notification (external service will set final status)
     event_type = request.action
-    send_webhook(product_id, event_type)
+    send_webhook(product_id, event_type, meli_id=db_product.meli_id)
     
     return db_product
 
@@ -166,7 +168,7 @@ def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
     db.refresh(db_product)
     
     # Trigger webhook
-    success, msg = send_webhook(product_id, "delete")
+    success, msg = send_webhook(product_id, "delete", meli_id=db_product.meli_id)
     if not success:
         raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
         
@@ -211,7 +213,7 @@ def notify_product_update(product_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(product)
         
-    success, msg = send_webhook(product_id, "update")
+    success, msg = send_webhook(product_id, "update", meli_id=product.meli_id)
     if not success:
         raise HTTPException(status_code=500, detail=f"Failed to send webhook: {msg}")
         
@@ -241,7 +243,7 @@ def trigger_pre_publish(
         "field": request.field
     }
     
-    success, msg = send_webhook(product_id, "pre-publish", extra_data)
+    success, msg = send_webhook(product_id, "pre-publish", meli_id=product.meli_id, extra_data=extra_data)
     
     if not success:
         raise HTTPException(status_code=500, detail=f"Error enviando al servicio de AI: {msg}")
