@@ -33,6 +33,7 @@ class Product(Base):
     listing_type_id = Column(String(50))
     free_shipping = Column(Integer)
     mode_shipping = Column(String(50))
+    price_tienda_nube = Column(Numeric(10, 0))
     
 
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
@@ -32,6 +32,8 @@ class ProductBase(BaseModel):
     listing_type_id: Optional[str] = None
     free_shipping: Optional[int] = None
     mode_shipping: Optional[str] = None
+    price_tienda_nube: Optional[Decimal] = None
+    tienda_nube_status: Optional[str] = None
     
 
 class ProductCreate(ProductBase):
@@ -51,9 +53,20 @@ class ProductUpdate(BaseModel):
     listing_type_id: Optional[str] = None
     free_shipping: Optional[int] = None
     mode_shipping: Optional[str] = None
+    price_tienda_nube: Optional[Decimal] = None
+    tienda_nube_status: Optional[str] = None
 
 class ProductResponse(ProductBase):
     id: int
+
+    @model_validator(mode='after')
+    def set_tn_status(self) -> 'ProductResponse':
+        if not self.tienda_nube_status:
+            if self.price_tienda_nube and self.price_tienda_nube > 0:
+                self.tienda_nube_status = 'active'
+            else:
+                self.tienda_nube_status = 'inactive'
+        return self
 
     class Config:
         from_attributes = True

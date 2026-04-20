@@ -377,74 +377,49 @@
 
                     <!-- Action Bar -->
                     <div class="flex flex-col gap-4 mb-6 flex-none">
-                        <!-- Row 1: Search + Bulk Actions -->
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <!-- Consolidated Header: Search + Filters + Actions -->
+                        <div class="flex flex-wrap items-center gap-3">
                             <!-- Search -->
-                            <div class="relative w-full sm:max-w-xs">
-                                <div class="relative">
-                                    <input type="text" id="searchInput" placeholder="Buscar por nombre, código..."
-                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow duration-200 shadow-sm text-sm">
-                                    <i data-lucide="search" class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"></i>
-                                </div>
+                            <div class="relative flex-1 min-w-[250px]">
+                                <input type="text" id="searchInput" placeholder="Buscar por nombre, código..."
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow duration-200 shadow-sm text-sm">
+                                <i data-lucide="search" class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"></i>
                             </div>
 
-                            <!-- Bulk Action Buttons (aligned right) -->
-                            <div class="flex items-center space-x-3 flex-shrink-0">
+                            <!-- Category Filter -->
+                            <div class="w-full sm:w-auto min-w-[160px]">
+                                <select id="filterCategory"
+                                    class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                    <option value="">Todas las categorías</option>
+                                    <!-- Dynamically populated -->
+                                </select>
+                            </div>
+
+                            <!-- Stock Toggle Button -->
+                            <button id="btnToggleStock" onclick="window.toggleStockFilter()"
+                                class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium bg-white hover:bg-gray-50 transition-all shadow-sm group">
+                                <i data-lucide="package" class="h-4 w-4 text-gray-400 group-hover:text-blue-500"></i>
+                                <span id="stockToggleLabel">Ocultar Sin Stock</span>
+                            </button>
+
+                            <!-- Bulk Action Buttons -->
+                            <div class="flex items-center space-x-2">
                                 <button id="btnBulkPublish"
-                                    class="hidden flex-row items-center h-[42px] px-4 gap-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium border border-green-200 text-sm">
+                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium border border-green-200 text-sm">
                                     <i data-lucide="check-circle" class="h-4 w-4"></i>
                                     <span class="flex items-center gap-1">Publicar <span id="selectedCountPublish"
                                             class="ml-0.5 text-xs bg-green-200 px-1.5 py-0.5 rounded-full">0</span></span>
                                 </button>
                                 <button id="btnBulkUnpublish"
-                                    class="hidden flex-row items-center h-[42px] px-4 gap-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium border border-orange-200 text-sm">
+                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium border border-orange-200 text-sm">
                                     <i data-lucide="x-circle" class="h-4 w-4"></i>
                                     <span class="flex items-center gap-1">Pausar <span id="selectedCountUnpublish"
                                             class="ml-0.5 text-xs bg-orange-200 px-1.5 py-0.5 rounded-full">0</span></span>
                                 </button>
-                            </div>
-                        </div>
-
-                        <!-- Row 2: Filters -->
-                        <div class="w-full">
-                            <!-- Mobile Filter Toggle -->
-                            <div class="md:hidden mb-2">
-                                <button onclick="document.getElementById('mobileFilters').classList.toggle('hidden')"
-                                    class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700">
-                                    <i data-lucide="filter" class="h-4 w-4"></i>
-                                    <span>Mostrar/Ocultar Filtros</span>
-                                </button>
-                            </div>
-
-                            <!-- Filters Container -->
-                            <div id="mobileFilters" class="hidden md:flex flex-wrap items-center gap-3 transition-all">
-
-                                <!-- Category Filter -->
-                                <div class="w-full sm:w-auto min-w-[140px]">
-                                    <select id="filterCategory"
-                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                        <option value="">Todas las categorías</option>
-                                        <!-- Dynamically populated -->
-                                    </select>
-                                </div>
-
-                                <!-- Stock Filter -->
-                                <div class="w-full sm:w-auto min-w-[120px]">
-                                    <select id="filterStock"
-                                        class="w-full pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
-                                        <option value="">Todo el stock</option>
-                                        <option value="with_stock">Con stock</option>
-                                        <option value="no_stock">Sin stock</option>
-                                    </select>
-                                </div>
-
-                                <!-- Clear Filters -->
                                 <button id="btnClearFilters"
                                     class="hidden items-center px-3 py-2.5 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 font-medium">
-                                    <i data-lucide="x" class="h-4 w-4 mr-1.5"></i>
-                                    Limpiar filtros
+                                    <i data-lucide="x" class="h-4 w-4"></i>
                                 </button>
-
                             </div>
                         </div>
                     </div>

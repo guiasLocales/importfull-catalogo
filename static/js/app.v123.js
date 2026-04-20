@@ -63,7 +63,8 @@ document.addEventListener('DOMContentLoaded', function () {
         searchInput: document.getElementById('searchInput'),
         filterCategory: document.getElementById('filterCategory'),
         filterBrand: document.getElementById('filterBrand'),
-        filterStock: document.getElementById('filterStock'),
+        btnToggleStock: document.getElementById('btnToggleStock'),
+        stockToggleLabel: document.getElementById('stockToggleLabel'),
         limitSelector: document.getElementById('limitSelector'),
         btnClearFilters: document.getElementById('btnClearFilters'),
         sortHeaders: document.querySelectorAll('.sortable'),
@@ -2281,13 +2282,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (elements.filterStock) {
-        elements.filterStock.addEventListener('change', (e) => {
-            state.filters.stock_filter = e.target.value;
-            state.page = 1;
-            fetchProducts();
-        });
-    }
+    window.toggleStockFilter = () => {
+        const btn = elements.btnToggleStock;
+        const label = elements.stockToggleLabel;
+        const icon = btn?.querySelector('i');
+
+        if (state.filters.stock_filter === 'with_stock') {
+            state.filters.stock_filter = '';
+            if (label) label.textContent = 'Ocultar Sin Stock';
+            btn?.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            btn?.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            if (icon) icon.classList.replace('text-white', 'text-gray-400');
+        } else {
+            state.filters.stock_filter = 'with_stock';
+            if (label) label.textContent = 'Mostrando con Stock';
+            btn?.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            btn?.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+            if (icon) icon.classList.replace('text-gray-400', 'text-white');
+        }
+        
+        state.page = 1;
+        fetchProducts();
+        if (window.lucide) lucide.createIcons();
+    };
 
     if (elements.limitSelector) {
         elements.limitSelector.addEventListener('change', (e) => {
@@ -2358,8 +2375,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (elements.searchInput) elements.searchInput.value = '';
             if (elements.filterCategory) elements.filterCategory.value = '';
             if (elements.filterBrand) elements.filterBrand.value = '';
-            if (elements.filterStatus) elements.filterStatus.value = '';
-            if (elements.filterStock) elements.filterStock.value = '';
+            
+            // Reset stock toggle visual state
+            const btn = elements.btnToggleStock;
+            const label = elements.stockToggleLabel;
+            if (label) label.textContent = 'Ocultar Sin Stock';
+            btn?.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            btn?.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            const icon = btn?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('text-white');
+                icon.classList.add('text-gray-400');
+            }
 
             fetchProducts();
         });
