@@ -167,33 +167,51 @@
             } catch(e) { console.warn("No extra attributes or status found"); }
 
             const html = `
-                <div class="flex flex-col h-full max-h-[90vh]">
-                    <!-- Header -->
-                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2 rounded-lg" style="background:#EEF0FF">
-                                <svg class="h-6 w-6" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <circle cx="18" cy="26" r="13" stroke="#1B2160" stroke-width="5" fill="none"/>
-                                  <circle cx="36" cy="18" r="15" stroke="#1B2160" stroke-width="5" fill="none"/>
+                <div class="flex flex-col md:flex-row h-full max-h-[90vh] relative">
+                    <!-- Close Button (Top-Right) -->
+                    <button onclick="closeModal()" 
+                        class="absolute right-4 top-4 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
+                        title="Cerrar">
+                        <i data-lucide="x" class="h-5 w-5 text-gray-600"></i>
+                    </button>
+
+                    <!-- Left: Product Image -->
+                    <div class="w-full md:w-5/12 bg-gray-50 flex flex-col p-6 border-r border-gray-100 items-center justify-center">
+                        <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-center">
+                            <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}" 
+                                 class="max-h-[300px] md:max-h-[500px] object-contain rounded-lg"
+                                 onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
+                        </div>
+                        <div class="mt-6 text-center">
+                            <h3 class="text-xl font-bold text-gray-900">${product.product_name}</h3>
+                            <p class="text-sm text-gray-500">SKU: ${product.product_code}</p>
+                            <div class="mt-4 flex flex-wrap justify-center gap-2">
+                                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded-full border border-blue-100 flex items-center gap-1">
+                                    <i data-lucide="tag" class="h-3 w-3"></i> Tienda Nube
+                                </span>
+                                ${product.meli_id ? `
+                                <span class="px-3 py-1 bg-yellow-50 text-yellow-700 text-[10px] font-bold uppercase rounded-full border border-yellow-100 flex items-center gap-1">
+                                    <i data-lucide="zap" class="h-3 w-3"></i> MercadoLibre
+                                </span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Form -->
+                    <div class="w-full md:w-7/12 overflow-y-auto p-8 custom-scrollbar bg-white">
+                        <div class="mb-8 flex items-center gap-3">
+                            <div class="p-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+                                <svg class="h-8 w-8" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+                                  <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-gray-900">${product.product_name}</h3>
-                                <p class="text-xs text-gray-500">SKU: ${product.product_code} | Tienda Nube Manager</p>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight">Tienda Nube Manager</h2>
+                                <p class="text-sm text-gray-500">Optimización de SEO y Atributos</p>
                             </div>
                         </div>
-                        <button onclick="closeModal()" class="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                            <i data-lucide="x" class="h-5 w-5 text-gray-500"></i>
-                        </button>
-                    </div>
 
-                    <!-- Body -->
-                    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                        <div class="mb-6 flex justify-center bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                            <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}" 
-                                 class="max-h-48 object-contain rounded-lg"
-                                 onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
-                        </div>
                         <form id="tnAttributesForm" class="space-y-6">
                             <!-- SEO Section -->
                             <div>

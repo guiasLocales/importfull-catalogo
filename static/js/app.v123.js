@@ -398,10 +398,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         class="row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
                         ${isSelected ? 'checked' : ''}>
                 </div>
-                <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
+                <div class="col-span-1 text-sm font-medium text-gray-900 truncate" title="${product.product_code || ''}">
                     ${product.product_code || '-'}
                 </div>
-                <div class="col-span-3 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
+                <div class="col-span-2 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
                     <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                         <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" 
                              alt="" class="h-full w-full object-cover">
@@ -414,32 +414,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
                 <div class="col-span-1 text-sm text-gray-600 font-medium">$ ${product.cost !== null && product.cost !== undefined && product.cost !== '' ? Number(product.cost).toLocaleString('es-AR') : '-'}</div>
+                
+                <!-- Precio ML -->
                 <div class="col-span-1 flex items-center">
-                    <div class="relative w-24 group/price">
-                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">$</span>
+                    <div class="relative w-full group/price">
+                        <span class="absolute left-1 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-[10px] pointer-events-none">$</span>
                         <input type="number" 
                                value="${product.price_mercadolibre || ''}" 
                                onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
-                               class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               class="w-full pl-3.5 pr-1 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                                step="0.01">
                     </div>
                 </div>
-                <div class="col-span-1 flex items-center justify-end pr-2">
-                    <span class="text-sm font-semibold text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100">$ ${product.price !== null && product.price !== undefined && product.price !== '' ? Number(product.price).toLocaleString('es-AR') : '-'}</span>
+
+                <!-- Precio TN -->
+                <div class="col-span-1 flex items-center">
+                    <div class="relative w-full group/price">
+                        <span class="absolute left-1 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-[10px] pointer-events-none">$</span>
+                        <input type="number" 
+                               value="${product.price_tienda_nube || ''}" 
+                               onchange="updateTNPriceInline(${product.id}, this.value, this)"
+                               onclick="event.stopPropagation()"
+                               class="w-full pl-3.5 pr-1 py-1 text-xs font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               step="0.01">
+                    </div>
                 </div>
-                <div class="col-span-1 flex items-center justify-center text-center">
+
+                <!-- Precio Local -->
+                <div class="col-span-1 flex items-center justify-end pr-1">
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-50 px-1.5 py-1 rounded border border-gray-100">$ ${product.price !== null && product.price !== undefined && product.price !== '' ? Number(product.price).toLocaleString('es-AR') : '-'}</span>
+                </div>
+
+                <!-- Publicación logos -->
+                <div class="col-span-2 flex items-center justify-center gap-4">
                     ${(() => {
-                    const s = product.status ? product.status.toLowerCase() : '';
-                    const meliLink = product.permalink || '';
-                    if (product.meli_id && s !== 'pausando' && s !== 'actualizando' && s !== 'en proceso') return `<a href="${meliLink}" target="_blank" rel="noopener" class="flex flex-col items-center gap-0.5 group/meli" title="Ver en MercadoLibre: ${product.meli_id}" onclick="event.stopPropagation()"><img src="/static/img/meli-logo-light.png" alt="ML" class="h-8 object-contain dark:hidden"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-8 object-contain hidden dark:block"><span class="text-[9px] font-mono text-gray-400 group-hover/meli:text-blue-500 transition-colors">${product.meli_id}</span></a>`;
-                    if (s === 'en proceso') return '<span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase rounded-full animate-pulse border border-blue-200">En Proceso</span>';
-                    if (s === 'pausando') return '<span class="px-2 py-1 bg-orange-100 text-orange-700 text-[10px] font-bold uppercase rounded-full animate-pulse border border-orange-200">Pausando</span>';
-                    if (s === 'actualizando') return '<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-full animate-pulse border border-green-200">Actualizando</span>';
-                    if (product.meli_id) return `<a href="${meliLink}" target="_blank" rel="noopener" class="flex flex-col items-center gap-0.5 group/meli" title="Ver en MercadoLibre: ${product.meli_id}" onclick="event.stopPropagation()"><img src="/static/img/meli-logo-light.png" alt="ML" class="h-8 object-contain dark:hidden"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-8 object-contain hidden dark:block"><span class="text-[9px] font-mono text-gray-400 group-hover/meli:text-blue-500 transition-colors">${product.meli_id}</span></a>`;
-                    return '<span class="text-xs text-gray-400 font-medium">No Publicado</span>';
-                })()}
+                        let logos = '';
+                        const s = product.status ? product.status.toLowerCase() : '';
+                        
+                        // MercadoLibre Logo
+                        if (product.meli_id) {
+                             logos += `<a href="${product.permalink || '#'}" target="_blank" rel="noopener" class="flex flex-col items-center gap-0.5 group/meli" title="MeLi: ${product.meli_id}" onclick="event.stopPropagation()">
+                                <img src="/static/img/meli-logo-light.png" alt="ML" class="h-6 object-contain">
+                                <span class="text-[8px] font-mono text-gray-400 group-hover/meli:text-yellow-600 transition-colors">${product.meli_id}</span>
+                             </a>`;
+                        }
+                        
+                        // Tienda Nube Logo
+                        if (product.price_tienda_nube && product.price_tienda_nube > 0) {
+                             logos += `<button onclick="event.stopPropagation(); openTiendaNubeModal(${product.id})" class="flex flex-col items-center gap-0.5 group/tn" title="Tienda Nube Activo">
+                                <div class="h-6 w-8 flex items-center justify-center bg-[#EEF0FF] rounded">
+                                    <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <circle cx="18" cy="26" r="13" stroke="#1B2160" stroke-width="5" fill="none"/>
+                                      <circle cx="36" cy="18" r="15" stroke="#1B2160" stroke-width="5" fill="none"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[8px] font-bold text-[#1B2160]">ACTIVO</span>
+                             </button>`;
+                        }
+
+                        if (!logos) {
+                            if (s === 'en proceso') return '<span class="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase rounded-full animate-pulse">En Proceso</span>';
+                            return '<span class="text-[10px] text-gray-400 font-medium italic">No Publicado</span>';
+                        }
+                        return logos;
+                    })()}
                 </div>
+
                 <div class="col-span-1 flex items-center justify-end">
                     ${product.status && product.status.toLowerCase() === 'active'
                     ? `<div class="flex flex-col gap-1">
@@ -643,6 +684,53 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (originalHover) inputEl.classList.add(originalHover);
                 // Revert to old valid value? Not strictly necessary, but could be nice.
             }, 1500);
+        }
+    };
+
+    window.updateTNPriceInline = async (id, newPrice, inputEl) => {
+        const parsedPrice = parseFloat(newPrice);
+        if (isNaN(parsedPrice)) return;
+        
+        const originalBg = inputEl.classList.contains('bg-blue-50/50') ? 'bg-blue-50/50' : '';
+        const originalHover = inputEl.classList.contains('hover:bg-blue-100') ? 'hover:bg-blue-100' : '';
+        const originalText = inputEl.classList.contains('text-blue-700') ? 'text-blue-700' : '';
+        
+        inputEl.classList.remove('bg-blue-50/50', 'hover:bg-blue-100', 'text-blue-700');
+        inputEl.classList.add('bg-orange-500', 'text-white');
+        
+        try {
+            const response = await authFetch(`/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ price_tienda_nube: parsedPrice })
+            });
+
+            if (!response.ok) throw new Error('Error al guardar precio TN');
+
+            inputEl.classList.remove('bg-orange-500');
+            inputEl.classList.add('bg-green-600');
+            
+            const productIndex = state.products.findIndex(p => p.id === id);
+            if (productIndex >= 0) {
+                state.products[productIndex].price_tienda_nube = parsedPrice;
+            }
+            
+            setTimeout(() => {
+                inputEl.classList.remove('bg-green-600', 'text-white');
+                if (originalText) inputEl.classList.add(originalText);
+                if (originalBg) inputEl.classList.add(originalBg);
+                if (originalHover) inputEl.classList.add(originalHover);
+            }, 1000);
+        } catch (e) {
+            console.error('Error updating TN price:', e);
+            inputEl.classList.remove('bg-orange-500');
+            inputEl.classList.add('bg-red-600');
+            setTimeout(() => {
+                inputEl.classList.remove('bg-red-600', 'text-white');
+                if (originalText) inputEl.classList.add(originalText);
+                if (originalBg) inputEl.classList.add(originalBg);
+                if (originalHover) inputEl.classList.add(originalHover);
+            }, 2000);
         }
     };
 
