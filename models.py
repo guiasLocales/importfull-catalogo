@@ -34,11 +34,6 @@ class Product(Base):
     free_shipping = Column(Integer)
     mode_shipping = Column(String(50))
     
-    # Tienda Nube Integration
-    tienda_nube_id = Column(String(50))
-    tienda_nube_status = Column(String(50))
-    price_tienda_nube = Column(Numeric(10, 0))
-    tienda_nube_last_sync = Column(DateTime)
 
 
 class User(Base):

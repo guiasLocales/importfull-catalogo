@@ -33,11 +33,6 @@ class ProductBase(BaseModel):
     free_shipping: Optional[int] = None
     mode_shipping: Optional[str] = None
     
-    # Tienda Nube Integration
-    tienda_nube_id: Optional[str] = None
-    tienda_nube_status: Optional[str] = None
-    price_tienda_nube: Optional[Decimal] = None
-    tienda_nube_last_sync: Optional[datetime] = None
 
 class ProductCreate(ProductBase):
     pass

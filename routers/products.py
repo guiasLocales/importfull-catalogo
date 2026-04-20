@@ -92,13 +92,6 @@ def search_products(
     products = crud.search_products(db, query_str=q, skip=skip, limit=limit)
     return products
 
-@router.get("/summary")
-def read_products_summary(
-    site: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Get product counts (total, active, etc.) for a specific site"""
-    return crud.get_products_summary(db, site=site)
 
 @router.get("/{product_id}", response_model=ProductResponse)
 def read_product(product_id: int, db: Session = Depends(get_db)):
