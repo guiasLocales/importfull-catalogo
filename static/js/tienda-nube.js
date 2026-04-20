@@ -337,15 +337,15 @@
             const modalContent = document.getElementById('modalContent');
             if (modalContent) {
                 modalContent.classList.remove('max-w-lg');
-                modalContent.classList.add('max-w-5xl');
-                modalContent.style.width = '95%'; // Ensure it fills on mobile/smaller screens too
-                modalContent.style.maxWidth = '1200px'; 
+                modalContent.classList.add('max-w-7xl');
+                modalContent.style.width = '95%'; 
+                modalContent.style.maxWidth = '1400px'; 
             }
 
             const originalClose = window.closeModal;
             window.closeModal = () => {
                 if (modalContent) {
-                    modalContent.classList.remove('max-w-5xl');
+                    modalContent.classList.remove('max-w-7xl');
                     modalContent.classList.add('max-w-lg');
                     modalContent.style.width = '';
                     modalContent.style.maxWidth = '';

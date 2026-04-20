@@ -1586,12 +1586,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Make modal wider for this view
             elements.modalContent.classList.remove('max-w-lg');
-            elements.modalContent.classList.add('max-w-5xl');
+            elements.modalContent.classList.add('max-w-7xl');
 
             // Save original close function and add width reset
             const originalClose = window.closeModal;
             window.closeModal = () => {
-                elements.modalContent.classList.remove('max-w-5xl');
+                elements.modalContent.classList.remove('max-w-7xl');
                 elements.modalContent.classList.add('max-w-lg');
                 originalClose();
                 window.closeModal = originalClose;
