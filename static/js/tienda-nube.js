@@ -328,10 +328,15 @@
                 </div>
             `;
 
+            openModal('', html);
+
+            // Force width update after openModal
             const modalContent = document.getElementById('modalContent');
             if (modalContent) {
                 modalContent.classList.remove('max-w-lg');
                 modalContent.classList.add('max-w-5xl');
+                modalContent.style.width = '95%'; // Ensure it fills on mobile/smaller screens too
+                modalContent.style.maxWidth = '1200px'; 
             }
 
             const originalClose = window.closeModal;
@@ -339,12 +344,13 @@
                 if (modalContent) {
                     modalContent.classList.remove('max-w-5xl');
                     modalContent.classList.add('max-w-lg');
+                    modalContent.style.width = '';
+                    modalContent.style.maxWidth = '';
                 }
                 originalClose();
                 window.closeModal = originalClose;
             };
 
-            openModal('', html);
             if (window.lucide) lucide.createIcons();
         } catch (e) {
             console.error(e);
