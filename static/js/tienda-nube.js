@@ -229,7 +229,7 @@
                                     <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                                         <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Descripción SEO (Meta-description)</label>
                                         <textarea name="seo_description" rows="2" 
-                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none">${attributes.seo_description || ''}</textarea>
+                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none">${attributes.seo_description || product.description || ''}</textarea>
                                     </div>
                                 </div>
                             </div>

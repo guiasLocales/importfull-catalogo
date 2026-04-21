@@ -865,6 +865,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const priceEl = document.getElementById('edit_price');
             if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
 
+            const priceTNEl = document.getElementById('edit_price_tienda_nube');
+            if (priceTNEl && priceTNEl.value !== "") updates.price_tienda_nube = parseFloat(priceTNEl.value);
+
             // MercadoLibre Business Fields
             const listingEl = document.getElementById('edit_listing_type_id');
             if (listingEl) updates.listing_type_id = listingEl.value;
@@ -1300,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="grid grid-cols-4 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <!-- Costo -->
                         <div class="flex flex-col justify-end">
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
@@ -1318,6 +1321,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="calculator" class="w-4 h-4"></i>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Precio TN -->
+                        <div class="flex flex-col justify-end">
+                            <label class="block text-xs font-bold text-blue-600 mb-1.5 uppercase tracking-wider">Precio TN ($)</label>
+                            <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
+                                   class="w-full h-10 px-3 border border-blue-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                         </div>
                         
                         <!-- Precio Local -->
