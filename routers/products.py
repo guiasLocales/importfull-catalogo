@@ -155,13 +155,16 @@ def update_publish_status(
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Write intermediate status to DB
-    new_status = "en proceso"
-    if request.action == "publish": new_status = "en proceso"
-    elif request.action == "pause": new_status = "pausando"
-    elif request.action == "delete": new_status = "eliminando"
+    # Write intermediate status to DB ONLY for MercadoLibre
+    # For Tienda Nube, we track status separately or via the specific TN status table
+    if not request.site or request.site == "mercadolibre":
+        new_status = "en proceso"
+        if request.action == "publish": new_status = "en proceso"
+        elif request.action == "pause": new_status = "pausando"
+        elif request.action == "delete": new_status = "eliminando"
+        
+        db_product.status = new_status
     
-    db_product.status = new_status
     db.commit()
     db.refresh(db_product)
     

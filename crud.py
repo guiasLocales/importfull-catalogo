@@ -4,7 +4,10 @@ from models import Product, User, ScrappedCompetence
 from schemas import UserCreate
 
 def get_product(db: Session, product_id: int):
-    return db.query(Product).filter(Product.id == product_id).first()
+    p = db.query(Product).filter(Product.id == product_id).first()
+    if p:
+        p.tienda_nube_status = "active" if (p.price_tienda_nube and p.price_tienda_nube > 0) else "unpublished"
+    return p
 
 def get_products(db: Session, skip: int = 0, limit: int = 50, 
                  category: str = None, brand: str = None, 
@@ -52,7 +55,11 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
             else:
                 query = query.order_by(asc(column))
         
-    return query.offset(skip).limit(limit).all()
+    results = query.offset(skip).limit(limit).all()
+    # Populate tienda_nube_status heuristic
+    for p in results:
+        p.tienda_nube_status = "active" if (p.price_tienda_nube and p.price_tienda_nube > 0) else "unpublished"
+    return results
 
 def get_categories(db: Session):
     categories = db.query(Product.product_type_path).filter(
