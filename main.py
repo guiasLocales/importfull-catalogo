@@ -177,11 +177,26 @@ def db_check():
 
 
 @app.on_event("startup")
-def create_default_user():
-    """Create default admin user on startup if it doesn't exist"""
-    # Create default user
+def startup_tasks():
+    """Run migrations and create default user on startup"""
     try:
         db = SessionLocal()
+        
+        # 1. Ensure column lengths for Tienda Nube (Self-healing migration)
+        print("Running database migrations for Tienda Nube...")
+        try:
+            # We use text() for raw SQL since these columns might already be the right size or the table might be empty
+            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_title VARCHAR(255)"))
+            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_description TEXT"))
+            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN tags TEXT"))
+            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN video_url VARCHAR(255)"))
+            db.commit()
+            print("Database migration successful.")
+        except Exception as e:
+            print(f"Warning: Migration partially failed or already applied: {e}")
+            db.rollback()
+
+        # 2. Create default user
         user = crud.get_user_by_username(db, username="admin")
         if not user:
             print("Creating default user 'admin'...")
@@ -190,7 +205,7 @@ def create_default_user():
             print("Default user 'admin' already exists.")
         db.close()
     except Exception as e:
-        print(f"Error creating default user: {e}")
+        print(f"Error during startup tasks: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

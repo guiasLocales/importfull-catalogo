@@ -379,8 +379,13 @@ def update_tienda_nube_attributes(
     updates = request.dict(exclude_unset=True)
     # Ensure item_id is correct
     updates['item_id'] = product_id
-    attrs = crud.update_tn_attributes(db, product_id, updates)
-    return attrs
+    try:
+        attrs = crud.update_tn_attributes(db, product_id, updates)
+        return attrs
+    except Exception as e:
+        print(f"Error updating TN attributes: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
 
 @router.get("/{product_id}/tienda-nube-status", response_model=Optional[TiendaNubeStatusResponse])
 def get_tienda_nube_status(product_id: int, db: Session = Depends(get_db)):
