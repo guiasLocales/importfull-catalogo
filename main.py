@@ -123,6 +123,29 @@ async def serve_index():
 def health_check():
     return {"status": "healthy"}
 
+@app.get("/api/force-migration")
+def force_migration(db: Session = Depends(get_db)):
+    """FORCE migration of Tienda Nube columns to TEXT"""
+    results = []
+    try:
+        commands = [
+            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_title VARCHAR(255)",
+            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_description TEXT",
+            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN tags TEXT",
+            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN video_url VARCHAR(255)"
+        ]
+        for cmd in commands:
+            try:
+                db.execute(text(cmd))
+                results.append(f"SUCCESS: {cmd}")
+            except Exception as cmd_err:
+                results.append(f"FAILED: {cmd} - {str(cmd_err)}")
+        
+        db.commit()
+        return {"status": "finished", "results": results}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/db-check")
 def db_check():
     """TEMPORARY: Public diagnostic endpoint to check database tables."""
