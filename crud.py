@@ -326,6 +326,10 @@ def update_tn_attributes(db: Session, item_id: int, updates: dict):
     
     for key, value in updates.items():
         if hasattr(db_attr, key):
+            # Truncate string fields to 100 characters to match DB limits
+            # since we don't have ALTER permissions to increase them.
+            if isinstance(value, str) and key not in ['id', 'item_id']:
+                value = value[:100]
             setattr(db_attr, key, value)
     
     db.commit()

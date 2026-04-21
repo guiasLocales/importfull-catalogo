@@ -123,29 +123,6 @@ async def serve_index():
 def health_check():
     return {"status": "healthy"}
 
-@app.get("/api/force-migration")
-def force_migration(db: Session = Depends(get_db)):
-    """FORCE migration of Tienda Nube columns to TEXT"""
-    results = []
-    try:
-        commands = [
-            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_title VARCHAR(255)",
-            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_description TEXT",
-            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN tags TEXT",
-            "ALTER TABLE tienda_nube.attributes MODIFY COLUMN video_url VARCHAR(255)"
-        ]
-        for cmd in commands:
-            try:
-                db.execute(text(cmd))
-                results.append(f"SUCCESS: {cmd}")
-            except Exception as cmd_err:
-                results.append(f"FAILED: {cmd} - {str(cmd_err)}")
-        
-        db.commit()
-        return {"status": "finished", "results": results}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
 @app.get("/db-check")
 def db_check():
     """TEMPORARY: Public diagnostic endpoint to check database tables."""
@@ -200,32 +177,14 @@ def db_check():
 
 
 @app.on_event("startup")
-def startup_tasks():
-    """Run migrations and create default user on startup"""
+def create_default_user():
+    """Create default admin user on startup if it doesn't exist"""
     try:
         db = SessionLocal()
-        
-        # 1. Ensure column lengths for Tienda Nube (Self-healing migration)
-        print("Running database migrations for Tienda Nube...")
-        try:
-            # We use text() for raw SQL since these columns might already be the right size or the table might be empty
-            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_title VARCHAR(255)"))
-            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN seo_description TEXT"))
-            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN tags TEXT"))
-            db.execute(text("ALTER TABLE tienda_nube.attributes MODIFY COLUMN video_url VARCHAR(255)"))
-            db.commit()
-            print("Database migration successful.")
-        except Exception as e:
-            print(f"Warning: Migration partially failed or already applied: {e}")
-            db.rollback()
-
-        # 2. Create default user
         user = crud.get_user_by_username(db, username="admin")
         if not user:
             print("Creating default user 'admin'...")
             crud.create_user(db, schemas.UserCreate(username="admin", password="admin123"))
-        else:
-            print("Default user 'admin' already exists.")
         db.close()
     except Exception as e:
         print(f"Error during startup tasks: {e}")
