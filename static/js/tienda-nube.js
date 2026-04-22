@@ -321,10 +321,17 @@
                                 <button onclick="saveTNAttributes(${product.id}, this)" class="px-5 py-2 bg-[#1B2160] text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
                                     <i data-lucide="refresh-cw" class="h-4 w-4"></i> Actualizar
                                 </button>
+                                ${product.tienda_nube_status === 'active' ? `
+                                <button disabled
+                                    class="px-5 py-2 bg-gray-300 text-gray-500 rounded-lg text-sm font-bold cursor-not-allowed flex items-center gap-2 opacity-60">
+                                    <i data-lucide="check-circle" class="h-4 w-4"></i> Publicado
+                                </button>
+                                ` : `
                                 <button onclick="toggleTNPublish(${product.id}, true, this)" 
                                     class="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
                                     <i data-lucide="upload-cloud" class="h-4 w-4"></i> Publicar
                                 </button>
+                                `}
                             </div>
                         </div>
                     </div>
