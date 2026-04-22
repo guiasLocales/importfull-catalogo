@@ -313,17 +313,17 @@
                         <!-- Footer (Fixed at Bottom of Right Pane) -->
                         <div class="px-8 py-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between sticky bottom-0">
                             <div class="flex gap-2">
-                                 <button onclick="deleteTNProduct(${product.id}, this)" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-bold transition-all">
-                                    Desvincular de TN
+                                 <button onclick="deleteTNProduct(${product.id}, this)" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i> Borrar
                                  </button>
                             </div>
                             <div class="flex gap-3">
-                                <button onclick="toggleTNPublish(${product.id}, ${!(product.tienda_nube_status === 'active')}, this)" 
-                                    class="px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${product.tienda_nube_status === 'active' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-green-600 text-white hover:bg-green-700'}">
-                                    ${product.tienda_nube_status === 'active' ? 'Pausar en TN' : 'Publicar en TN'}
+                                <button onclick="saveTNAttributes(${product.id}, this)" class="px-5 py-2 bg-[#1B2160] text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                                    <i data-lucide="refresh-cw" class="h-4 w-4"></i> Actualizar
                                 </button>
-                                <button onclick="saveTNAttributes(${product.id}, this)" class="px-5 py-2 bg-[#1B2160] text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                                    Guardar Atributos
+                                <button onclick="toggleTNPublish(${product.id}, true, this)" 
+                                    class="px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                                    <i data-lucide="upload-cloud" class="h-4 w-4"></i> Publicar
                                 </button>
                             </div>
                         </div>
