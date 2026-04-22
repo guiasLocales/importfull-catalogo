@@ -83,10 +83,12 @@ def read_products(
 def get_products_summary(site: Optional[str] = None, db: Session = Depends(get_db)):
     """Get count summary for dashboard indicators"""
     total = db.query(models.Product).count()
-    # Use TiendaNubeProductStatus to know real counts
-    from models import TiendaNubeProductStatus
+    # Use correct FK chain: Product -> attributes (item_id) -> product_status (attribute_id)
+    from models import TiendaNubeProductStatus, TiendaNubeAttribute
     active_tn = db.query(models.Product).join(
-        TiendaNubeProductStatus, models.Product.id == TiendaNubeProductStatus.attribute_id
+        TiendaNubeAttribute, models.Product.id == TiendaNubeAttribute.item_id
+    ).join(
+        TiendaNubeProductStatus, TiendaNubeAttribute.id == TiendaNubeProductStatus.attribute_id
     ).filter(
         TiendaNubeProductStatus.product_id != None,
         TiendaNubeProductStatus.product_id > 0
@@ -94,9 +96,8 @@ def get_products_summary(site: Optional[str] = None, db: Session = Depends(get_d
     
     return {
         "total": total,
-        "active_count": active_tn,
-        "paused_count": 0,
-        "unpublished_count": total - active_tn
+        "active": active_tn,
+        "unpublished": total - active_tn
     }
 
 @router.get("/meli")
