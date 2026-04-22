@@ -174,8 +174,14 @@ def update_publish_status(
         # Map 'pause' to 'delete' for Tienda Nube as per supported events documentation
         effective_action = "delete"
         
-    send_webhook(product_id, effective_action, site=request.site)
+    print(f"DEBUG: Triggering webhook for site='{request.site}', action='{request.action}' (effective='{effective_action}'), item_id={product_id}")
+    success, msg = send_webhook(product_id, effective_action, site=request.site)
     
+    if not success:
+        print(f"ERROR: Webhook failed: {msg}")
+        # We don't raise here yet to allow the DB status to persist, 
+        # but in a real scenario we might want to notify the UI better.
+        
     return db_product
 
 @router.delete("/{product_id}/delete-meli")
