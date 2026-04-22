@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasNext = currentDetailIndex < state.products.length - 1;
 
             const html = `
-            <div class="flex flex-col md:flex-row h-full max-h-[90vh] relative">
+            <div class="flex flex-col md:flex-row h-full min-h-0 relative">
                 <!-- Close Button (Top-Right) -->
                 <button onclick="closeModal()" 
                     class="absolute right-2 top-2 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
@@ -1053,7 +1053,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </button>
 
                 <!-- Left: Huge Image -->
-                <div class="w-full md:w-5/12 bg-gray-100 flex flex-col p-4 border-r border-gray-200">
+                <div class="w-full md:w-5/12 bg-gray-100 flex flex-col p-4 border-r border-gray-200 overflow-y-auto custom-scrollbar">
                     <div class="flex-1 flex items-center justify-center mb-4 relative min-h-[200px] md:min-h-[300px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <img id="main-product-image" 
                              src="${product.product_image_b_format_url || (files && files.length > 0 ? (files[0].thumbnailLink || files[0].webContentLink) : 'https://via.placeholder.com/400?text=Sin+Imagen')}" 
@@ -1086,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <!-- Right: Details -->
-                <div class="w-full md:w-7/12 p-6 md:p-8 overflow-y-auto custom-scrollbar flex flex-col bg-white">
+                <div class="w-full md:w-7/12 p-6 md:p-8 overflow-y-auto custom-scrollbar flex flex-col min-h-0 bg-white">
                     <div class="mb-5 border-b border-gray-100 pb-5">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${getCategoryColor(product.product_type_path)}">
@@ -1593,19 +1593,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
             `;
-
-            // Make modal wider for this view
-            elements.modalContent.classList.remove('max-w-lg');
-            elements.modalContent.classList.add('max-w-7xl');
-
-            // Save original close function and add width reset
-            const originalClose = window.closeModal;
-            window.closeModal = () => {
-                elements.modalContent.classList.remove('max-w-7xl');
-                elements.modalContent.classList.add('max-w-lg');
-                originalClose();
-                window.closeModal = originalClose;
-            };
 
             openModal(``, html);
             lucide.createIcons();
@@ -2530,9 +2517,19 @@ document.addEventListener('DOMContentLoaded', function () {
         body.innerHTML = content;
         backdrop.classList.remove('hidden');
         
+        const contentEl = document.getElementById('modalContent');
+        if (contentEl) {
+            contentEl.classList.remove('max-w-lg', 'max-w-7xl');
+            // By default, add max-w-lg unless it's a known wide modal
+            if (content.includes('max-w-7xl')) {
+                 contentEl.classList.add('max-w-7xl');
+            } else {
+                 contentEl.classList.add('max-w-lg');
+            }
+        }
+
         setTimeout(() => {
             backdrop.classList.add('opacity-100');
-            const contentEl = document.getElementById('modalContent');
             if (contentEl) contentEl.classList.add('scale-100');
         }, 10);
     };

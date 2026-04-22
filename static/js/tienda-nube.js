@@ -167,7 +167,7 @@
             } catch(e) { console.warn("No extra attributes or status found"); }
 
             const html = `
-                <div class="flex flex-col md:flex-row h-full max-h-[90vh] relative">
+                <div class="max-w-7xl flex flex-col md:flex-row h-full min-h-0 relative" style="height: 100%;">
                     <!-- Close Button (Top-Right) -->
                     <button onclick="closeModal()" 
                         class="absolute right-4 top-4 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
@@ -176,10 +176,10 @@
                     </button>
 
                     <!-- Left: Product Image -->
-                    <div class="w-full md:w-5/12 bg-gray-50 flex flex-col p-6 border-r border-gray-100 items-center justify-center">
+                    <div class="w-full md:w-5/12 bg-gray-50 flex flex-col p-6 border-r border-gray-100 items-center justify-center overflow-y-auto custom-scrollbar">
                         <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-center">
                             <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}" 
-                                 class="max-h-[300px] md:max-h-[500px] object-contain rounded-lg"
+                                 class="max-h-[300px] md:max-h-[400px] object-contain rounded-lg"
                                  onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
                         </div>
                         <div class="mt-6 text-center">
@@ -198,9 +198,9 @@
                     </div>
 
                     <!-- Right: Pane -->
-                    <div class="w-full md:w-7/12 flex flex-col h-full bg-white overflow-hidden">
+                    <div class="w-full md:w-7/12 flex flex-col h-full min-h-0 bg-white overflow-hidden" style="height: 100%;">
                         <!-- Header & Form Content (Scrollable) -->
-                        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar min-h-0">
                             <div class="mb-8 flex items-center gap-3">
                                 <div class="p-3 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200">
                                     <svg class="h-8 w-8" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -339,27 +339,6 @@
             `;
 
             openModal('', html);
-
-            // Force width update after openModal
-            const modalContent = document.getElementById('modalContent');
-            if (modalContent) {
-                modalContent.classList.remove('max-w-lg');
-                modalContent.classList.add('max-w-7xl');
-                modalContent.style.width = '95%'; 
-                modalContent.style.maxWidth = '1400px'; 
-            }
-
-            const originalClose = window.closeModal;
-            window.closeModal = () => {
-                if (modalContent) {
-                    modalContent.classList.remove('max-w-7xl');
-                    modalContent.classList.add('max-w-lg');
-                    modalContent.style.width = '';
-                    modalContent.style.maxWidth = '';
-                }
-                originalClose();
-                window.closeModal = originalClose;
-            };
 
             if (window.lucide) lucide.createIcons();
         } catch (e) {
