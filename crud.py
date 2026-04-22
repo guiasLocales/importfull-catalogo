@@ -175,6 +175,17 @@ def update_product(db: Session, product_id: int, updates: dict):
     for key, value in updates.items():
         if hasattr(db_product, key) and value is not None:
             setattr(db_product, key, value)
+    
+    # Automatic Sync for Tienda Nube SEO attributes
+    if "product_name_meli" in updates or "description" in updates:
+        from models import TiendaNubeAttribute
+        tn_attr = db.query(TiendaNubeAttribute).filter(TiendaNubeAttribute.item_id == product_id).first()
+        if tn_attr:
+            if "product_name_meli" in updates:
+                tn_attr.seo_title = str(updates["product_name_meli"])[:100]
+            if "description" in updates:
+                tn_attr.seo_description = str(updates["description"])[:100]
+
     db.commit()
     db.refresh(db_product)
     return db_product
@@ -324,10 +335,20 @@ def update_tn_attributes(db: Session, item_id: int, updates: dict):
         db_attr = TiendaNubeAttribute(item_id=item_id)
         db.add(db_attr)
     
+    # Force auto-sync SEO fields from main product as per documentation
+    product = get_product(db, product_id)
+    if product:
+        if product.product_name_meli:
+            updates['seo_title'] = str(product.product_name_meli)[:100]
+        elif product.product_name:
+            updates['seo_title'] = str(product.product_name)[:100]
+            
+        if product.description:
+            updates['seo_description'] = str(product.description)[:100]
+
     for key, value in updates.items():
         if hasattr(db_attr, key):
             # Truncate string fields to 100 characters to match DB limits
-            # since we don't have ALTER permissions to increase them.
             if isinstance(value, str) and key not in ['id', 'item_id']:
                 value = value[:100]
             setattr(db_attr, key, value)

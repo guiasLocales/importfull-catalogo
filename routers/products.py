@@ -169,7 +169,12 @@ def update_publish_status(
     db.refresh(db_product)
     
     # Send webhook notification (external service will set final status)
-    send_webhook(product_id, request.action, site=request.site)
+    effective_action = request.action
+    if request.site == "tienda-nube" and request.action == "pause":
+        # Map 'pause' to 'delete' for Tienda Nube as per supported events documentation
+        effective_action = "delete"
+        
+    send_webhook(product_id, effective_action, site=request.site)
     
     return db_product
 
@@ -202,6 +207,10 @@ def patch_product(
     db_product = crud.update_product(db, product_id=product_id, updates=updates)
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
+        
+    # If Tienda Nube price was updated, notify the service
+    if "price_tienda_nube" in updates:
+        send_webhook(product_id, "update", site="tienda-nube")
         
     return db_product
 
@@ -381,6 +390,8 @@ def update_tienda_nube_attributes(
     updates['item_id'] = product_id
     try:
         attrs = crud.update_tn_attributes(db, product_id, updates)
+        # Notify external service that attributes (SEO, price, tags) have changed
+        send_webhook(product_id, "update", site="tienda-nube")
         return attrs
     except Exception as e:
         print(f"Error updating TN attributes: {e}")

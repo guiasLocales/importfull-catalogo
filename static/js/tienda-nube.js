@@ -221,15 +221,21 @@
                                     <i data-lucide="search" class="h-3 w-3"></i> Optimización SEO
                                 </h4>
                                 <div class="grid grid-cols-1 gap-4">
-                                    <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Título SEO (Recomendado 70 caracteres)</label>
-                                        <input type="text" name="seo_title" value="${attributes.seo_title || product.product_name_meli || ''}" 
-                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none">
+                                    <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm opacity-75">
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                            Título SEO (Automático) 
+                                            <i data-lucide="info" class="h-3 w-3" title="Se completa automáticamente desde el nombre de MercadoLibre"></i>
+                                        </label>
+                                        <input type="text" name="seo_title" value="${attributes.seo_title || product.product_name_meli || ''}" readonly
+                                            class="w-full px-3 py-2 border border-gray-100 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed outline-none">
                                     </div>
-                                    <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Descripción SEO (Meta-description)</label>
-                                        <textarea name="seo_description" rows="2" 
-                                            class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none">${attributes.seo_description || product.description || ''}</textarea>
+                                    <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm opacity-75">
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1">
+                                            Descripción SEO (Automático)
+                                            <i data-lucide="info" class="h-3 w-3" title="Se completa automáticamente desde la descripción del inventario"></i>
+                                        </label>
+                                        <textarea name="seo_description" rows="2" readonly
+                                            class="w-full px-3 py-2 border border-gray-100 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed outline-none">${attributes.seo_description || product.description || ''}</textarea>
                                     </div>
                                 </div>
                             </div>
