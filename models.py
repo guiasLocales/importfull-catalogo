@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Float
+from datetime import datetime
 from db_conn import Base
 
 class Product(Base):

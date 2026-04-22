@@ -390,8 +390,8 @@
                 throw new Error(err.detail || 'Error al guardar');
             }
 
-            // Also trigger a normal product update to notify changes
-            await authFetch(`/api/products/${productId}/notify`, { method: 'POST' });
+            // Also trigger a TN-specific update webhook
+            await authFetch(`/api/products/${productId}/notify?site=tienda-nube`, { method: 'POST' });
 
             btn.classList.replace('bg-[#1B2160]', 'bg-green-600');
             btn.innerHTML = '<i data-lucide="check" class="h-4 w-4"></i> Guardado';

@@ -234,22 +234,25 @@ def put_product(
     return db_product
 
 @router.post("/{product_id}/notify")
-def notify_product_update(product_id: int, db: Session = Depends(get_db)):
-    """Manually trigger an update webhook notification and set status to actualizando"""
+def notify_product_update(product_id: int, site: Optional[str] = None, db: Session = Depends(get_db)):
+    """Manually trigger an update webhook notification"""
     product = crud.get_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Write intermediate status to DB
-    product.status = "actualizando"
-    db.commit()
-    db.refresh(product)
+    effective_site = site if site else "mercadolibre"
+    
+    # Only update ML status column when it's a MercadoLibre update
+    if effective_site == "mercadolibre":
+        product.status = "actualizando"
+        db.commit()
+        db.refresh(product)
         
-    success, msg = send_webhook(product_id, "update")
+    success, msg = send_webhook(product_id, "update", site=effective_site)
     if not success:
         raise HTTPException(status_code=500, detail=f"Failed to send webhook: {msg}")
         
-    return {"status": "success", "message": "Update notification sent"}
+    return {"status": "success", "message": f"Update notification sent for {effective_site}"}
 
 
 

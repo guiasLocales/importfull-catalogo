@@ -74,9 +74,8 @@ def get_drive_service():
                         print("DEBUG: Credentials created but not valid after refresh.", flush=True)
         except Exception as e:
             print(f"CRITICAL DEBUG: Permanent Refresh Token flow FAILED: {e}", flush=True)
-            # If the user provided a token and it failed, we DON'T want to fallback to Service Account
-            # because that causes confusing 403 errors.
-            return None 
+            # Do NOT return None here, allow fallback to Priority 1 (local token.json)
+            # return None 
 
     # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
     # Try to load token from environment/base64 first

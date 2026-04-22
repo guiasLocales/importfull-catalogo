@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, distinct, asc, desc, func
-from models import Product, User, ScrappedCompetence
+from models import Product, User, ScrappedCompetence, TiendaNubeProductStatus
 from schemas import UserCreate
 
 def get_product(db: Session, product_id: int):
     p = db.query(Product).filter(Product.id == product_id).first()
     if p:
-        p.tienda_nube_status = "active" if (p.price_tienda_nube and p.price_tienda_nube > 0) else "unpublished"
+        tn_status = db.query(TiendaNubeProductStatus).filter(TiendaNubeProductStatus.attribute_id == p.id).first()
+        p.tienda_nube_status = "active" if (tn_status and tn_status.product_id) else "unpublished"
     return p
 
 def get_products(db: Session, skip: int = 0, limit: int = 50, 
@@ -19,7 +20,6 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
     query = db.query(Product)
     
     if site == 'tienda-nube':
-        from models import TiendaNubeProductStatus
         # Join with TN status table to know real status
         query = query.outerjoin(TiendaNubeProductStatus, Product.id == TiendaNubeProductStatus.attribute_id)
         
