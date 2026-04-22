@@ -37,11 +37,19 @@
             scrollbar-width: none;
         }
 
-        /* Dark mode for select dropdowns */
         .dark select {
             background-color: #374151 !important;
             border-color: #4b5563 !important;
             color: #f3f4f6 !important;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @media (max-height: 800px) {
+            #modalContent { max-height: 98vh; }
         }
 
         .dark select option {
@@ -1275,9 +1283,9 @@
     <div id="modalBackdrop"
         class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
         <div id="modalContent"
-            class="bg-white rounded-xl shadow-2xl w-full max-w-lg transform scale-95 transition-transform duration-300 overflow-hidden">
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden">
             <!-- Dynamic Content -->
-            <div id="modalBody"></div>
+            <div id="modalBody" class="flex-1 flex flex-col overflow-hidden"></div>
         </div>
     </div>
 
