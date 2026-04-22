@@ -170,12 +170,17 @@ def update_publish_status(
     
     # Send webhook notification (external service will set final status)
     effective_action = request.action
+    effective_site = request.site if request.site else "mercadolibre"
     
-    print(f"DEBUG: Triggering webhook for site='{request.site}', action='{effective_action}', item_id={product_id}")
-    success, msg = send_webhook(product_id, effective_action, site=request.site)
+    # Extra safety: if we're doing a TN action, ensure site is correct
+    print(f"DEBUG: Triggering webhook - site='{effective_site}', action='{effective_action}', item_id={product_id}")
+    
+    success, msg = send_webhook(product_id, effective_action, site=effective_site)
     
     if not success:
-        print(f"ERROR: Webhook failed: {msg}")
+        print(f"ERROR: Webhook failed for item {product_id}: {msg}")
+    else:
+        print(f"SUCCESS: Webhook sent for item {product_id}")
         
     return db_product
 
