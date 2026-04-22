@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         
                         // Tienda Nube Logo
-                        if (product.price_tienda_nube && product.price_tienda_nube > 0) {
+                        if (product.tienda_nube_status === 'active') {
                              logos += `<button onclick="event.stopPropagation(); openTiendaNubeModal(${product.id})" class="flex flex-col items-center gap-0.5 group/tn" title="Tienda Nube Activo">
                                 <div class="h-6 w-8 flex items-center justify-center bg-[#EEF0FF] rounded">
                                     <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="flex items-center gap-2">
                         ${product.meli_id ? `<img src="/static/img/meli-logo-light.png" alt="ML" class="h-4 object-contain">` : ''}
-                        ${product.price_tienda_nube && product.price_tienda_nube > 0 ? `
+                        ${product.tienda_nube_status === 'active' ? `
                             <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <circle cx="18" cy="26" r="13" stroke="#1B2160" stroke-width="3" fill="none"/>
                                 <circle cx="36" cy="18" r="15" stroke="#1B2160" stroke-width="3" fill="none"/>
@@ -1548,7 +1548,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
                                 <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
                             </svg>
-                            <span class="hidden sm:inline">${product.price_tienda_nube && product.price_tienda_nube > 0 ? 'Pausar TN' : 'Publicar TN'}</span>
+                            <span class="hidden sm:inline">${product.tienda_nube_status === 'active' ? 'Gestionar TN' : 'Publicar TN'}</span>
                         </button>
 
                         ${product.meli_id ? `

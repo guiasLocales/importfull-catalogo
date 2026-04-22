@@ -42,10 +42,21 @@ def get_auth_url(request: Request):
         raise HTTPException(status_code=404, detail="client_secret.json not found on server and env var not set")
 
     # Determine redirect URI dynamically
-    host = request.headers.get("host")
+    host = request.headers.get("host", "")
     forwarded_proto = request.headers.get("x-forwarded-proto", "http")
-    protocol = "https" if forwarded_proto == "https" or "inventory-app" in host else "http"
+    
+    # Force HTTPS for Cloud Run or when specifically on the inventory-app domain
+    is_cloud_run = os.getenv('K_SERVICE') is not None
+    is_inventory_host = "inventory-app" in host or ".run.app" in host
+    
+    protocol = "https" if forwarded_proto == "https" or is_cloud_run or is_inventory_host else "http"
+    
+    # Security: If not localhost, always prefer https for OAuth
+    if "localhost" not in host and "127.0.0.1" not in host:
+        protocol = "https"
+
     redirect_uri = f"{protocol}://{host}/api/drive/callback"
+    print(f"DEBUG: Generating Auth URL with redirect_uri: {redirect_uri}")
     
     # Required for some OAuth libraries when behind proxies
     if protocol == "https":
@@ -86,9 +97,19 @@ def auth_callback(request: Request, code: str, state: str = None):
     if not client_config:
         raise HTTPException(status_code=404, detail="client_secret.json not found and env var not set")
 
-    host = request.headers.get("host")
-    protocol = "https" if "https" in str(request.url.scheme) or "inventory-app" in host else "http"
+    host = request.headers.get("host", "")
+    forwarded_proto = request.headers.get("x-forwarded-proto", "http")
+    
+    is_cloud_run = os.getenv('K_SERVICE') is not None
+    is_inventory_host = "inventory-app" in host or ".run.app" in host
+    
+    protocol = "https" if forwarded_proto == "https" or is_cloud_run or is_inventory_host else "http"
+    
+    if "localhost" not in host and "127.0.0.1" not in host:
+        protocol = "https"
+        
     redirect_uri = f"{protocol}://{host}/api/drive/callback"
+    print(f"DEBUG: Callback using redirect_uri: {redirect_uri}")
 
     flow = Flow.from_client_config(
         client_config,
