@@ -56,10 +56,10 @@ class TiendaNubeProductStatus(Base):
     __table_args__ = {"schema": "tienda_nube"}
 
     attribute_id = Column(Integer, primary_key=True)
-    product_id = Column(Integer)
+    product_id = Column(Integer) # External Tienda Nube ID
     variant_id = Column(Integer)
-    response = Column(String(1000))
-    updated_at = Column(DateTime)
+    response = Column(String(1000)) # AI processed API response
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 

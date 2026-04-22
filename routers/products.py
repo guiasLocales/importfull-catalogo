@@ -82,15 +82,14 @@ def read_products(
 @router.get("/summary")
 def get_products_summary(site: Optional[str] = None, db: Session = Depends(get_db)):
     """Get count summary for dashboard indicators"""
-    # For now, we use a simple count. 
-    # If site is tienda-nube, we might want to filter but since we don't have 
-    # a dedicated column yet that we can rely on, we return general counts.
     total = db.query(models.Product).count()
-    
-    # Heuristic for TN active: has a TN price
-    active_tn = db.query(models.Product).filter(
-        models.Product.price_tienda_nube != None,
-        models.Product.price_tienda_nube > 0
+    # Use TiendaNubeProductStatus to know real counts
+    from models import TiendaNubeProductStatus
+    active_tn = db.query(models.Product).join(
+        TiendaNubeProductStatus, models.Product.id == TiendaNubeProductStatus.attribute_id
+    ).filter(
+        TiendaNubeProductStatus.product_id != None,
+        TiendaNubeProductStatus.product_id > 0
     ).count()
     
     return {

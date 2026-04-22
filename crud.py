@@ -19,10 +19,16 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
     query = db.query(Product)
     
     if site == 'tienda-nube':
+        from models import TiendaNubeProductStatus
+        # Join with TN status table to know real status
+        query = query.outerjoin(TiendaNubeProductStatus, Product.id == TiendaNubeProductStatus.attribute_id)
+        
         if status == 'active':
-            query = query.filter(Product.price_tienda_nube > 0)
+            # Strictly active: has a record with a non-null external product_id
+            query = query.filter(TiendaNubeProductStatus.product_id != None, TiendaNubeProductStatus.product_id > 0)
         elif status == 'unpublished':
-            query = query.filter((Product.price_tienda_nube == 0) | (Product.price_tienda_nube == None))
+            # Not active: no record or external product_id is null/zero
+            query = query.filter(or_(TiendaNubeProductStatus.product_id == None, TiendaNubeProductStatus.product_id == 0))
     
     if category:
         query = query.filter(Product.product_type_path == category)
@@ -58,7 +64,13 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
     results = query.offset(skip).limit(limit).all()
     # Populate tienda_nube_status heuristic
     for p in results:
-        p.tienda_nube_status = "active" if (p.price_tienda_nube and p.price_tienda_nube > 0) else "unpublished"
+        # Real status from joined table (if available) or fallback
+        # We assume the join was done or we fetch it
+        tn_status_record = db.query(TiendaNubeProductStatus).filter(TiendaNubeProductStatus.attribute_id == p.id).first()
+        if tn_status_record and tn_status_record.product_id:
+            p.tienda_nube_status = "active"
+        else:
+            p.tienda_nube_status = "unpublished"
     return results
 
 def get_categories(db: Session):
