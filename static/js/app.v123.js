@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasNext = currentDetailIndex < state.products.length - 1;
 
             const html = `
-            <div class="flex flex-col md:flex-row h-full min-h-0 relative w-full max-w-4xl">
+            <div class="flex flex-col md:flex-row h-full min-h-0 relative w-full">
                 <!-- Close Button (Top-Right) -->
                 <button onclick="closeModal()" 
                     class="absolute right-2 top-2 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
@@ -2519,10 +2519,14 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const contentEl = document.getElementById('modalContent');
         if (contentEl) {
-            contentEl.classList.remove('max-w-lg', 'max-w-7xl');
-            // By default, add max-w-lg unless it's a known wide modal
+            // Limpiar todos los posibles anchos previos
+            contentEl.classList.remove('max-w-lg', 'max-w-4xl', 'max-w-5xl', 'max-w-7xl');
+            
+            // Determinar el nuevo ancho
             if (content.includes('max-w-7xl')) {
                  contentEl.classList.add('max-w-7xl');
+            } else if (content.includes('max-w-5xl')) {
+                 contentEl.classList.add('max-w-5xl');
             } else if (content.includes('max-w-4xl') || content.includes('id="main-product-image"')) {
                  contentEl.classList.add('max-w-4xl');
             } else {
