@@ -74,6 +74,7 @@ generate_*.py
 # Backups
 backup*/
 backup_v*/
+importfull-inventorybackup/
 
 # OS files
 Thumbs.db

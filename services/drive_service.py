@@ -32,29 +32,18 @@ def get_drive_service():
     RUNTIME_TOKEN_FILE = '/tmp/token.json'
     
     # 0. Priority: Permanent Refresh Token from Environment Variable
-    # This is the most reliable method for headless servers
+    # This is the most reliable method for headless servers/Cloud Run
     refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
     if refresh_token:
-        refresh_token = refresh_token.strip() # Clean potential whitespace
+        refresh_token = refresh_token.strip()
         try:
-            print(f"DEBUG: Attempting login with permanent REFRESH_TOKEN (Starts with: {refresh_token[:5]}...)", flush=True)
-            from google.oauth2.credentials import Credentials
-            import json
-            
-            # We need client_id and client_secret to use the refresh_token
             from routers.drive_auth import get_client_config
             client_config = get_client_config()
             
-            if not client_config:
-                print("CRITICAL DEBUG: client_config is NONE. Check GOOGLE_CLIENT_SECRET_JSON env var.", flush=True)
-            
             if client_config:
-                # client_config usually has 'web' or 'installed' as the root key
                 config = client_config.get('web') or client_config.get('installed')
-                if not config:
-                    print(f"CRITICAL DEBUG: Root key 'web' or 'installed' not found in config. Keys present: {list(client_config.keys())}", flush=True)
-                
                 if config:
+                    print(f"DEBUG: Attempting login with Permanent Refresh Token (Client: {config.get('client_id')[:10]}...)", flush=True)
                     creds = Credentials(
                         token=None,
                         refresh_token=refresh_token,
@@ -64,18 +53,17 @@ def get_drive_service():
                         scopes=SCOPES
                     )
                     
-                    # Refresh to get a valid access token
+                    # Force a refresh to verify it works
                     creds.refresh(Request())
                     
                     if creds and creds.valid:
-                        print(">>> AUTH: Using PERMANENT REFRESH TOKEN (Success)", flush=True)
+                        print(">>> AUTH: Using PERMANENT REFRESH TOKEN (Verified Success)", flush=True)
                         return build('drive', 'v3', credentials=creds)
-                    else:
-                        print("DEBUG: Credentials created but not valid after refresh.", flush=True)
+            
+            print("DEBUG: Permanent Refresh Token provided but could not be verified or refreshed.", flush=True)
         except Exception as e:
             print(f"CRITICAL DEBUG: Permanent Refresh Token flow FAILED: {e}", flush=True)
-            # Do NOT return None here, allow fallback to Priority 1 (local token.json)
-            # return None 
+            # Fallback to local token.json if the env var token is dead
 
     # 1. Priority: User OAuth Token (Recommended for Quota/Ownership)
     # Try to load token from environment/base64 first

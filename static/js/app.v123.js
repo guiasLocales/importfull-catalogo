@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasNext = currentDetailIndex < state.products.length - 1;
 
             const html = `
-            <div class="flex flex-col md:flex-row h-full min-h-0 relative">
+            <div class="flex flex-col md:flex-row h-full min-h-0 relative max-w-5xl">
                 <!-- Close Button (Top-Right) -->
                 <button onclick="closeModal()" 
                     class="absolute right-2 top-2 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
@@ -1532,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="sticky bottom-0 -mx-6 -mb-6 px-6 py-4 bg-white border-t border-gray-100 flex gap-3 z-10">
+                    <div class="sticky bottom-0 -mx-6 md:-mx-8 -mb-6 md:-mb-8 px-6 md:px-8 py-4 bg-white border-t border-gray-100 flex flex-wrap sm:flex-nowrap gap-3 z-10 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
                         <button onclick="closeModal()" 
                                 class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors border border-gray-200">
                             Cerrar
@@ -2523,6 +2523,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // By default, add max-w-lg unless it's a known wide modal
             if (content.includes('max-w-7xl')) {
                  contentEl.classList.add('max-w-7xl');
+            } else if (content.includes('max-w-5xl')) {
+                 contentEl.classList.add('max-w-5xl');
             } else {
                  contentEl.classList.add('max-w-lg');
             }
