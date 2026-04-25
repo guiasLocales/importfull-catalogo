@@ -1532,62 +1532,62 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="sticky bottom-0 -mx-6 md:-mx-8 -mb-6 md:-mb-8 px-6 md:px-8 py-4 bg-white border-t border-gray-100 flex flex-wrap sm:flex-nowrap gap-3 z-10 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+                    <div class="sticky bottom-0 -mx-6 md:-mx-8 -mb-6 md:-mb-8 px-6 md:px-8 py-4 bg-white/90 backdrop-blur-md border-t border-gray-100 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
                         <button onclick="closeModal()" 
-                                class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors border border-gray-200">
+                                class="px-4 py-2 text-sm bg-white text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-all border border-gray-200 shadow-sm">
                             Cerrar
                         </button>
                         
-                        <div id="auto-save-status" class="flex-1 flex items-center px-2"></div>
+                        <div class="flex items-center gap-2">
+                            <div id="auto-save-status" class="hidden md:flex items-center px-2 mr-2"></div>
 
-                        <!-- Tienda Nube Quick Action -->
-                        <button onclick="event.stopPropagation(); openTiendaNubeDetail(${product.id})" 
-                                class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition-all shadow-md flex items-center gap-2"
-                                title="Gestionar Tienda Nube">
-                            <svg class="h-5 w-5" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
-                                <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
-                            </svg>
-                            <span class="hidden sm:inline">${product.tienda_nube_status === 'active' ? 'Gestionar TN' : 'Publicar TN'}</span>
-                        </button>
+                            <!-- Tienda Nube Action -->
+                            <button onclick="event.stopPropagation(); openTiendaNubeDetail(${product.id})" 
+                                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all shadow-md flex items-center gap-2"
+                                    title="Gestionar Tienda Nube">
+                                <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+                                    <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+                                </svg>
+                                <span>${product.tienda_nube_status === 'active' ? 'Gestionar TN' : 'Publicar TN'}</span>
+                            </button>
 
-                        ${product.meli_id ? `
-                        <button onclick="triggerProductUpdate(${product.id}, this)" 
-                                class="px-4 py-2.5 bg-green-50 text-green-700 border border-green-300 rounded-lg hover:bg-green-100 font-medium transition-colors flex items-center gap-2"
-                                title="Actualizar en MercadoLibre">
-                            <i data-lucide="rotate-cw" class="h-5 w-5"></i>
-                            <span class="hidden sm:inline">Actualizar</span>
-                        </button>` : ''}
+                            ${product.meli_id ? `
+                            <button onclick="triggerProductUpdate(${product.id}, this)" 
+                                    class="px-4 py-2 text-sm bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 font-medium transition-all flex items-center gap-2">
+                                <i data-lucide="rotate-cw" class="h-4 w-4"></i>
+                                <span>Actualizar</span>
+                            </button>` : ''}
 
-                        <div class="w-px h-auto bg-gray-200 mx-1"></div>
+                            <div class="w-px h-6 bg-gray-200 mx-1"></div>
 
-                        ${isActive
-                    ? `<div class="flex gap-2">
-                                <button onclick="togglePublishFromDetail(${product.id}, false)" 
-                                   class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors flex items-center gap-2"
-                                   title="Pausar publicación">
-                                    <i data-lucide="pause-circle" class="h-5 w-5"></i>
-                                    <span>Pausar</span>
-                                </button>
-                                <button onclick="deleteMeliProduct(${product.id}, this)" 
-                                   class="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center gap-2 shadow-sm"
-                                   title="Eliminar de MercadoLibre">
-                                    <i data-lucide="trash-2" class="h-5 w-5"></i>
-                                </button>
-                               </div>`
-                    : `<div class="flex gap-2">
-                                <button onclick="togglePublishFromDetail(${product.id}, true)" 
-                                   class="px-5 py-2.5 bg-[#fff159] text-[#2d3277] border border-yellow-400 rounded-lg hover:bg-[#fdd835] font-medium transition-colors flex items-center gap-2 shadow-sm"
-                                   title="Publicar en MercadoLibre">
-                                    <i data-lucide="shopping-bag" class="h-5 w-5"></i>
-                                    <span class="font-bold">Publicar</span>
-                                </button>
-                                <button onclick="deleteMeliProduct(${product.id}, this)" 
-                                   class="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center gap-2 shadow-sm"
-                                   title="Eliminar de MercadoLibre">
-                                    <i data-lucide="trash-2" class="h-5 w-5"></i>
-                                </button>
-                               </div>`}
+                            ${isActive
+                                ? `<div class="flex gap-2">
+                                    <button onclick="togglePublishFromDetail(${product.id}, false)" 
+                                       class="px-4 py-2 text-sm bg-orange-50 text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-100 font-medium transition-all flex items-center gap-2">
+                                        <i data-lucide="pause-circle" class="h-4 w-4"></i>
+                                        <span>Pausar</span>
+                                    </button>
+                                    <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                       class="p-2 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                       title="Eliminar de MercadoLibre">
+                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                    </button>
+                                   </div>`
+                                : `<div class="flex gap-2">
+                                    <button onclick="togglePublishFromDetail(${product.id}, true)" 
+                                       class="px-5 py-2 text-sm bg-[#fff159] text-[#2d3277] border border-yellow-400 rounded-lg hover:bg-[#fdd835] font-bold transition-all flex items-center gap-2 shadow-sm">
+                                        <i data-lucide="shopping-bag" class="h-4 w-4"></i>
+                                        <span>Publicar</span>
+                                    </button>
+                                    <button onclick="deleteMeliProduct(${product.id}, this)" 
+                                       class="p-2 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                       title="Eliminar de MercadoLibre">
+                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                    </button>
+                                   </div>`
+                            }
+                        </div>
                     </div>
 
                 </div>
