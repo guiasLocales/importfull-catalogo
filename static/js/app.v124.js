@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error(errData.detail || 'Error al eliminar');
                 }
 
-                showAlert('Éxito', 'Solicitud de eliminación enviada con éxito.', 'success');
+                showAlert('Éxito', 'Solicitud de eliminación enviada con éxito.', 'success', () => closeModal());
                 
                 // Update local state
                 const productIndex = state.products.findIndex(p => p.id === id);
@@ -2698,7 +2698,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Replacement for alert() with Premium Modal design (Uses Overlay Layer)
      */
-    window.showAlert = function(title, message, type = 'info') {
+    window.showAlert = function(title, message, type = 'info', onAccept = null) {
         const configs = {
             info: { icon: 'info', color: 'text-blue-600 bg-blue-100', btn: 'bg-blue-600 hover:bg-blue-700' },
             success: { icon: 'check-circle', color: 'text-green-600 bg-green-100', btn: 'bg-green-600 hover:bg-green-700' },
@@ -2706,6 +2706,11 @@ document.addEventListener('DOMContentLoaded', function () {
             warning: { icon: 'alert-triangle', color: 'text-orange-600 bg-orange-100', btn: 'bg-orange-600 hover:bg-orange-700' }
         };
         const config = configs[type] || configs.info;
+
+        window._modalAlertAction = () => {
+            closeAlertModal();
+            if (onAccept) onAccept();
+        };
 
         openAlertModal(`
             <div class="p-6">
@@ -2719,7 +2724,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <p class="text-gray-600 mb-6 text-sm leading-relaxed">${message}</p>
                 <div class="flex justify-end">
-                    <button onclick="closeAlertModal()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                    <button onclick="window._modalAlertAction()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
                         Aceptar
                     </button>
                 </div>
