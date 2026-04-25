@@ -264,17 +264,27 @@ def notify_product_update(product_id: int, site: Optional[str] = None, db: Sessi
     return {"status": "success", "message": f"Update notification sent for {effective_site}"}
 
 @router.post("/bulk-publish-tn")
-def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = Depends(get_db)):
-    """Send a bulk publication request for Tienda Nube with a list of IDs"""
+async def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = Depends(get_db)):
+    """Send individual publication requests for each item to avoid 500 errors on the external service"""
     if not request.item_ids:
         raise HTTPException(status_code=400, detail="No item IDs provided")
     
-    success, msg = send_webhook(request.item_ids, "publish", site="tienda-nube")
+    results = []
+    for item_id in request.item_ids:
+        # We send them individually because the external service fails with 500 when receiving an array
+        success, msg = send_webhook(item_id, "publish", site="tienda-nube")
+        results.append({"item_id": item_id, "success": success, "message": msg})
     
-    if not success:
-        raise HTTPException(status_code=500, detail=f"Error en publicación masiva TN: {msg}")
+    # Check if at least some succeeded
+    succeeded = [r for r in results if r["success"]]
+    if not succeeded:
+        raise HTTPException(status_code=500, detail=f"Todos los productos fallaron. Último error: {results[-1]['message']}")
         
-    return {"status": "success", "message": f"Solicitud enviada para {len(request.item_ids)} productos"}
+    return {
+        "status": "success", 
+        "message": f"Se procesaron {len(succeeded)} de {len(request.item_ids)} productos correctamente.",
+        "details": results
+    }
 
 
 
