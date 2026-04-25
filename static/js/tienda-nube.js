@@ -67,7 +67,7 @@
             updateTNSummary();
         } catch (error) {
             console.error('TN Load Error:', error);
-            alert('No se pudieron cargar los productos de Tienda Nube.');
+            showAlert('Error de Carga', 'No se pudieron cargar los productos de Tienda Nube.', 'error');
         } finally {
             setTNLoading(false);
         }
@@ -343,7 +343,7 @@
             if (window.lucide) lucide.createIcons();
         } catch (e) {
             console.error(e);
-            alert('Error al cargar detalle de Tienda Nube');
+            showAlert('Error de Carga', 'No se pudieron cargar los detalles del producto de Tienda Nube.', 'error');
         } finally {
             setTNLoading(false);
         }
@@ -392,7 +392,7 @@
 
         } catch (e) {
             console.error(e);
-            alert('Error al guardar: ' + e.message);
+            showAlert('Error al Guardar', e.message, 'error');
             btn.disabled = false;
             btn.innerHTML = originalHTML;
             if (window.lucide) lucide.createIcons();
@@ -416,13 +416,13 @@
 
             if (!response.ok) throw new Error('Error al cambiar estado');
 
-            alert(publish ? 'Solicitud de publicación enviada a Tienda Nube' : 'Solicitud de pausa enviada a Tienda Nube');
+            showAlert('Éxito', publish ? 'Solicitud de publicación enviada a Tienda Nube' : 'Solicitud de pausa enviada a Tienda Nube', 'success');
             closeModal();
             loadTiendaNubeProducts();
 
         } catch (e) {
             console.error(e);
-            alert('Error: ' + e.message);
+            showAlert('Error', e.message, 'error');
             btn.disabled = false;
             btn.innerHTML = originalHTML;
             if (window.lucide) lucide.createIcons();
@@ -430,29 +430,29 @@
     };
 
     window.deleteTNProduct = async function(id, btn) {
-        if (!confirm('¿Estás seguro de desvincular este producto de Tienda Nube? Se eliminará de la plataforma.')) return;
-        
-        btn.disabled = true;
-        const originalText = btn.innerText;
-        btn.innerText = 'Eliminando...';
+        showConfirm('Desvincular Producto', '¿Estás seguro de desvincular este producto de Tienda Nube? Se eliminará de la plataforma.', async () => {
+            btn.disabled = true;
+            const originalText = btn.innerText;
+            btn.innerText = 'Eliminando...';
 
-        try {
-            const response = await authFetch(`/api/products/${id}/publish`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'delete', site: 'tienda-nube' })
-            });
+            try {
+                const response = await authFetch(`/api/products/${id}/publish`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', site: 'tienda-nube' })
+                });
 
-            if (!response.ok) throw new Error('Error al eliminar');
+                if (!response.ok) throw new Error('Error al eliminar');
 
-            alert('Eliminación iniciada correctamente.');
-            closeModal();
-            loadTiendaNubeProducts();
-        } catch (e) {
-            alert('Error: ' + e.message);
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
+                showAlert('Eliminación Iniciada', 'La solicitud de eliminación ha sido enviada correctamente.', 'success');
+                closeModal();
+                loadTiendaNubeProducts();
+            } catch (e) {
+                showAlert('Error', e.message, 'error');
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }, 'danger');
     };
 
     // --- Helpers ---

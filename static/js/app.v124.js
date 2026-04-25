@@ -79,12 +79,12 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // --- Check for Auth Success in URL ---
-    if (window.location.hash.includes('auth=success')) {
-        alert('✅ Google Drive conectado con éxito.');
-        window.location.hash = '#settings';
-    } else if (window.location.hash.includes('auth=error')) {
-        alert('❌ Error al conectar con Google Drive.');
-        window.location.hash = '#settings';
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('drive_success')) {
+        showAlert('Google Drive', 'Google Drive conectado con éxito.', 'success');
+    }
+    if (urlParams.has('drive_error')) {
+        showAlert('Google Drive', 'Error al conectar con Google Drive.', 'error');
     }
 
     if (elements.btnConnectDrive) {
@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error(e);
-            alert('Error al guardar el precio.');
+            showAlert('Error', 'Error al guardar el precio.', 'error');
             
             // Error state
             inputEl.classList.remove('bg-orange-500');
@@ -743,46 +743,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Global function for product deletion from MercadoLibre (Direct Frontend Call)
     window.deleteMeliProduct = async (id, buttonElement) => {
-        if (!confirm('¿Estás seguro de que deseas eliminar esta publicación de MercadoLibre? Esta acción no se puede deshacer.')) return;
+        showConfirm('Eliminar Publicación', '¿Estás seguro de que deseas eliminar esta publicación de MercadoLibre? Esta acción no se puede deshacer.', async () => {
+            const button = buttonElement || (window.event && window.event.currentTarget);
+            const originalHTML = button ? button.innerHTML : '';
 
-        const button = buttonElement || (event && event.currentTarget);
-        const originalHTML = button ? button.innerHTML : '';
-
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>';
-            if (window.lucide) lucide.createIcons();
-        }
-
-        try {
-            const response = await authFetch(`/api/products/${id}/delete-meli`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || 'Error al eliminar');
-            }
-
-            alert('Solicitud de eliminación enviada con éxito.');
-
-            // Update local state
-            const productIndex = state.products.findIndex(p => p.id === id);
-            if (productIndex >= 0) {
-                state.products[productIndex].status = 'eliminando';
-            }
-            renderProducts();
-
-        } catch (e) {
-            console.error('Error deleting product from ML:', e);
-            alert('Error al eliminar: ' + e.message);
-        } finally {
             if (button) {
-                button.disabled = false;
-                button.innerHTML = originalHTML;
+                button.disabled = true;
+                button.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>';
                 if (window.lucide) lucide.createIcons();
             }
-        }
+
+            try {
+                const response = await authFetch(`/api/products/${id}/delete-meli`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || 'Error al eliminar');
+                }
+
+                showAlert('Éxito', 'Solicitud de eliminación enviada con éxito.', 'success');
+
+                // Update local state
+                const productIndex = state.products.findIndex(p => p.id === id);
+                if (productIndex >= 0) {
+                    state.products[productIndex].status = 'eliminando';
+                }
+                renderProducts();
+
+            } catch (e) {
+                console.error('Error deleting product from ML:', e);
+                showAlert('Error', 'Error al eliminar: ' + e.message, 'error');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalHTML;
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }, 'danger');
     };
 
     // Global function for publish toggle
@@ -2404,7 +2404,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fetchProducts();
         } catch (e) {
             console.error('Error en publicación masiva:', e);
-            alert('Error al cambiar estado');
+            showAlert('Error', 'Error al cambiar el estado de los productos seleccionados.', 'error');
         }
     };
 
@@ -2614,7 +2614,83 @@ document.addEventListener('DOMContentLoaded', function () {
         
         setTimeout(() => {
             backdrop.classList.add('hidden');
+            document.getElementById('modalBody').innerHTML = '';
+            // Limpiar acciones pendientes de confirmación si existen
+            delete window._modalConfirmAction;
         }, 300);
+    };
+
+    /**
+     * Replacement for alert() with Premium Modal design
+     */
+    window.showAlert = function(title, message, type = 'info') {
+        const configs = {
+            info: { icon: 'info', color: 'text-blue-600 bg-blue-100', btn: 'bg-blue-600 hover:bg-blue-700' },
+            success: { icon: 'check-circle', color: 'text-green-600 bg-green-100', btn: 'bg-green-600 hover:bg-green-700' },
+            error: { icon: 'alert-circle', color: 'text-red-600 bg-red-100', btn: 'bg-red-600 hover:bg-red-700' },
+            warning: { icon: 'alert-triangle', color: 'text-orange-600 bg-orange-100', btn: 'bg-orange-600 hover:bg-orange-700' }
+        };
+        const config = configs[type] || configs.info;
+
+        openModal(title, `
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 rounded-lg ${config.color}">
+                        <i data-lucide="${config.icon}" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-6 text-sm leading-relaxed">${message}</p>
+                <div class="flex justify-end">
+                    <button onclick="closeModal()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        `);
+        if (window.lucide) lucide.createIcons();
+    };
+
+    /**
+     * Replacement for confirm() with Premium Modal design
+     */
+    window.showConfirm = function(title, message, onConfirm, type = 'warning') {
+        const configs = {
+            warning: { icon: 'alert-triangle', color: 'text-orange-600 bg-orange-100', btn: 'bg-orange-600 hover:bg-orange-700' },
+            danger: { icon: 'trash-2', color: 'text-red-600 bg-red-100', btn: 'bg-red-600 hover:bg-red-700' },
+            info: { icon: 'help-circle', color: 'text-blue-600 bg-blue-100', btn: 'bg-blue-600 hover:bg-blue-700' }
+        };
+        const config = configs[type] || configs.warning;
+
+        window._modalConfirmAction = () => {
+            onConfirm();
+            closeModal();
+        };
+
+        openModal(title, `
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 rounded-lg ${config.color}">
+                        <i data-lucide="${config.icon}" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-6 text-sm leading-relaxed">${message}</p>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="window._modalConfirmAction()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        `);
+        if (window.lucide) lucide.createIcons();
     };
 
     if (loginForm) {
