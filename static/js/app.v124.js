@@ -1897,17 +1897,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Modals ---
 
-    function openModal(title, contentHtml) {
-        elements.modalBody.innerHTML = contentHtml; // Simplistic content injection
-        elements.modalBackdrop.classList.remove('hidden');
-        // Simple animation delay
-        setTimeout(() => {
-            elements.modalBackdrop.classList.remove('opacity-0');
-            elements.modalBackdrop.classList.add('opacity-100');
-            elements.modalContent.classList.remove('scale-95');
-            elements.modalContent.classList.add('scale-100');
-        }, 10);
-    }
+
 
     window.closeModal = () => {
         // Remove keyboard navigation handler if it exists
