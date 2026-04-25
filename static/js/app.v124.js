@@ -1086,8 +1086,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
 
                 <!-- Right: Details -->
-                <div class="w-full md:w-7/12 p-6 md:p-8 overflow-y-auto custom-scrollbar flex flex-col min-h-0 bg-white">
-                    <div class="mb-5 border-b border-gray-100 pb-5">
+                <div class="w-full md:w-7/12 overflow-y-auto custom-scrollbar flex flex-col min-h-0 bg-white">
+                    <div class="p-6 md:p-8 mb-5 border-b border-gray-100 pb-5">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${getCategoryColor(product.product_type_path)}">
                                 ${product.product_type_path || 'General'}
@@ -1159,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             })();
                         </script>` : ''}
 
-                        <div class="flex items-center gap-3 text-sm text-gray-500">
+                        <div class="px-6 md:px-8 flex items-center gap-3 text-sm text-gray-500">
                              <span>ID: ${product.id}</span>
                              <span class="text-gray-300">|</span>
                              <span>SKU: ${product.product_code}</span>
@@ -1167,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Editable Fields Section -->
-                    <div class="space-y-4 mb-6">
+                    <div class="px-6 md:px-8 space-y-4 mb-6">
                         
                         <!-- Meli Name -->
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
@@ -1268,42 +1268,44 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- MercadoLibre Business Config -->
-                    <div class="mb-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                             <i data-lucide="settings" class="h-3 w-3"></i> Configuración de Publicación
-                        </label>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <!-- Listing Type -->
-                            <div>
-                                <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Publicación</label>
-                                <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
-                                        class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
-                                    <option value="gold_special" ${product.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
-                                    <option value="gold_pro" ${product.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
-                                </select>
-                            </div>
-                            <!-- Shipping Mode -->
-                            <div>
-                                <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Logística</label>
-                                <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
-                                        class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
-                                    <option value="me2" ${product.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
-                                    <option value="me1" ${product.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
-                                </select>
-                            </div>
-                            <!-- Free Shipping -->
-                            <div class="flex items-end">
-                                <label class="flex items-center gap-2 cursor-pointer p-2 w-full h-10 rounded-lg hover:bg-white transition-colors border border-gray-200 shadow-sm">
-                                    <input type="checkbox" id="edit_free_shipping" ${product.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
-                                           class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
-                                    <span class="text-xs font-bold text-gray-700">Envío Gratis</span>
-                                </label>
+                    <div class="px-6 md:px-8 mb-4">
+                        <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                 <i data-lucide="settings" class="h-3 w-3"></i> Configuración de Publicación
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <!-- Listing Type -->
+                                <div>
+                                    <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Publicación</label>
+                                    <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
+                                            class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
+                                        <option value="gold_special" ${product.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
+                                        <option value="gold_pro" ${product.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
+                                    </select>
+                                </div>
+                                <!-- Shipping Mode -->
+                                <div>
+                                    <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Logística</label>
+                                    <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
+                                            class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
+                                        <option value="me2" ${product.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
+                                        <option value="me1" ${product.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
+                                    </select>
+                                </div>
+                                <!-- Free Shipping -->
+                                <div class="flex items-end">
+                                    <label class="flex items-center gap-2 cursor-pointer p-2 w-full h-10 rounded-lg hover:bg-white transition-colors border border-gray-200 shadow-sm">
+                                        <input type="checkbox" id="edit_free_shipping" ${product.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
+                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="text-xs font-bold text-gray-700">Envío Gratis</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                    <div class="px-6 md:px-8 grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
                         <!-- Costo -->
                         <div class="flex flex-col justify-end">
                             <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
@@ -1362,7 +1364,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <!-- Meli Costs (Collapsible) -->
                     ${meliCosts ? `
-                    <div class="mb-6">
+                    <div class="px-6 md:px-8 mb-6">
                         <details class="group bg-yellow-50 border border-yellow-200 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
                             <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-yellow-100/50 transition-colors select-none">
                                 <div class="flex items-center gap-3">
@@ -1414,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>` : ''}
 
                     <!-- Validation Issues (Collapsible) -->
-                    <div class="mb-6">
+                    <div class="px-6 md:px-8 mb-6">
                         ${(() => {
                     const hasIssues = (product.reason && product.reason !== 'None') || (product.remedy && product.remedy !== 'None');
                     const bgClass = hasIssues ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200';
@@ -1460,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Drive Dropzone -->
-                    <div class="mb-6">
+                    <div class="px-6 md:px-8 mb-6">
                         <div id="drive-dropzone-${product.id}" 
                              class="relative p-4 rounded-xl border-2 border-dashed transition-all duration-200 group
                                     ${product.drive_url ? 'bg-blue-50/50 border-blue-200' : 'bg-gray-50 border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'}"
@@ -1505,7 +1507,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Meli Photo Tips link -->
-                    <div class="mb-6 px-1">
+                    <div class="mb-6 px-6 md:px-8">
                         <p class="text-xs text-gray-500 flex items-center gap-1.5">
                             <i data-lucide="help-circle" class="h-3.5 w-3.5 text-gray-400"></i>
                             Aquí te dejamos un enlace con las fotos recomendadas por Mercado Libre 
@@ -1516,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Description Editor -->
-                    <div class="mb-24 flex-1 flex flex-col min-h-[150px] relative">
+                    <div class="px-6 md:px-8 mb-24 flex-1 flex flex-col min-h-[150px] relative">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex justify-between items-center">
                             <span>Descripción</span>
                             <button id="btn-ai-description" onclick="triggerAIPrePublish(${product.id}, 'description')" 
@@ -1532,7 +1534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="sticky bottom-0 -mx-6 md:-mx-8 -mb-6 md:-mb-8 px-6 md:px-8 py-4 bg-white/90 backdrop-blur-md border-t border-gray-100 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
+                    <div class="sticky bottom-0 px-6 md:px-8 py-4 bg-white border-t border-gray-100 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
                         <button onclick="closeModal()" 
                                 class="px-4 py-2 text-sm bg-white text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-all border border-gray-200 shadow-sm">
                             Cerrar
