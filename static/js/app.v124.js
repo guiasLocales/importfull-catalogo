@@ -1313,45 +1313,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <!-- Key Stats Grid -->
                     <div class="px-6 md:px-8">
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-4 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                        <div class="grid grid-cols-2 lg:grid-cols-6 gap-6 mb-4 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                             <!-- Costo -->
                             <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Costo ($)</label>
                                 <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
-                                       class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                             </div>
                             
-                            <!-- Precio ML -->
-                            <div class="flex flex-col relative">
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
+                            <!-- Precio ML (ESPANDIDO PERO LETRA NORMAL) -->
+                            <div class="flex flex-col lg:col-span-2 relative">
+                                <label class="block text-[10px] font-black text-blue-600 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Mercado Libre ($)</label>
                                 <div class="relative flex items-center">
                                     <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                           class="w-full h-10 pl-3 pr-11 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                                    <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1 w-9 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                                        <i data-lucide="calculator" class="w-4 h-4"></i>
+                                           class="w-full h-11 pl-4 pr-12 border-2 border-blue-100 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                    <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1.5 w-9 h-9 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors bg-white/50 backdrop-blur-sm">
+                                        <i data-lucide="calculator" class="w-5 h-5"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Precio TN -->
                             <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-blue-600 mb-1.5 uppercase tracking-wider">Precio TN ($)</label>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio TN ($)</label>
                                 <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
-                                       class="w-full h-10 px-3 border border-blue-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                             </div>
                             
                             <!-- Precio Local -->
                             <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Local ($)</label>
                                 <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
-                                       class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                             </div>
                             
                             <!-- Stock -->
                             <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock</label>
-                                <div class="w-full h-10 flex items-center justify-end px-1">
-                                    <span class="text-xl font-black text-gray-900">${product.stock || 0}</span>
+                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest text-right">Stock</label>
+                                <div class="w-full h-11 flex items-center justify-end px-1 border border-transparent">
+                                    <span class="text-2xl font-black text-gray-900 leading-none">${product.stock || 0}</span>
                                 </div>
                             </div>
 
