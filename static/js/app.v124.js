@@ -764,13 +764,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 showAlert('Éxito', 'Solicitud de eliminación enviada con éxito.', 'success');
-
+                
                 // Update local state
                 const productIndex = state.products.findIndex(p => p.id === id);
                 if (productIndex >= 0) {
                     state.products[productIndex].status = 'eliminando';
                 }
                 renderProducts();
+                fetchProducts();
 
             } catch (e) {
                 console.error('Error deleting product from ML:', e);
@@ -2351,6 +2352,49 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    /**
+     * Replacement for prompt() with Premium Modal design
+     */
+    window.showPrompt = function(title, message, onAccept, defaultValue = '') {
+        window._modalPromptAction = () => {
+            const input = document.getElementById('modalPromptInput');
+            if (input) {
+                onAccept(input.value);
+                closeModal();
+            }
+        };
+
+        openModal(title, `
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 rounded-lg text-blue-600 bg-blue-100">
+                        <i data-lucide="message-square" class="h-6 w-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">${title}</h3>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4 text-sm leading-relaxed">${message}</p>
+                <div class="relative mb-6">
+                    <input type="text" id="modalPromptInput" value="${defaultValue}" 
+                           class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all text-sm outline-none shadow-sm"
+                           placeholder="Escribe aquí..."
+                           onkeydown="if(event.key === 'Enter') window._modalPromptAction()">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+                        Cancelar
+                    </button>
+                    <button onclick="window._modalPromptAction()" class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        `);
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => document.getElementById('modalPromptInput')?.focus(), 100);
+    };
+
     window.execBulkPublishTN = async () => {
         try {
             const ids = Array.from(state.selectedIds).map(id => parseInt(id));
@@ -2372,14 +2416,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             state.selectedIds.clear();
             updateSelectionUI();
-            closeModal();
             
-            // Show success toast or message
-            alert(`Solicitud enviada para ${ids.length} productos correctamente.`);
+            // Show success toast or message - REMOVED immediate closeModal to allow reading
+            showAlert('Publicación Masiva', `Solicitud enviada para ${ids.length} productos correctamente.`, 'success');
             fetchProducts();
         } catch (e) {
             console.error('Error en publicación masiva TN:', e);
-            alert('Error al procesar la publicación masiva en Tienda Nube');
+            showAlert('Error', 'Error al procesar la publicación masiva en Tienda Nube', 'error');
         }
     };
 
@@ -3977,89 +4020,92 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     window.triggerAIPrePublish = async function (productId, field) {
-        let promptText = prompt(`Ingresa el prompt para generar ${field === 'product_name_meli' ? 'el título' : 'la descripción'}:`);
-        if (!promptText) return;
+        const fieldName = field === 'product_name_meli' ? 'el título' : 'la descripción';
+        
+        showPrompt('Generar con IA', `Ingresa el prompt para generar ${fieldName}:`, async (promptText) => {
+            if (!promptText) return;
 
-        const btnId = `btn-ai-${field}`;
-        const btn = document.getElementById(btnId);
-        const originalContent = btn ? btn.innerHTML : '';
+            const btnId = `btn-ai-${field}`;
+            const btn = document.getElementById(btnId);
+            const originalContent = btn ? btn.innerHTML : '';
 
-        try {
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>';
-            }
-
-            const response = await authFetch(`/api/products/${productId}/pre-publish`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    prompt: promptText,
-                    field: field
-                })
-            });
-
-            if (!response.ok) {
-                const text = await response.text();
-                let errorMsg = 'Error en la solicitud de AI';
-                try {
-                    const errData = JSON.parse(text);
-                    if (errData.detail) errorMsg = errData.detail;
-                } catch (e) {
-                    if (text) errorMsg = `Server Error: ${text.substring(0, 200)}`;
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600"></div>';
                 }
-                throw new Error(errorMsg);
-            }
 
-            alert('✨ Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.');
+                const response = await authFetch(`/api/products/${productId}/pre-publish`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: promptText,
+                        field: field
+                    })
+                });
 
-        } catch (e) {
-            console.error('AI Error:', e);
-            alert('Error al solicitar generación AI: ' + e.message);
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-                lucide.createIcons();
+                if (!response.ok) {
+                    const text = await response.text();
+                    let errorMsg = 'Error en la solicitud de AI';
+                    try {
+                        const errData = JSON.parse(text);
+                        if (errData.detail) errorMsg = errData.detail;
+                    } catch (e) {
+                        if (text) errorMsg = `Server Error: ${text.substring(0, 200)}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                showAlert('IA en proceso', 'Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.', 'success');
+
+            } catch (e) {
+                console.error('AI Error:', e);
+                showAlert('Error AI', 'Error al solicitar generación AI: ' + e.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                    if (window.lucide) lucide.createIcons();
+                }
             }
-        }
+        });
     };
 
     window.startScraping = async function () {
-        if (!confirm('¿Estás seguro de iniciar el proceso de scrapping global? Esto puede tardar varios minutos.')) return;
+        showConfirm('Scrapping Global', '¿Estás seguro de iniciar el proceso de scrapping global? Esto puede tardar varios minutos.', async () => {
+            const btn = document.getElementById('btnStartScraping');
+            const originalContent = btn.innerHTML;
 
-        const btn = document.getElementById('btnStartScraping');
-        const originalContent = btn.innerHTML;
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <div class="flex items-center justify-center w-full gap-2 font-semibold">
+                        <div class="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                        <span>Iniciando...</span>
+                    </div>
+                `;
 
-        try {
-            btn.disabled = true;
-            btn.innerHTML = `
-                <div class="flex items-center justify-center w-full gap-2 font-semibold">
-                    <div class="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
-                    <span>Iniciando...</span>
-                </div>
-            `;
+                const response = await authFetch('/api/competence/start-scraping', {
+                    method: 'POST'
+                });
 
-            const response = await authFetch('/api/competence/start-scraping', {
-                method: 'POST'
-            });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error al iniciar el scrapping');
+                }
 
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(data.detail || 'Error al iniciar el scrapping');
+                showAlert('Sincronización', 'Scrapping iniciado correctamente. Los resultados aparecerán gradualmente.', 'success');
+                loadCompetenceData();
+
+            } catch (e) {
+                console.error('Error starting scraping:', e);
+                showAlert('Error', 'Error al iniciar scrapping: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                if (window.lucide) lucide.createIcons();
             }
-
-            alert('Scrapping iniciado correctamente. Los resultados aparecerán gradualmente.');
-            loadCompetenceData();
-
-        } catch (e) {
-            console.error('Error starting scraping:', e);
-            alert('Error al iniciar scrapping: ' + e.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
-            lucide.createIcons();
-        }
+        }, 'info');
     };
 
 

@@ -417,7 +417,6 @@
             if (!response.ok) throw new Error('Error al cambiar estado');
 
             showAlert('Éxito', publish ? 'Solicitud de publicación enviada a Tienda Nube' : 'Solicitud de pausa enviada a Tienda Nube', 'success');
-            closeModal();
             loadTiendaNubeProducts();
 
         } catch (e) {
@@ -445,7 +444,6 @@
                 if (!response.ok) throw new Error('Error al eliminar');
 
                 showAlert('Eliminación Iniciada', 'La solicitud de eliminación ha sido enviada correctamente.', 'success');
-                closeModal();
                 loadTiendaNubeProducts();
             } catch (e) {
                 showAlert('Error', e.message, 'error');
