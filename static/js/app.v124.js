@@ -1364,7 +1364,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div>
                                 ${product.status
                         ? `<span id="detail-status-badge-${product.id}" class="${product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'} px-3 py-1.5 rounded-full text-[10px] font-black uppercase border tracking-widest">${product.status}</span>`
-                        : '<span id="detail-status-badge-' + product.id + '" class="bg-gray-100 text-gray-600 border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black border tracking-widest">No Publicado</span>'
+                        : ''
                     }
                                 </div>
                             </div>
