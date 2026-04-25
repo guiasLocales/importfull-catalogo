@@ -1291,6 +1291,15 @@
         </div>
     </div>
 
+    <!-- Alert/Overlay Modal Layer (for Alerts, Confirms, Prompts over existing modals) -->
+    <div id="alertModalBackdrop"
+        class="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-[60] hidden flex items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">
+        <div id="alertModalContent"
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg h-auto transform scale-95 transition-transform duration-300 overflow-hidden">
+            <div id="alertModalBody"></div>
+        </div>
+    </div>
+
     <!-- Modal Template (Hidden by default) -->
     <div id="modalBackdrop"
         class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 sm:p-6 opacity-0 transition-opacity duration-300">

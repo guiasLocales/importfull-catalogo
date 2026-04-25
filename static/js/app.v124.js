@@ -2355,16 +2355,19 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
      * Replacement for prompt() with Premium Modal design
      */
+    /**
+     * Replacement for prompt() with Premium Modal design (Uses Overlay Layer)
+     */
     window.showPrompt = function(title, message, onAccept, defaultValue = '') {
         window._modalPromptAction = () => {
             const input = document.getElementById('modalPromptInput');
             if (input) {
                 onAccept(input.value);
-                closeModal();
+                closeAlertModal();
             }
         };
 
-        openModal(title, `
+        openAlertModal(`
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-3 rounded-lg text-blue-600 bg-blue-100">
@@ -2382,7 +2385,7 @@ document.addEventListener('DOMContentLoaded', function () {
                            onkeydown="if(event.key === 'Enter') window._modalPromptAction()">
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <button onclick="closeModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+                    <button onclick="closeAlertModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
                         Cancelar
                     </button>
                     <button onclick="window._modalPromptAction()" class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
@@ -2663,8 +2666,37 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 300);
     };
 
+    // --- Alert/Overlay Modal Management (Nested Modals) ---
+    window.openAlertModal = function(content) {
+        const backdrop = document.getElementById('alertModalBackdrop');
+        const body = document.getElementById('alertModalBody');
+        if (!backdrop || !body) return;
+
+        body.innerHTML = content;
+        backdrop.classList.remove('hidden');
+        
+        setTimeout(() => {
+            backdrop.classList.add('opacity-100');
+            document.getElementById('alertModalContent')?.classList.add('scale-100');
+        }, 10);
+    };
+
+    window.closeAlertModal = function() {
+        const backdrop = document.getElementById('alertModalBackdrop');
+        const content = document.getElementById('alertModalContent');
+        if (!backdrop || !content) return;
+
+        backdrop.classList.remove('opacity-100');
+        content.classList.remove('scale-100');
+        
+        setTimeout(() => {
+            backdrop.classList.add('hidden');
+            document.getElementById('alertModalBody').innerHTML = '';
+        }, 300);
+    };
+
     /**
-     * Replacement for alert() with Premium Modal design
+     * Replacement for alert() with Premium Modal design (Uses Overlay Layer)
      */
     window.showAlert = function(title, message, type = 'info') {
         const configs = {
@@ -2675,7 +2707,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         const config = configs[type] || configs.info;
 
-        openModal(title, `
+        openAlertModal(`
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-3 rounded-lg ${config.color}">
@@ -2687,7 +2719,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <p class="text-gray-600 mb-6 text-sm leading-relaxed">${message}</p>
                 <div class="flex justify-end">
-                    <button onclick="closeModal()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
+                    <button onclick="closeAlertModal()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
                         Aceptar
                     </button>
                 </div>
@@ -2697,7 +2729,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     /**
-     * Replacement for confirm() with Premium Modal design
+     * Replacement for confirm() with Premium Modal design (Uses Overlay Layer)
      */
     window.showConfirm = function(title, message, onConfirm, type = 'warning') {
         const configs = {
@@ -2709,10 +2741,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         window._modalConfirmAction = () => {
             onConfirm();
-            closeModal();
+            closeAlertModal();
         };
 
-        openModal(title, `
+        openAlertModal(`
             <div class="p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-3 rounded-lg ${config.color}">
@@ -2724,7 +2756,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <p class="text-gray-600 mb-6 text-sm leading-relaxed">${message}</p>
                 <div class="flex justify-end space-x-3">
-                    <button onclick="closeModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+                    <button onclick="closeAlertModal()" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
                         Cancelar
                     </button>
                     <button onclick="window._modalConfirmAction()" class="px-6 py-2 ${config.btn} text-white rounded-lg text-sm font-bold shadow-md transition-all transform hover:scale-[1.02] active:scale-95">
