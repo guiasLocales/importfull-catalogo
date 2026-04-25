@@ -97,11 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.href = data.auth_url;
                     }
                 } else {
-                    alert('Error al obtener la URL de autenticación');
+                    showAlert('Error', 'Error al obtener la URL de autenticación', 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error al conectar con el servidor');
+                showAlert('Error', 'Error al conectar con el servidor', 'error');
             }
         });
     }
@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error('Error updating publish status:', e);
-            alert('Error al cambiar estado: ' + e.message);
+            showAlert('Error', 'Error al cambiar estado: ' + e.message, 'error');
         } finally {
             // Restore button state
             if (button) {
@@ -959,7 +959,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             const data = await response.json();
-            alert(data.message || 'Cálculo iniciado. Vuelve a abrir el modal en unos segundos.');
+            showAlert('Cálculo Iniciado', data.message || 'Cálculo iniciado. Vuelve a abrir el modal en unos segundos.', 'success');
             
             setTimeout(() => {
                 btn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-green-500"></i>';
@@ -977,7 +977,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
         } catch (error) {
             console.error('Error calculando costos ML:', error);
-            alert('Error: ' + error.message);
+            showAlert('Error de Cálculo', error.message, 'error');
             event.currentTarget.innerHTML = '<i data-lucide="calculator" class="w-4 h-4"></i>';
             if (window.lucide) lucide.createIcons();
         }
@@ -998,7 +998,7 @@ document.addEventListener('DOMContentLoaded', function () {
             await openProductDetail(productId);
         } catch (e) {
             console.error(e);
-            alert('Error al refrescar: ' + e.message);
+            showAlert('Error', 'Error al refrescar: ' + e.message, 'error');
         }
     };
 
@@ -1630,7 +1630,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error("Error fetching product details:", e);
-            alert('Error al cargar los detalles del producto.');
+            showAlert('Error', 'Error al cargar los detalles del producto.', 'error');
         } finally {
             setLoading(false);
         }
@@ -1671,7 +1671,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error('Error updating drive URL:', e);
-            alert('Error al guardar la URL de Drive: ' + e.message);
+            showAlert('Error', 'Error al guardar la URL de Drive: ' + e.message, 'error');
         }
     };
 
@@ -1754,11 +1754,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Final feedback
         if (errorCount === 0) {
-            alert(successCount > 1 ? `¡${successCount} fotos subidas correctamente!` : '¡Foto subida correctamente!');
+            showAlert('Carga Exitosa', successCount > 1 ? `¡${successCount} fotos subidas correctamente!` : '¡Foto subida correctamente!', 'success');
         } else if (successCount > 0) {
-            alert(`Se subieron ${successCount} fotos, pero ${errorCount} fallaron. Último error: ${lastError}`);
+            showAlert('Carga Parcial', `Se subieron ${successCount} fotos, pero ${errorCount} fallaron. Último error: ${lastError}`, 'warning');
         } else {
-            alert('Error al subir las fotos: ' + lastError);
+            showAlert('Error de Carga', 'Error al subir las fotos: ' + lastError, 'error');
         }
 
         // Clear input
@@ -1809,7 +1809,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error('Error:', e);
-            alert('Error al cambiar el estado');
+            showAlert('Error', 'Error al cambiar el estado', 'error');
         } finally {
             // Always restore button
             if (button) {
@@ -1844,12 +1844,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             setTimeout(() => {
-                alert('Actualización enviada correctamente');
+                showAlert('Éxito', 'Actualización enviada correctamente', 'success');
             }, 500);
 
         } catch (e) {
             console.error(e);
-            alert('Error al enviar notificación de actualización');
+            showAlert('Error', 'Error al enviar notificación de actualización', 'error');
         } finally {
             if (icon) icon.classList.remove('animate-spin');
             btn.disabled = false;
@@ -1970,7 +1970,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (product.price_mercadolibre === null) product.price_mercadolibre = '';
             } catch (e) {
                 console.error(e);
-                alert('Error al cargar el producto');
+                showAlert('Error', 'Error al cargar el producto', 'error');
                 setLoading(false);
                 return;
             } finally {
@@ -2100,11 +2100,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 
                                 if (!response.ok) throw new Error(data.detail || 'Error en AI');
                                 
-                                alert('Solicitud AI enviada: ' + data.message + '\\n(Los cambios se reflejarán cuando refresques la vista más tarde)');
+                                showAlert('AI en Proceso', 'Solicitud AI enviada: ' + data.message + '\n(Los cambios se reflejarán cuando refresques la vista más tarde)', 'success');
                                 
                             } catch (error) {
                                 console.error('AI Error:', error);
-                                alert('Error generando contenido AI: ' + error.message);
+                                showAlert('Error AI', 'Error generando contenido AI: ' + error.message, 'error');
                             } finally {
                                 btn.innerHTML = originalHtml;
                                 btn.disabled = false;
@@ -2232,7 +2232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error(error);
-            alert('Error: ' + error.message);
+            showAlert('Error', error.message, 'error');
         }
     };
 
@@ -2876,10 +2876,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmPassword = document.getElementById('settingsConfirmPassword').value;
             const token = localStorage.getItem('token');
 
-            if (!username) return alert('El usuario es requerido');
+            if (!username) return showAlert('Validación', 'El usuario es requerido', 'warning');
             
             if (newPassword && newPassword !== confirmPassword) {
-                return alert('Las contraseñas no coinciden');
+                return showAlert('Validación', 'Las contraseñas no coinciden', 'warning');
             }
 
             const payload = { username };
@@ -2897,16 +2897,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 if (response.ok) {
-                    alert('Credenciales actualizadas correctamente');
+                    showAlert('Éxito', 'Credenciales actualizadas correctamente', 'success');
                     credentialsForm.reset();
                     fetchUserMe();
                 } else {
                     const data = await response.json();
-                    alert('Error al actualizar credenciales: ' + (data.detail || 'Error desconocido'));
+                    showAlert('Error', 'Error al actualizar credenciales: ' + (data.detail || 'Error desconocido'), 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                showAlert('Error', 'Error de conexión', 'error');
             }
         });
     }
@@ -2932,12 +2932,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     const data = await response.json();
                     updateAppLogo(data.logo_url);
                     fetchUserMe();
+                    showAlert('Éxito', 'Logo actualizado correctamente', 'success');
                 } else {
-                    alert('Error al subir logo');
+                    showAlert('Error', 'Error al subir el logo', 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert('Error de conexión');
+                showAlert('Error', 'Error de conexión con el servidor', 'error');
             }
         });
     }
@@ -3324,7 +3325,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let rows = data.rows || [];
             
             if (!summary && rows.length === 0) {
-                alert('No se encontraron datos de performance para esta publicación. Recuerda que solo funciona para productos activos.');
+                showAlert('Sin Datos', 'No se encontraron datos de performance para esta publicación. Recuerda que solo funciona para productos activos.', 'info');
                 setLoading(false);
                 return;
             }
@@ -3429,7 +3430,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error('Error opening performance modal:', e);
-            alert('Error: ' + e.message);
+            showAlert('Error', e.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -3590,10 +3591,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!response.ok) throw new Error(result.detail || 'Error desconocido');
 
-            alert('Sincronización de base de datos finalizada.\n\nResultados:\n' + result.results.join('\n'));
+            showAlert('Sincronización Finalizada', 'Base de datos sincronizada correctamente.', 'success');
             loadCompetenceData(); // Reload data
         } catch (e) {
-            alert('Error al reparar: ' + e.message);
+            showAlert('Error al Reparar', e.message, 'error');
             console.error(e);
         } finally {
             const btn = document.querySelector('button[onclick="fixDatabaseSchema()"]');
@@ -3618,7 +3619,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const urlInput = document.getElementById('compNewUrl');
         const btn = document.getElementById('btnAddCompUrl');
         if (!urlInput || !urlInput.value.trim()) {
-            alert('Ingresa una URL válida de MercadoLibre');
+            showAlert('Validación', 'Ingresa una URL válida de MercadoLibre', 'warning');
             return;
         }
 
@@ -3648,13 +3649,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (e.message.includes('denied')) msg += '\n\nParece un problema de PERMISOS.';
             if (e.message.includes('default value')) msg += '\n\nFaltan datos obligatorios en la tabla.';
 
-            alert(msg);
+            showAlert('Error', msg, 'error');
 
             // Offer diagnostics if relevant
             if (e.message.includes('denied') || e.message.includes('OperationalError')) {
-                if (confirm('¿Quieres ver los permisos actuales de la base de datos para diagnosticar?')) {
+                showConfirm('Diagnóstico', '¿Quieres ver los permisos actuales de la base de datos para diagnosticar?', () => {
                     checkPermissions();
-                }
+                }, 'info');
             }
         } finally {
             btn.disabled = false;
@@ -3667,32 +3668,31 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const response = await authFetch('/api/competence/debug-permissions');
             const data = await response.json();
-            alert('DIAGNÓSTICO DE PERMISOS:\n\n' + JSON.stringify(data, null, 2));
+            showAlert('DIAGNÓSTICO DE PERMISOS', JSON.stringify(data, null, 2), 'info');
         } catch (err) {
-            alert('Error al verificar permisos: ' + err.message);
+            showAlert('Error de Diagnóstico', err.message, 'error');
         }
     };
 
     window.deleteCompetenceItem = async function (code) {
         if (!code) return;
-        if (!confirm('¿Eliminar este registro de competencia?')) return;
+        showConfirm('Confirmar Eliminación', '¿Eliminar este registro de competencia?', async () => {
+            try {
+                const encodedCode = encodeURIComponent(code);
+                const response = await authFetch(`/api/competence?code=${encodedCode}`, {
+                    method: 'DELETE'
+                });
 
-        try {
-            // Encode code for query param
-            const encodedCode = encodeURIComponent(code);
-            const response = await authFetch(`/api/competence?code=${encodedCode}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Error ${response.status}: Ruta no encontrada o prohibida`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `Error ${response.status}: Ruta no encontrada o prohibida`);
+                }
+                loadCompetenceData();
+            } catch (e) {
+                console.error('Error deleting competence item:', e);
+                showAlert('Error', 'Error al eliminar: ' + e.message, 'error');
             }
-            loadCompetenceData();
-        } catch (e) {
-            console.error('Error deleting competence item:', e);
-            alert('Error al eliminar: ' + e.message);
-        }
+        }, 'danger');
     };
 
     window.openCompetenceModal = async function (code) {
@@ -3918,7 +3918,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
             console.error(e);
-            alert('Error al abrir calculadora: ' + e.message);
+            showAlert('Error', 'Error al abrir calculadora: ' + e.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -3937,14 +3937,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await res.json();
             if (!res.ok) throw new Error(data.detail || 'Error disparando el cálculo');
             
-            alert(data.message);
-            // After 5s close modal to prompt user to reopen and see new data
+            showAlert('Cálculo Iniciado', data.message, 'success');
+            // After 3s close modal to prompt user to reopen and see new data
             setTimeout(() => {
                 closeModal();
             }, 3000);
             
         } catch(e) {
-            alert('Error: ' + e.message);
+            showAlert('Error', e.message, 'error');
         } finally {
             if(event.target) {
                 event.target.innerText = 'Recalcular desde Meli';
@@ -4048,7 +4048,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000);
 
         } catch (e) {
-            alert('Error: ' + e.message);
+            showAlert('Error', e.message, 'error');
             btn.disabled = false;
             btn.innerText = originalText;
         }
@@ -4261,7 +4261,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error(error);
-            alert('Error al guardar: ' + error.message);
+            showAlert('Error al Guardar', error.message, 'error');
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
