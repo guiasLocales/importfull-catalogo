@@ -27,33 +27,39 @@ class BulkPublishTNRequest(BaseModel):
 
 def send_webhook(item_id: any, event_type: str, site: Optional[str] = None, extra_data: dict = None):
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
-    # item_id can be int or List[int] for bulk operations
     effective_site = site if site else "mercadolibre"
     
+    # Ensure item_id is in the correct format (string or list of strings)
+    # Some external services fail with 500 if IDs are sent as integers in an array
+    formatted_id = item_id
+    if isinstance(item_id, list):
+        formatted_id = [str(x) for x in item_id]
+    elif isinstance(item_id, (int, float)):
+        formatted_id = str(item_id)
+
     data = {
+        "site": effective_site,
         "event_type": event_type,
-        "item_id": item_id,
-        "secret": WEBHOOK_SECRET,
-        "site": effective_site
+        "item_id": formatted_id,
+        "secret": WEBHOOK_SECRET
     }
     
     if extra_data:
         data["data"] = extra_data
     try:
         print(f"DEBUG: Sending webhook to {WEBHOOK_URL} with data: {data}")
-        # Increased timeout to 30s as publication services can be slow
         with httpx.Client(timeout=30.0) as client:
             response = client.post(WEBHOOK_URL, json=data)
-            print(f"Webhook sent for item {item_id}: {data['event_type']} - Status: {response.status_code}")
+            status = response.status_code
+            print(f"Webhook sent: {event_type} - Status: {status}")
             
-            if response.status_code in (200, 202):
+            if status in (200, 202):
                 return True, "Success"
             else:
-                # Return more of the error body to help debugging (up to 500 chars)
                 error_body = response.text[:500]
-                return False, f"Status: {response.status_code} - {error_body}"
+                return False, f"Status: {status} - {error_body}"
     except Exception as e:
-        print(f"Webhook error for item {item_id}: {e}")
+        print(f"Webhook error: {e}")
         return False, str(e)
 
 @router.get("/", response_model=List[ProductResponse])
