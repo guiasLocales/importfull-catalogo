@@ -22,10 +22,12 @@ router = APIRouter(
 WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications"
 WEBHOOK_SECRET = "mati-gordo"
 
-def send_webhook(item_id: int, event_type: str, site: Optional[str] = None, extra_data: dict = None):
+class BulkPublishTNRequest(BaseModel):
+    item_ids: List[int]
+
+def send_webhook(item_id: any, event_type: str, site: Optional[str] = None, extra_data: dict = None):
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
-    # Default to 'mercadolibre' if no site is provided, as the external service
-    # now requires this parameter for all events.
+    # item_id can be int or List[int] for bulk operations
     effective_site = site if site else "mercadolibre"
     
     data = {
@@ -254,6 +256,19 @@ def notify_product_update(product_id: int, site: Optional[str] = None, db: Sessi
         raise HTTPException(status_code=500, detail=f"Failed to send webhook: {msg}")
         
     return {"status": "success", "message": f"Update notification sent for {effective_site}"}
+
+@router.post("/bulk-publish-tn")
+def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = Depends(get_db)):
+    """Send a bulk publication request for Tienda Nube with a list of IDs"""
+    if not request.item_ids:
+        raise HTTPException(status_code=400, detail="No item IDs provided")
+    
+    success, msg = send_webhook(request.item_ids, "publish", site="tienda-nube")
+    
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Error en publicación masiva TN: {msg}")
+        
+    return {"status": "success", "message": f"Solicitud enviada para {len(request.item_ids)} productos"}
 
 
 

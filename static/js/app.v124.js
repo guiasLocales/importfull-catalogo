@@ -52,8 +52,10 @@ document.addEventListener('DOMContentLoaded', function () {
         empty: document.getElementById('emptyState'),
         checkAll: document.getElementById('checkAll'),
         btnBulkPublish: document.getElementById('btnBulkPublish'),
+        btnBulkPublishTN: document.getElementById('btnBulkPublishTN'),
         btnBulkUnpublish: document.getElementById('btnBulkUnpublish'),
         selectedCountPublish: document.getElementById('selectedCountPublish'),
+        selectedCountTN: document.getElementById('selectedCountTN'),
         selectedCountUnpublish: document.getElementById('selectedCountUnpublish'),
         btnPrev: document.getElementById('btnPrev'),
         btnNext: document.getElementById('btnNext'),
@@ -607,10 +609,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateSelectionUI() {
         const count = state.selectedIds.size;
         if (elements.selectedCountPublish) elements.selectedCountPublish.textContent = count;
+        if (elements.selectedCountTN) elements.selectedCountTN.textContent = count;
         if (elements.selectedCountUnpublish) elements.selectedCountUnpublish.textContent = count;
 
         if (count > 0) {
             if (elements.btnBulkPublish) elements.btnBulkPublish.classList.remove('hidden');
+            if (elements.btnBulkPublishTN) elements.btnBulkPublishTN.classList.remove('hidden');
             if (elements.btnBulkUnpublish) elements.btnBulkUnpublish.classList.remove('hidden');
 
             // Determine "Select All" state based on visible products matches
@@ -621,6 +625,7 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.checkAll.checked = allVisibleSelected;
         } else {
             if (elements.btnBulkPublish) elements.btnBulkPublish.classList.add('hidden');
+            if (elements.btnBulkPublishTN) elements.btnBulkPublishTN.classList.add('hidden');
             if (elements.btnBulkUnpublish) elements.btnBulkUnpublish.classList.add('hidden');
             elements.checkAll.indeterminate = false;
             elements.checkAll.checked = false;
@@ -2314,6 +2319,69 @@ document.addEventListener('DOMContentLoaded', function () {
     `);
         });
     }
+
+    // Bulk Publish TN button event
+    if (elements.btnBulkPublishTN) {
+        elements.btnBulkPublishTN.addEventListener('click', () => {
+            if (state.selectedIds.size === 0) return;
+            openModal('Publicar en Tienda Nube', `
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
+                    <svg class="h-6 w-6" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+                        <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Publicación Masiva TN</h3>
+                    <p class="text-sm text-gray-500">¿Publicar ${state.selectedIds.size} productos seleccionados?</p>
+                </div>
+            </div>
+            <p class="text-gray-500 mb-6 text-sm">Se enviará una solicitud de publicación para todos los productos seleccionados a Tienda Nube.</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeModal()" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium text-sm">Cancelar</button>
+                <button onclick="execBulkPublishTN()" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-bold shadow-md transition-all flex items-center gap-2 text-sm">
+                    <i data-lucide="upload-cloud" class="h-4 w-4"></i> Publicar en Tienda Nube
+                </button>
+            </div>
+        </div>
+    `);
+            if (window.lucide) lucide.createIcons();
+        });
+    }
+
+    window.execBulkPublishTN = async () => {
+        try {
+            const ids = Array.from(state.selectedIds).map(id => parseInt(id));
+            const btn = document.querySelector('button[onclick="execBulkPublishTN()"]');
+            
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Procesando...';
+                if (window.lucide) lucide.createIcons();
+            }
+
+            const response = await authFetch('/api/products/bulk-publish-tn', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_ids: ids })
+            });
+
+            if (!response.ok) throw new Error('Error en publicación masiva TN');
+
+            state.selectedIds.clear();
+            updateSelectionUI();
+            closeModal();
+            
+            // Show success toast or message
+            alert(`Solicitud enviada para ${ids.length} productos correctamente.`);
+            fetchProducts();
+        } catch (e) {
+            console.error('Error en publicación masiva TN:', e);
+            alert('Error al procesar la publicación masiva en Tienda Nube');
+        }
+    };
 
     window.execBulkPublish = async (publish) => {
         const newStatus = publish ? 'Publicado' : 'Despublicado';

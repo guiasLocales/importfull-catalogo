@@ -413,13 +413,25 @@
                             <!-- Bulk Action Buttons -->
                             <div class="flex items-center space-x-2">
                                 <button id="btnBulkPublish"
-                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium border border-green-200 text-sm">
+                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors duration-200 font-medium border border-green-200 text-sm"
+                                    title="Publicar en MercadoLibre">
                                     <i data-lucide="check-circle" class="h-4 w-4"></i>
                                     <span class="flex items-center gap-1">Publicar <span id="selectedCountPublish"
                                             class="ml-0.5 text-xs bg-green-200 px-1.5 py-0.5 rounded-full">0</span></span>
                                 </button>
+                                <button id="btnBulkPublishTN"
+                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium border border-blue-200 text-sm"
+                                    title="Publicar en Tienda Nube">
+                                    <svg class="h-4 w-4" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="18" cy="26" r="13" stroke="currentColor" stroke-width="5" fill="none"/>
+                                        <circle cx="36" cy="18" r="15" stroke="currentColor" stroke-width="5" fill="none"/>
+                                    </svg>
+                                    <span class="flex items-center gap-1">Publicar TN <span id="selectedCountTN"
+                                            class="ml-0.5 text-xs bg-blue-200 px-1.5 py-0.5 rounded-full">0</span></span>
+                                </button>
                                 <button id="btnBulkUnpublish"
-                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium border border-orange-200 text-sm">
+                                    class="hidden flex flex-row items-center h-[42px] px-4 gap-2 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium border border-orange-200 text-sm"
+                                    title="Pausar en MercadoLibre">
                                     <i data-lucide="x-circle" class="h-4 w-4"></i>
                                     <span class="flex items-center gap-1">Pausar <span id="selectedCountUnpublish"
                                             class="ml-0.5 text-xs bg-orange-200 px-1.5 py-0.5 rounded-full">0</span></span>
