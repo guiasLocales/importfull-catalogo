@@ -2579,18 +2579,22 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const contentEl = document.getElementById('modalContent');
         if (contentEl) {
-            // Limpiar todos los posibles anchos previos
-            contentEl.classList.remove('max-w-lg', 'max-w-4xl', 'max-w-5xl', 'max-w-7xl');
+            // Limpiar clases previas
+            contentEl.classList.remove('max-w-lg', 'max-w-4xl', 'max-w-5xl', 'max-w-7xl', 'h-[85vh]', 'h-auto');
             
-            // Determinar el nuevo ancho
-            if (content.includes('max-w-7xl')) {
-                 contentEl.classList.add('max-w-7xl');
-            } else if (content.includes('max-w-5xl')) {
-                 contentEl.classList.add('max-w-5xl');
-            } else if (content.includes('is-product-detail') || content.includes('max-w-4xl')) {
-                 contentEl.classList.add('max-w-4xl');
+            // Determinar ancho y alto dinámicamente
+            const isComplexView = content.includes('max-w-7xl') || 
+                                content.includes('max-w-5xl') || 
+                                content.includes('is-product-detail') || 
+                                content.includes('max-w-4xl');
+
+            if (isComplexView) {
+                contentEl.classList.add('h-[85vh]');
+                if (content.includes('max-w-7xl')) contentEl.classList.add('max-w-7xl');
+                else if (content.includes('max-w-5xl')) contentEl.classList.add('max-w-5xl');
+                else contentEl.classList.add('max-w-4xl');
             } else {
-                 contentEl.classList.add('max-w-lg');
+                contentEl.classList.add('max-w-lg', 'h-auto');
             }
         }
 
