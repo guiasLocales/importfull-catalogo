@@ -1276,13 +1276,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     <!-- MercadoLibre Business Config -->
                     <div class="px-6 md:px-8 mb-4">
                         <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                 <i data-lucide="settings" class="h-3 w-3"></i> Configuración de Publicación
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                 <i data-lucide="settings" class="h-3 w-3 text-blue-500"></i> Configuración de Publicación
                             </label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <!-- Listing Type -->
                                 <div>
-                                    <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Publicación</label>
+                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Publicación</label>
                                     <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
                                             class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
                                         <option value="gold_special" ${product.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
@@ -1291,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                                 <!-- Shipping Mode -->
                                 <div>
-                                    <label class="block text-[10px] text-gray-400 uppercase font-black mb-1">Logística</label>
+                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Logística</label>
                                     <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
                                             class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
                                         <option value="me2" ${product.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
@@ -1299,8 +1299,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </select>
                                 </div>
                                 <!-- Free Shipping -->
-                                <div class="flex items-end">
-                                    <label class="flex items-center gap-2 cursor-pointer p-2 w-full h-10 rounded-lg hover:bg-white transition-colors border border-gray-200 shadow-sm">
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Promoción</label>
+                                    <label class="flex items-center gap-2 cursor-pointer px-3 w-full h-10 rounded-lg bg-white border border-gray-300 shadow-sm hover:border-blue-300 transition-all">
                                         <input type="checkbox" id="edit_free_shipping" ${product.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
                                                class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
                                         <span class="text-xs font-bold text-gray-700">Envío Gratis</span>
@@ -1311,59 +1312,61 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
 
                     <!-- Key Stats Grid -->
-                    <div class="px-6 md:px-8 grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                        <!-- Costo -->
-                        <div class="flex flex-col justify-end">
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
-                            <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
-                                   class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                        </div>
-                        
-                        <!-- Precio ML -->
-                        <div class="flex flex-col justify-end relative">
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
-                            <div class="relative flex items-center">
-                                <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                       class="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                                <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1 w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
-                                    <i data-lucide="calculator" class="w-4 h-4"></i>
-                                </button>
+                    <div class="px-6 md:px-8">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                            <!-- Costo -->
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Costo ($)</label>
+                                <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
+                                       class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner" step="0.01">
                             </div>
-                        </div>
+                            
+                            <!-- Precio ML -->
+                            <div class="flex flex-col relative">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio ML ($)</label>
+                                <div class="relative flex items-center">
+                                    <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
+                                           class="w-full h-10 pl-3 pr-10 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
+                                    <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1 w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                                        <i data-lucide="calculator" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
 
-                        <!-- Precio TN -->
-                        <div class="flex flex-col justify-end">
-                            <label class="block text-xs font-bold text-blue-600 mb-1.5 uppercase tracking-wider">Precio TN ($)</label>
-                            <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
-                                   class="w-full h-10 px-3 border border-blue-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                        </div>
-                        
-                        <!-- Precio Local -->
-                        <div class="flex flex-col justify-end">
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
-                            <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
-                                   class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                        </div>
-                        
-                        <!-- Stock -->
-                        <div class="flex flex-col justify-end">
-                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock</label>
-                            <div class="w-full h-10 flex items-center justify-end px-3">
-                                <span class="text-xl font-bold text-gray-900">${product.stock || 0}</span>
+                            <!-- Precio TN -->
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-bold text-blue-600 mb-1.5 uppercase tracking-wider">Precio TN ($)</label>
+                                <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
+                                       class="w-full h-10 px-3 border border-blue-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" step="0.01">
                             </div>
-                        </div>
+                            
+                            <!-- Precio Local -->
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider">Precio Local ($)</label>
+                                <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
+                                       class="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50 cursor-not-allowed shadow-inner" step="0.01">
+                            </div>
+                            
+                            <!-- Stock -->
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-wider text-right">Stock</label>
+                                <div class="w-full h-10 flex items-center justify-end px-1">
+                                    <span class="text-xl font-black text-gray-900">${product.stock || 0}</span>
+                                </div>
+                            </div>
 
-                         <div class="col-span-4 pt-3 mt-1 border-t border-gray-100 flex justify-between items-center">
-                            <div class="text-sm">
-                                <span class="text-gray-500">Marca:</span>
-                                <span class="font-medium text-gray-900 ml-1">${product.brand || '-'}</span>
-                            </div>
-                            <!-- Status Badge -->
-                            <div>
-                            ${product.status
-                    ? `<span id="detail-status-badge-${product.id}" class="${product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'} px-2.5 py-1 rounded-full text-xs font-bold uppercase border">${product.status}</span>`
-                    : '<span id="detail-status-badge-' + product.id + '" class="bg-gray-100 text-gray-600 border-gray-200 px-2.5 py-1 rounded-full text-xs font-medium border">No Publicado</span>'
-                }
+                            <div class="col-span-2 lg:col-span-5 pt-3 mt-1 border-t border-gray-100 flex justify-between items-center">
+                                <div class="text-sm">
+                                    <span class="text-gray-400 text-xs uppercase font-bold tracking-tighter">Marca:</span>
+                                    <span class="font-bold text-gray-900 ml-1 uppercase">${product.brand || '-'}</span>
+                                </div>
+                                <!-- Status Badge -->
+                                <div>
+                                ${product.status
+                        ? `<span id="detail-status-badge-${product.id}" class="${product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'} px-2.5 py-1 rounded-full text-xs font-bold uppercase border">${product.status}</span>`
+                        : '<span id="detail-status-badge-' + product.id + '" class="bg-gray-100 text-gray-600 border-gray-200 px-2.5 py-1 rounded-full text-xs font-medium border">No Publicado</span>'
+                    }
+                                </div>
                             </div>
                         </div>
                     </div>
