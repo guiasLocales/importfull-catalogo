@@ -356,7 +356,14 @@
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
-        // Convert prices to float
+        // Convert empty strings to null for backend validation
+        for (const key in data) {
+            if (data[key] === '') {
+                data[key] = null;
+            }
+        }
+        
+        // Convert prices to float if present
         if (data.promotional_price) data.promotional_price = parseFloat(data.promotional_price);
 
         const originalHTML = btn.innerHTML;
