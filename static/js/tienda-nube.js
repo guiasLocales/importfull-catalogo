@@ -253,7 +253,15 @@
                             </div>
 
                             <!-- Pricing & Details -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Precio Publicado</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                        <input type="number" name="published_price" value="${attributes.published_price || ''}" step="0.01"
+                                            class="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none font-bold text-gray-900">
+                                    </div>
+                                </div>
                                 <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Precio Promocional</label>
                                     <div class="relative">
@@ -365,6 +373,7 @@
         
         // Convert prices to float if present
         if (data.promotional_price) data.promotional_price = parseFloat(data.promotional_price);
+        if (data.published_price) data.published_price = parseFloat(data.published_price);
 
         const originalHTML = btn.innerHTML;
         btn.disabled = true;
