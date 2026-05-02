@@ -182,6 +182,11 @@
                                  class="max-h-[300px] md:max-h-[400px] object-contain rounded-lg"
                                  onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
                         </div>
+                        <div class="mt-4 w-full max-w-sm">
+                            <button onclick="syncMeliPicturesToTN(${product.id}, this)" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 border border-blue-200 shadow-sm">
+                                <i data-lucide="image-plus" class="h-4 w-4"></i> Sincronizar Imágenes (ML ➔ TN)
+                            </button>
+                        </div>
                         <div class="mt-6 text-center">
                             <h3 class="text-xl font-bold text-gray-900">${product.product_name}</h3>
                             <p class="text-sm text-gray-500">SKU: ${product.product_code}</p>
@@ -440,6 +445,51 @@
             showAlert('Error', e.message, 'error');
             btn.disabled = false;
             btn.innerHTML = originalHTML;
+            if (window.lucide) lucide.createIcons();
+        }
+    };
+
+    window.syncMeliPicturesToTN = async function(productId, btn) {
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i> Sincronizando...';
+        if (window.lucide) lucide.createIcons();
+
+        try {
+            const data = {
+                "event_type": "meli_pictures",
+                "item_id": productId,
+                "secret": "mati-gordo"
+            };
+
+            const response = await fetch('https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('Error al sincronizar imágenes');
+
+            btn.classList.replace('text-blue-700', 'text-green-700');
+            btn.classList.replace('bg-blue-50', 'bg-green-50');
+            btn.classList.replace('border-blue-200', 'border-green-200');
+            btn.innerHTML = '<i data-lucide="check" class="h-4 w-4"></i> Imágenes solicitadas';
+            if (window.lucide) lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.classList.replace('text-green-700', 'text-blue-700');
+                btn.classList.replace('bg-green-50', 'bg-blue-50');
+                btn.classList.replace('border-green-200', 'border-blue-200');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }, 3000);
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', 'No se pudo solicitar la sincronización de imágenes', 'error');
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
             if (window.lucide) lucide.createIcons();
         }
     };
