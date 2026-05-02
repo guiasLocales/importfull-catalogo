@@ -1313,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <!-- Key Stats Grid -->
                     <div class="px-6 md:px-8">
-                        <div class="grid grid-cols-2 lg:grid-cols-6 gap-6 mb-4 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-4 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
                             <!-- Costo -->
                             <div class="flex flex-col">
                                 <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Costo ($)</label>
@@ -1346,19 +1346,19 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
                                        class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                             </div>
-                            
-                            <!-- Stock -->
-                            <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest text-right">Stock</label>
-                                <div class="w-full h-11 flex items-center justify-end px-1 border border-transparent">
-                                    <span class="text-2xl font-black text-gray-900 leading-none">${product.stock || 0}</span>
-                                </div>
-                            </div>
 
+                            <!-- Bottom Row: Marca & Stock & Status -->
                             <div class="col-span-2 lg:col-span-5 pt-4 mt-1 border-t border-gray-100 flex justify-between items-center">
-                                <div class="text-sm">
-                                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Marca:</span>
-                                    <span class="font-bold text-gray-900 ml-1 uppercase tracking-tight">${product.brand || '-'}</span>
+                                <div class="flex items-center gap-6">
+                                    <div class="text-sm">
+                                        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Marca:</span>
+                                        <span class="font-bold text-gray-900 ml-1 uppercase tracking-tight">${product.brand || '-'}</span>
+                                    </div>
+                                    <!-- Stock moved down here -->
+                                    <div class="flex items-center gap-2 border-l border-gray-200 pl-6">
+                                        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Stock:</span>
+                                        <span class="text-lg font-black text-gray-900">${product.stock || 0}</span>
+                                    </div>
                                 </div>
                                 <!-- Status Badge -->
                                 <div>
