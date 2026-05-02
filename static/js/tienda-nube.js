@@ -258,7 +258,7 @@
                                     <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Precio Publicado</label>
                                     <div class="relative">
                                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
-                                        <input type="number" name="published_price" value="${attributes.published_price || ''}" step="0.01"
+                                        <input type="number" name="published_price" value="${attributes.published_price || product.price_tienda_nube || ''}" step="0.01"
                                             class="w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#1B2160] outline-none font-bold text-gray-900">
                                     </div>
                                 </div>
