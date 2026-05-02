@@ -456,16 +456,8 @@
         if (window.lucide) lucide.createIcons();
 
         try {
-            const data = {
-                "event_type": "meli_pictures",
-                "item_id": productId,
-                "secret": "mati-gordo"
-            };
-
-            const response = await fetch('https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/publications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+            const response = await authFetch(`/api/products/${productId}/sync-pictures`, {
+                method: 'POST'
             });
 
             if (!response.ok) throw new Error('Error al sincronizar imágenes');

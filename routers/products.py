@@ -198,6 +198,26 @@ def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
     db_product = crud.get_product(db, product_id)
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+@router.post("/{product_id}/sync-pictures")
+def sync_meli_pictures(product_id: int):
+    """Proxy picture sync request to webhook to avoid CORS issues"""
+    data = {
+        "event_type": "meli_pictures",
+        "item_id": product_id,
+        "secret": WEBHOOK_SECRET
+    }
+    try:
+        print(f"DEBUG: Proxied webhook sync-pictures for item {product_id}")
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(WEBHOOK_URL, json=data)
+            if response.status_code in (200, 202):
+                return {"message": "Sincronización iniciada"}
+            else:
+                print(f"ERROR: Webhook returned {response.status_code} - {response.text}")
+                raise HTTPException(status_code=500, detail=f"Error de webhook: {response.status_code}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
     # Set intermediate status
     db_product.status = 'eliminando'
