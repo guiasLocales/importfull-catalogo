@@ -1089,6 +1089,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     ` : ''}
+                    <div class="mt-4 w-full mb-4">
+                        <button onclick="syncMeliPicturesToTN(${product.id}, this)" class="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 border border-blue-200 shadow-sm">
+                            <i data-lucide="image-plus" class="h-4 w-4"></i> Sincronizar Imágenes (ML ➔ TN)
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Right: Details -->
