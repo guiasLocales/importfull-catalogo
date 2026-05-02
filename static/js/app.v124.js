@@ -3188,6 +3188,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         : `<span class="text-gray-400 text-xs italic">Sin link</span>`;
 
                     return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onclick="openProductDetail(${p.id})">
+                        <td class="px-4 py-3 text-center w-10" onclick="event.stopPropagation()">
+                            <input type="checkbox" value="${p.id}" class="meli-checkbox w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300" onchange="updateMeliSelectionCount()">
+                        </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
                                 ${imgHtml}
@@ -3236,6 +3239,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     fetchMeliScoresBulk(meliIds);
                 }
                 
+                // Clear any previous selection when reloading products
+                const selectAllCb = document.getElementById('selectAllMeli');
+                if (selectAllCb) selectAllCb.checked = false;
+                if (window.updateMeliSelectionCount) window.updateMeliSelectionCount();
+                
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         } catch (e) {
@@ -3271,6 +3279,86 @@ document.addEventListener('DOMContentLoaded', function () {
         if (stock <= 3) return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400">${stock}</span>`;
         return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">${stock}</span>`;
     }
+
+    // MercadoLibre Bulk Actions
+    window.toggleAllMeli = function(checkbox) {
+        const checkboxes = document.querySelectorAll('.meli-checkbox');
+        checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        window.updateMeliSelectionCount();
+    };
+
+    window.updateMeliSelectionCount = function() {
+        const checked = document.querySelectorAll('.meli-checkbox:checked');
+        const btn = document.getElementById('btnBulkPublishMeliToTN');
+        const countSpan = document.getElementById('meliSelectedCount');
+        
+        if (countSpan) countSpan.textContent = checked.length;
+        
+        if (btn) {
+            if (checked.length > 0) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+        
+        // Update select all checkbox state
+        const selectAllCb = document.getElementById('selectAllMeli');
+        const allCheckboxes = document.querySelectorAll('.meli-checkbox');
+        if (selectAllCb && allCheckboxes.length > 0) {
+            selectAllCb.checked = checked.length === allCheckboxes.length;
+        }
+    };
+
+    window.bulkPublishMeliToTN = async function() {
+        const checked = document.querySelectorAll('.meli-checkbox:checked');
+        if (checked.length === 0) return;
+        
+        const ids = Array.from(checked).map(cb => parseInt(cb.value));
+        
+        showConfirm('Publicar en Tienda Nube', `¿Estás seguro que deseas solicitar la publicación de ${ids.length} producto(s) en Tienda Nube?`, async () => {
+            const btn = document.getElementById('btnBulkPublishMeliToTN');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Publicando...';
+            btn.disabled = true;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const id of ids) {
+                try {
+                    const response = await authFetch(`/api/products/${id}/publish`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'publish', site: 'tienda-nube' })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (e) {
+                    errorCount++;
+                }
+            }
+            
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            // Clear selection
+            const selectAllCb = document.getElementById('selectAllMeli');
+            if (selectAllCb) selectAllCb.checked = false;
+            const checkboxes = document.querySelectorAll('.meli-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            window.updateMeliSelectionCount();
+            
+            showAlert('Resultado de Publicación', `Se enviaron exitosamente ${successCount} solicitudes. ${errorCount > 0 ? `Fallaron ${errorCount}.` : ''}`, successCount > 0 ? 'success' : 'warning');
+            
+        }, 'info');
+    };
 
     // MercadoLibre event listeners
     const meliSearchInput = document.getElementById('meliSearchInput');
