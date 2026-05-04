@@ -323,13 +323,15 @@ def trigger_pre_publish(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Use flat structure like sync-pictures to ensure compatibility with external backend
+    # Nested structure as requested by user, but without the 'site' field
     data = {
         "event_type": "pre-publish",
         "item_id": product_id,
         "secret": WEBHOOK_SECRET,
-        "prompt": request.prompt,
-        "field": request.field
+        "data": {
+            "prompt": request.prompt,
+            "field": request.field
+        }
     }
     
     try:
