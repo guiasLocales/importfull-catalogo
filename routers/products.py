@@ -323,21 +323,30 @@ def trigger_pre_publish(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    extra_data = {
+    # Use flat structure like sync-pictures to ensure compatibility with external backend
+    data = {
+        "event_type": "pre-publish",
+        "item_id": product_id,
+        "secret": WEBHOOK_SECRET,
         "prompt": request.prompt,
         "field": request.field
     }
     
-    success, msg = send_webhook(product_id, "pre-publish", extra_data=extra_data)
-    
-    if not success:
-        raise HTTPException(status_code=500, detail=f"Error enviando al servicio de AI: {msg}")
-
-    return {
-        "status": "success", 
-        "message": "Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.",
-        "field": request.field
-    }
+    try:
+        print(f"DEBUG: Sending AI pre-publish webhook for item {product_id} (field: {request.field})")
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(WEBHOOK_URL, json=data)
+            if response.status_code in (200, 202):
+                return {
+                    "status": "success", 
+                    "message": "Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.",
+                    "field": request.field
+                }
+            else:
+                print(f"ERROR: AI Webhook returned {response.status_code} - {response.text}")
+                raise HTTPException(status_code=500, detail=f"Error del servicio de AI: {response.status_code}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{product_id}/upload")
 async def upload_product_photo(
