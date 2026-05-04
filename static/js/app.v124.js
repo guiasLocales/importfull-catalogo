@@ -1250,26 +1250,30 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <div>
                                         <label class="block text-[10px] text-gray-500 mb-1 font-medium">Alto (cm)</label>
                                         <input type="number" id="dim_h" value="${dH}" oninput="triggerAutoSave(${product.id})"
+                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="any">
+                                               placeholder="0" step="1">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] text-gray-500 mb-1 font-medium">Ancho (cm)</label>
                                         <input type="number" id="dim_w" value="${dW}" oninput="triggerAutoSave(${product.id})"
+                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="any">
+                                               placeholder="0" step="1">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] text-gray-500 mb-1 font-medium">Largo (cm)</label>
                                         <input type="number" id="dim_l" value="${dL}" oninput="triggerAutoSave(${product.id})"
+                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="any">
+                                               placeholder="0" step="1">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] text-gray-500 mb-1 font-medium">Peso (g)</label>
                                         <input type="number" id="dim_weight" value="${dWt}" oninput="triggerAutoSave(${product.id})"
+                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
                                                class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="any">
+                                               placeholder="0" step="1">
                                     </div>
                                 </div>
                             </div>
