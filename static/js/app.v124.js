@@ -40,7 +40,9 @@ document.addEventListener('DOMContentLoaded', function () {
         filters: {
             category: '',
             brand: '',
-            stock_filter: ''
+            stock_filter: '',
+            meli_filter: '',
+            tn_filter: ''
         }
     };
 
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', function () {
         btnToggleStock: document.getElementById('btnToggleStock'),
         stockToggleLabel: document.getElementById('stockToggleLabel'),
         limitSelector: document.getElementById('limitSelector'),
+        filterMeli: document.getElementById('filterMeli'),
+        filterTN: document.getElementById('filterTN'),
         btnClearFilters: document.getElementById('btnClearFilters'),
         sortHeaders: document.querySelectorAll('.sortable'),
         modalBackdrop: document.getElementById('modalBackdrop'),
@@ -162,9 +166,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.append('q', state.search);
             }
             if (state.filters.category) params.append('category', state.filters.category);
-            if (state.filters.stock_filter) {
-                params.append('stock_filter', state.filters.stock_filter);
-            }
+            if (state.filters.stock_filter) params.append('stock_filter', state.filters.stock_filter);
+            if (state.filters.meli_filter) params.append('meli_filter', state.filters.meli_filter);
+            if (state.filters.tn_filter) params.append('tn_filter', state.filters.tn_filter);
 
             // Sorting
             if (state.sortBy) {
@@ -2475,6 +2479,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    if (elements.filterMeli) {
+        elements.filterMeli.addEventListener('change', (e) => {
+            state.filters.meli_filter = e.target.value;
+            state.page = 1;
+            fetchProducts();
+        });
+    }
+
+    if (elements.filterTN) {
+        elements.filterTN.addEventListener('change', (e) => {
+            state.filters.tn_filter = e.target.value;
+            state.page = 1;
+            fetchProducts();
+        });
+    }
+
     if (elements.filterBrand) {
         elements.filterBrand.addEventListener('change', (e) => {
             state.filters.brand = e.target.value;
@@ -2499,13 +2519,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (state.filters.stock_filter === 'with_stock') {
             state.filters.stock_filter = '';
             if (label) label.textContent = 'Ocultar Sin Stock';
-            btn?.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            btn?.classList.remove('bg-slate-800', 'text-white', 'border-slate-800');
             btn?.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
             if (icon) icon.classList.replace('text-white', 'text-gray-400');
         } else {
             state.filters.stock_filter = 'with_stock';
             if (label) label.textContent = 'Mostrando con Stock';
-            btn?.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+            btn?.classList.add('bg-slate-800', 'text-white', 'border-slate-800');
             btn?.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
             if (icon) icon.classList.replace('text-gray-400', 'text-white');
         }

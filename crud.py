@@ -24,19 +24,28 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
                  stock_filter: str = None,
                  status: str = None,
                  site: str = None,
-                 sort_by: str = None, sort_order: str = 'asc'):
+                 sort_by: str = None, sort_order: str = 'asc',
+                 meli_filter: str = None,
+                 tn_filter: str = None):
     query = db.query(Product)
     
-    if site == 'tienda-nube':
+    # Platform-specific publication filters
+    if tn_filter or site == 'tienda-nube':
         # Join through attributes table: Product.id -> attributes.item_id -> product_status.attribute_id
         query = query.outerjoin(TiendaNubeAttribute, Product.id == TiendaNubeAttribute.item_id)\
                      .outerjoin(TiendaNubeProductStatus, TiendaNubeAttribute.id == TiendaNubeProductStatus.attribute_id)
         
-        if status == 'active':
+        if tn_filter == 'published' or (site == 'tienda-nube' and status == 'active'):
             query = query.filter(TiendaNubeProductStatus.product_id != None, TiendaNubeProductStatus.product_id > 0)
-        elif status == 'unpublished':
+        elif tn_filter == 'not_published' or (site == 'tienda-nube' and status == 'unpublished'):
             query = query.filter(or_(TiendaNubeProductStatus.product_id == None, TiendaNubeProductStatus.product_id == 0))
-    
+
+    if meli_filter:
+        if meli_filter == 'published':
+            query = query.filter(Product.meli_id != None, Product.meli_id != '')
+        elif meli_filter == 'not_published':
+            query = query.filter(or_(Product.meli_id == None, Product.meli_id == ''))
+
     if category:
         query = query.filter(Product.product_type_path == category)
     if brand:

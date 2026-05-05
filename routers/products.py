@@ -75,6 +75,8 @@ def read_products(
     q: Optional[str] = None,
     status: Optional[str] = None,
     site: Optional[str] = None,
+    meli_filter: Optional[str] = None,
+    tn_filter: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     products = crud.get_products(
@@ -84,7 +86,9 @@ def read_products(
         stock_filter=stock_filter,
         status=status,
         site=site,
-        sort_by=sort_by, sort_order=sort_order
+        sort_by=sort_by, sort_order=sort_order,
+        meli_filter=meli_filter,
+        tn_filter=tn_filter
     )
     return products
 
@@ -199,6 +203,18 @@ def delete_meli_publication(product_id: int, db: Session = Depends(get_db)):
     db_product = crud.get_product(db, product_id)
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
+        
+    # Set intermediate status
+    db_product.status = 'eliminando'
+    db.commit()
+    db.refresh(db_product)
+    
+    # Trigger webhook
+    success, msg = send_webhook(product_id, "delete", site="mercadolibre")
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
+        
+    return {"status": "success", "message": "Solicitud de eliminación enviada"}
 
 @router.post("/{product_id}/sync-pictures")
 def sync_meli_pictures(product_id: int):
@@ -219,18 +235,6 @@ def sync_meli_pictures(product_id: int):
                 raise HTTPException(status_code=500, detail=f"Error de webhook: {response.status_code}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-    # Set intermediate status
-    db_product.status = 'eliminando'
-    db.commit()
-    db.refresh(db_product)
-    
-    # Trigger webhook
-    success, msg = send_webhook(product_id, "delete", site="mercadolibre")
-    if not success:
-        raise HTTPException(status_code=500, detail=f"Error enviando solicitud de eliminación: {msg}")
-        
-    return {"status": "success", "message": "Solicitud de eliminación enviada"}
 
 @router.patch("/{product_id}", response_model=ProductResponse)
 def patch_product(
