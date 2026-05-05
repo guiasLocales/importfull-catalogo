@@ -25,26 +25,33 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
                  status: str = None,
                  site: str = None,
                  sort_by: str = None, sort_order: str = 'asc',
-                 meli_filter: str = None,
-                 tn_filter: str = None):
+                 channel_filter: str = None):
     query = db.query(Product)
     
-    # Platform-specific publication filters
-    if tn_filter or site == 'tienda-nube':
-        # Join through attributes table: Product.id -> attributes.item_id -> product_status.attribute_id
+    # Platform-specific publication filters (Combined into channel_filter)
+    if channel_filter:
+        if channel_filter.startswith('tn_') or site == 'tienda-nube':
+            # Join through attributes table for TN status
+            query = query.outerjoin(TiendaNubeAttribute, Product.id == TiendaNubeAttribute.item_id)\
+                         .outerjoin(TiendaNubeProductStatus, TiendaNubeAttribute.id == TiendaNubeProductStatus.attribute_id)
+            
+            if channel_filter == 'tn_published' or (site == 'tienda-nube' and status == 'active'):
+                query = query.filter(TiendaNubeProductStatus.product_id != None, TiendaNubeProductStatus.product_id > 0)
+            elif channel_filter == 'tn_not_published' or (site == 'tienda-nube' and status == 'unpublished'):
+                query = query.filter(or_(TiendaNubeProductStatus.product_id == None, TiendaNubeProductStatus.product_id == 0))
+        
+        if channel_filter == 'meli_published':
+            query = query.filter(Product.meli_id != None, Product.meli_id != '')
+        elif channel_filter == 'meli_not_published':
+            query = query.filter(or_(Product.meli_id == None, Product.meli_id == ''))
+    elif site == 'tienda-nube':
+        # Default TN view behavior if no specific channel_filter
         query = query.outerjoin(TiendaNubeAttribute, Product.id == TiendaNubeAttribute.item_id)\
                      .outerjoin(TiendaNubeProductStatus, TiendaNubeAttribute.id == TiendaNubeProductStatus.attribute_id)
-        
-        if tn_filter == 'published' or (site == 'tienda-nube' and status == 'active'):
+        if status == 'active':
             query = query.filter(TiendaNubeProductStatus.product_id != None, TiendaNubeProductStatus.product_id > 0)
-        elif tn_filter == 'not_published' or (site == 'tienda-nube' and status == 'unpublished'):
+        elif status == 'unpublished':
             query = query.filter(or_(TiendaNubeProductStatus.product_id == None, TiendaNubeProductStatus.product_id == 0))
-
-    if meli_filter:
-        if meli_filter == 'published':
-            query = query.filter(Product.meli_id != None, Product.meli_id != '')
-        elif meli_filter == 'not_published':
-            query = query.filter(or_(Product.meli_id == None, Product.meli_id == ''))
 
     if category:
         query = query.filter(Product.product_type_path == category)

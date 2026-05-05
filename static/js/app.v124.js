@@ -41,8 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
             category: '',
             brand: '',
             stock_filter: '',
-            meli_filter: '',
-            tn_filter: ''
+            channel_filter: ''
         }
     };
 
@@ -70,8 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnToggleStock: document.getElementById('btnToggleStock'),
         stockToggleLabel: document.getElementById('stockToggleLabel'),
         limitSelector: document.getElementById('limitSelector'),
-        filterMeli: document.getElementById('filterMeli'),
-        filterTN: document.getElementById('filterTN'),
+        filterChannel: document.getElementById('filterChannel'),
         btnClearFilters: document.getElementById('btnClearFilters'),
         sortHeaders: document.querySelectorAll('.sortable'),
         modalBackdrop: document.getElementById('modalBackdrop'),
@@ -167,8 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (state.filters.category) params.append('category', state.filters.category);
             if (state.filters.stock_filter) params.append('stock_filter', state.filters.stock_filter);
-            if (state.filters.meli_filter) params.append('meli_filter', state.filters.meli_filter);
-            if (state.filters.tn_filter) params.append('tn_filter', state.filters.tn_filter);
+            if (state.filters.channel_filter) params.append('channel_filter', state.filters.channel_filter);
 
             // Sorting
             if (state.sortBy) {
@@ -2479,17 +2476,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (elements.filterMeli) {
-        elements.filterMeli.addEventListener('change', (e) => {
-            state.filters.meli_filter = e.target.value;
-            state.page = 1;
-            fetchProducts();
-        });
-    }
-
-    if (elements.filterTN) {
-        elements.filterTN.addEventListener('change', (e) => {
-            state.filters.tn_filter = e.target.value;
+    if (elements.filterChannel) {
+        elements.filterChannel.addEventListener('change', (e) => {
+            state.filters.channel_filter = e.target.value;
             state.page = 1;
             fetchProducts();
         });

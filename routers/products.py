@@ -75,8 +75,7 @@ def read_products(
     q: Optional[str] = None,
     status: Optional[str] = None,
     site: Optional[str] = None,
-    meli_filter: Optional[str] = None,
-    tn_filter: Optional[str] = None,
+    channel_filter: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     products = crud.get_products(
@@ -87,8 +86,7 @@ def read_products(
         status=status,
         site=site,
         sort_by=sort_by, sort_order=sort_order,
-        meli_filter=meli_filter,
-        tn_filter=tn_filter
+        channel_filter=channel_filter
     )
     return products
 
