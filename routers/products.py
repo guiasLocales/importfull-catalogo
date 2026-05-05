@@ -29,20 +29,21 @@ def send_webhook(item_id: any, event_type: str, site: Optional[str] = None, extr
     """Send webhook notification for events (publish/paused/update/pre-publish)"""
     effective_site = site if site else "mercadolibre"
     
-    # Ensure item_id is in the correct format (string or list of strings)
-    # Some external services fail with 500 if IDs are sent as integers in an array
+    # Keep item_id as provided (integer if integer, string if string) 
+    # unless it's a list, then ensure elements are strings if needed (handled by external service)
     formatted_id = item_id
     if isinstance(item_id, list):
         formatted_id = [str(x) for x in item_id]
-    elif isinstance(item_id, (int, float)):
-        formatted_id = str(item_id)
 
     data = {
-        "site": effective_site,
         "event_type": event_type,
         "item_id": formatted_id,
         "secret": WEBHOOK_SECRET
     }
+
+    # Only include site if it's NOT mercadolibre (as per Emiliano's documentation)
+    if effective_site != "mercadolibre":
+        data["site"] = effective_site
     
     if extra_data:
         data["data"] = extra_data
