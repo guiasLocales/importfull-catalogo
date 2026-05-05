@@ -519,7 +519,11 @@
                                 Precio Local <i data-lucide="arrow-up-down"
                                     class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
                             </div>
-                            <div class="col-span-2 flex items-center justify-center text-center">Publicación</div>
+                            <div class="col-span-2 cursor-pointer hover:text-gray-700 flex items-center justify-center group sortable"
+                                data-sort="meli_id">
+                                Publicación <i data-lucide="arrow-up-down"
+                                    class="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
                             <div class="col-span-1 flex items-center justify-end text-right">Acción</div>
 
                         </div>
@@ -794,11 +798,36 @@
                             <table class="w-full border-collapse">
                                 <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Producto</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">SKU</th>
-                                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Precio TN</th>
-                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock</th>
-                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="product_name">
+                                            <div class="flex items-center gap-1">
+                                                Producto
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="product_code">
+                                            <div class="flex items-center gap-1">
+                                                SKU
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="price_tienda_nube">
+                                            <div class="flex items-center gap-1 justify-end">
+                                                Precio TN
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="stock">
+                                            <div class="flex items-center gap-1 justify-center">
+                                                Stock
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="tienda_nube_status">
+                                            <div class="flex items-center gap-1 justify-center">
+                                                Estado
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
                                         <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sincro</th>
                                         <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acción</th>
                                     </tr>
@@ -913,27 +942,38 @@
                                         <th class="px-4 py-3 w-10 text-center">
                                             <input type="checkbox" id="selectAllMeli" onchange="toggleAllMeli(this)" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
                                         </th>
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Producto</th>
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Meli ID</th>
-                                        <th
-                                            class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Estado</th>
-                                        <th
-                                            class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Precio</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Stock</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Calidad</th>
-                                        <th
-                                            class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Acción</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="product_name">
+                                            <div class="flex items-center gap-1">
+                                                Producto
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="meli_id">
+                                            <div class="flex items-center gap-1">
+                                                Meli ID
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="status">
+                                            <div class="flex items-center gap-1">
+                                                Estado
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="price_mercadolibre">
+                                            <div class="flex items-center gap-1 justify-end">
+                                                Precio
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sortable cursor-pointer group" data-sort="stock">
+                                            <div class="flex items-center gap-1 justify-center">
+                                                Stock
+                                                <i data-lucide="arrow-up-down" class="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                            </div>
+                                        </th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Calidad</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="meliTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">

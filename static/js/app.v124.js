@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
             brand: '',
             stock_filter: '',
             channel_filter: ''
-        }
+        },
+        currentView: 'inventory'
     };
 
 
@@ -269,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function () {
             settings: document.getElementById('navSettings'),
             prompts: document.getElementById('navPrompts')
         };
+        
+        state.currentView = viewName;
 
         // 1. Hide ALL views and clear styles
         Object.keys(views).forEach(key => {
@@ -361,6 +364,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // 6. Refresh icons
+        if (typeof updateSortIndicators === 'function') updateSortIndicators();
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
@@ -2551,7 +2555,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateSortIndicators();
 
                 state.page = 1;
-                fetchProducts();
+                
+                // Dispatch to the correct fetch function based on current view
+                if (state.currentView === 'inventory') {
+                    fetchProducts();
+                } else if (state.currentView === 'mercadolibre') {
+                    if (typeof loadMeliProducts === 'function') loadMeliProducts();
+                } else if (state.currentView === 'tiendanube') {
+                    if (window.tnState) {
+                        window.tnState.sortBy = sortField;
+                        window.tnState.sortOrder = state.sortOrder;
+                    }
+                    if (typeof loadTiendaNubeProducts === 'function') loadTiendaNubeProducts();
+                }
             });
         });
     }
@@ -3165,6 +3181,10 @@ document.addEventListener('DOMContentLoaded', function () {
             let params = new URLSearchParams();
             if (searchInput && searchInput.value.trim()) params.append('q', searchInput.value.trim());
             if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
+            
+            // Add sorting
+            if (state.sortBy) params.append('sort_by', state.sortBy);
+            if (state.sortOrder) params.append('sort_order', state.sortOrder);
 
             const response = await authFetch(`/api/products/meli?${params.toString()}`);
             if (!response.ok) throw new Error('Error loading ML products');

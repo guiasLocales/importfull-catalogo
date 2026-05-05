@@ -12,8 +12,11 @@
         search: '',
         status: 'active',
         category: '',
-        isLoading: false
+        isLoading: false,
+        sortBy: 'product_code',
+        sortOrder: 'asc'
     };
+    window.tnState = tnState;
 
     const tnElements = {
         tableBody: document.getElementById('tnTableBody'),
@@ -48,6 +51,10 @@
             if (tnState.search) params.append('q', tnState.search);
             if (tnState.status) params.append('status', tnState.status);
             if (tnState.category) params.append('category', tnState.category);
+            
+            // Add sorting
+            if (tnState.sortBy) params.append('sort_by', tnState.sortBy);
+            if (tnState.sortOrder) params.append('sort_order', tnState.sortOrder);
 
             const response = await authFetch(`/api/products/?${params.toString()}`);
             if (!response.ok) throw new Error('Error al cargar productos de Tienda Nube');

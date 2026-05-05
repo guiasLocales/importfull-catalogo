@@ -96,7 +96,8 @@ def get_categories(db: Session):
     return [c[0] for c in categories]
 
 def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
-                      status: str = None, search: str = None):
+                      status: str = None, search: str = None,
+                      sort_by: str = None, sort_order: str = 'asc'):
     """Get products that have a MercadoLibre ID (published on ML)"""
     query = db.query(Product).filter(
         Product.meli_id != None,
@@ -116,8 +117,19 @@ def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
             search_conditions.append(Product.id == int(search))
         query = query.filter(or_(*search_conditions))
     
+    # Sorting
+    if sort_by:
+        column = getattr(Product, sort_by, None)
+        if column is not None:
+            if sort_order == 'desc':
+                query = query.order_by(desc(column))
+            else:
+                query = query.order_by(asc(column))
+    else:
+        query = query.order_by(desc(Product.id))
+
     total = query.count()
-    products = query.order_by(desc(Product.id)).offset(skip).limit(limit).all()
+    products = query.offset(skip).limit(limit).all()
     
     # Count by status
     active_count = db.query(Product).filter(
