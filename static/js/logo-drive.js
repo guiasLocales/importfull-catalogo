@@ -114,6 +114,16 @@
                 applyLoginLogo(url);
                 // Save for sidebar
                 localStorage.setItem('logoLight', url);
+            } else {
+                localStorage.removeItem('logoLight');
+                const ids = getElementIds('light');
+                const preview = document.getElementById(ids.preview);
+                const placeholder = document.getElementById(ids.placeholder);
+                if (preview) preview.classList.add('hidden');
+                if (placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.textContent = 'Logo';
+                }
             }
 
             // Dark logo
@@ -121,6 +131,16 @@
                 const url = settings.logo_dark_url + '?t=' + Date.now();
                 showPreview('dark', url);
                 localStorage.setItem('logoDark', url);
+            } else {
+                localStorage.removeItem('logoDark');
+                const ids = getElementIds('dark');
+                const preview = document.getElementById(ids.preview);
+                const placeholder = document.getElementById(ids.placeholder);
+                if (preview) preview.classList.add('hidden');
+                if (placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.textContent = 'Logo';
+                }
             }
 
             // Favicon
@@ -128,6 +148,15 @@
                 const url = settings.favicon_url + '?t=' + Date.now();
                 showPreview('favicon', url);
                 applyFavicon(url);
+            } else {
+                const ids = getElementIds('favicon');
+                const preview = document.getElementById(ids.preview);
+                const placeholder = document.getElementById(ids.placeholder);
+                if (preview) preview.classList.add('hidden');
+                if (placeholder) {
+                    placeholder.classList.remove('hidden');
+                    placeholder.textContent = 'Favicon';
+                }
             }
 
             if (typeof updateSidebarLogo === 'function') updateSidebarLogo();
