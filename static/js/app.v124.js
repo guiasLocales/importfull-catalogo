@@ -1007,6 +1007,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    function requiredBadge(isRequired) {
+        return isRequired ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-800/40">Requerido por MercadoLibre</span>` : '';
+    }
+
+    function formatNotMappedAttributes(notMapped) {
+        if (!notMapped) return '<p class="text-xs text-gray-400 dark:text-gray-500 italic">No hay atributos no mapeados.</p>';
+        try {
+            const attrs = typeof notMapped === 'string' ? JSON.parse(notMapped) : notMapped;
+            if (Object.keys(attrs).length === 0) {
+                return '<p class="text-xs text-gray-400 dark:text-gray-500 italic">No hay atributos no mapeados.</p>';
+            }
+            return `
+                <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50/50 dark:bg-gray-800/20">
+                    ${Object.entries(attrs).map(([key, val]) => `
+                        <div class="flex items-start justify-between py-1 border-b border-gray-150 dark:border-gray-800 last:border-0 text-xs">
+                            <span class="font-bold text-gray-600 dark:text-gray-400 font-mono">${key}</span>
+                            <span class="text-gray-900 dark:text-gray-250 bg-white dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">${typeof val === 'object' ? JSON.stringify(val) : val}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } catch(e) {
+            return `<pre class="text-xs font-mono bg-red-50 dark:bg-red-950/20 p-2 text-red-700 dark:text-red-400 rounded border border-red-100 dark:border-red-850/30 overflow-x-auto">${String(notMapped)}</pre>`;
+        }
+    }
+
     async function openProductDetail(productId) {
         setLoading(true);
 
@@ -1015,14 +1041,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             // Always fetch fresh data for detail view
-            const [resProduct, resFiles] = await Promise.all([
+            const [resProduct, resFiles, resMeliAttrs] = await Promise.all([
                 authFetch(`/api/products/${productId}`),
-                authFetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] }))
+                authFetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] })),
+                authFetch(`/api/products/${productId}/mercadolibre-attributes`).catch(() => ({ ok: false, json: () => null }))
             ]);
 
             if (!resProduct.ok) throw new Error('Error fetching product details');
             const product = await resProduct.json();
             const files = resFiles.ok ? await resFiles.json() : [];
+
+            // Load meli attributes
+            let meliAttrs = null;
+            if (resMeliAttrs && resMeliAttrs.ok) {
+                meliAttrs = await resMeliAttrs.json();
+            } else {
+                // Check if there is a local mock
+                const mock = localStorage.getItem(`mock_meli_attrs_${productId}`);
+                if (mock) {
+                    try {
+                        meliAttrs = JSON.parse(mock);
+                    } catch(e) {}
+                }
+            }
+
+            if (!meliAttrs) {
+                meliAttrs = {
+                    currency_id: 'ARS',
+                    buying_mode: 'buy_it_now',
+                    condition_type: 'new',
+                    category_id: '',
+                    local_pick_up: true,
+                    logistic_type: 'drop_off',
+                    warranty_type: 'Garantía del vendedor',
+                    warranty_time: '30 días',
+                    volume_capacity: null,
+                    volume_capacity_required: false,
+                    units_per_pack: 1,
+                    units_per_pack_required: false,
+                    value_added_tax: '48405909',
+                    value_added_tax_required: false,
+                    import_duty: '49553239',
+                    import_duty_required: false,
+                    empty_gtin_reason: '17055160',
+                    empty_gtin_reason_required: false,
+                    not_mapped_attributes: null,
+                    allowed_options: null,
+                    listing_type_id: product.listing_type_id || 'gold_special',
+                    free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
+                    mode_shipping: product.mode_shipping || 'me1'
+                };
+            }
             
             // Try to fetch automated ML costs
             let meliCosts = null;
@@ -1043,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const hasNext = currentDetailIndex < state.products.length - 1;
 
             const html = `
-            <div class="is-product-detail flex flex-col md:flex-row h-full min-h-0 relative w-full">
+            <div class="is-product-detail max-w-5xl flex flex-col md:flex-row h-full min-h-0 relative w-full">
                 <!-- Close Button (Top-Right) -->
                 <button onclick="closeModal()" 
                     class="absolute right-2 top-2 z-20 p-2 bg-white/90 hover:bg-gray-100 rounded-full shadow-lg transition-all border border-gray-200"
@@ -1173,393 +1242,604 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                 } catch(e) {}
                             })();
-                        </script>` : ''}
-
-                        <div class="px-6 md:px-8 flex items-center gap-3 text-sm text-gray-500">
+                                              <div class="px-6 md:px-8 flex items-center gap-3 text-sm text-gray-500">
                              <span>ID: ${product.id}</span>
                              <span class="text-gray-300">|</span>
                              <span>SKU: ${product.product_code}</span>
                         </div>
                     </div>
 
-                    <!-- Editable Fields Section -->
-                    <div class="px-6 md:px-8 space-y-4 mb-6">
-                        
-                        <!-- Meli Name -->
-                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                                Nombre en MercadoLibre
-                            </label>
-                            <div class="flex gap-2">
-                                <input type="text" id="edit_product_name_meli" 
-                                   value="${product.product_name_meli || ''}" oninput="triggerAutoSave(${product.id})" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm placeholder-gray-400" 
-                                   placeholder="Nombre optimizado para publicación...">
-                                <button id="btn-ai-product_name_meli" onclick="triggerAIPrePublish(${product.id}, 'product_name_meli')" 
-                                    class="px-3 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors shadow-sm"
-                                    title="Generar con AI">
-                                    <i data-lucide="sparkles" class="h-4 w-4"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                         <!-- Catalog Link -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                                Link de Catálogo / Proveedor
-                            </label>
-                            <div class="flex gap-2">
-                                <div class="relative flex-1">
-                                    <input type="text" id="edit_catalog_link" 
-                                           value="${product.catalog_link || ''}" oninput="triggerAutoSave(${product.id})"
-                                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm" 
-                                           placeholder="https://...">
-                                    <i data-lucide="link" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
-                                </div>
-                                ${product.catalog_link ? `
-                                <a href="${product.catalog_link}" target="_blank" 
-                                   class="p-2 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 text-gray-500 transition-colors shadow-sm"
-                                   title="Abrir enlace">
-                                     <i data-lucide="external-link" class="h-5 w-5"></i>
-                                </a>` : ''}
-                            </div>
-                        </div>
-
-                        <!-- Dimentions (Collapsible) -->
-                        ${(() => {
-                            const raw = product.dimentions || '';
-                            let dH = '', dW = '', dL = '', dWt = '';
-                            if (raw) {
-                                const parts = raw.split(',');
-                                const dims = (parts[0] || '').split('x');
-                                dH = dims[0] || ''; dW = dims[1] || ''; dL = dims[2] || '';
-                                dWt = parts[1] || '';
-                            }
-                            const hasDims = dH || dW || dL || dWt;
-                            return `
-                        <details class="group bg-gray-50 border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm open:bg-white open:border-blue-200" ${hasDims ? 'open' : ''}>
-                            <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-gray-100 transition-colors select-none">
-                                <div class="flex items-center gap-2">
-                                    <div class="bg-gray-200/60 p-1.5 rounded-lg text-gray-500 group-open:bg-blue-100 group-open:text-blue-600 transition-colors">
-                                        <i data-lucide="ruler" class="h-4 w-4"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs font-bold text-gray-600 uppercase tracking-wider">Dimensiones</span>
-                                        <span class="text-[10px] text-gray-400 ml-2 font-normal">${hasDims ? dH+'x'+dW+'x'+dL+', '+dWt+'g' : 'Sin cargar'}</span>
-                                    </div>
-                                </div>
-                                <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180"></i>
-                            </summary>
-                            <div class="p-3 pt-1 border-t border-gray-100">
-                                <div class="grid grid-cols-4 gap-2">
-                                    <div>
-                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Alto (cm)</label>
-                                        <input type="number" id="dim_h" value="${dH}" oninput="triggerAutoSave(${product.id})"
-                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="1">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Ancho (cm)</label>
-                                        <input type="number" id="dim_w" value="${dW}" oninput="triggerAutoSave(${product.id})"
-                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="1">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Largo (cm)</label>
-                                        <input type="number" id="dim_l" value="${dL}" oninput="triggerAutoSave(${product.id})"
-                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="1">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] text-gray-500 mb-1 font-medium">Peso (g)</label>
-                                        <input type="number" id="dim_weight" value="${dWt}" oninput="triggerAutoSave(${product.id})"
-                                               onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                               class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                               placeholder="0" step="1">
-                                    </div>
-                                </div>
-                            </div>
-                        </details>`;
-                        })()}
-
+                    <!-- Tabs Navigation -->
+                    <div class="px-6 md:px-8 border-b border-gray-200 dark:border-gray-700 flex gap-6 mb-4">
+                        <button onclick="window.switchDetailTab('general')" id="tabBtn-general" 
+                                class="pb-3 border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold text-sm transition-all focus:outline-none flex items-center gap-2">
+                            <i data-lucide="file-text" class="h-4 w-4"></i> Datos Básicos
+                        </button>
+                        <button onclick="window.switchDetailTab('attributes')" id="tabBtn-attributes" 
+                                class="pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-all focus:outline-none flex items-center gap-2">
+                            <i data-lucide="sliders" class="h-4 w-4"></i> Atributos MercadoLibre
+                        </button>
                     </div>
 
-                    <!-- MercadoLibre Business Config -->
-                    <div class="px-6 md:px-8 mb-4 is-product-detail max-w-5xl">
-                        <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
-                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                 <i data-lucide="settings" class="h-3 w-3 text-blue-500"></i> Configuración de Publicación
-                            </label>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                <!-- Listing Type -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Publicación</label>
-                                    <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
-                                            class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300">
-                                        <option value="gold_special" ${product.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
-                                        <option value="gold_pro" ${product.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
-                                    </select>
-                                </div>
-                                <!-- Shipping Mode -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Logística</label>
-                                    <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
-                                            class="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all hover:border-blue-300 min-w-[140px]">
-                                        <option value="me2" ${product.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
-                                        <option value="me1" ${product.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
-                                    </select>
-                                </div>
-                                <!-- Free Shipping -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-1.5 tracking-tight">Promoción</label>
-                                    <label class="flex items-center gap-2 cursor-pointer px-3 w-full h-10 rounded-lg bg-white border border-gray-300 shadow-sm hover:border-blue-300 transition-all">
-                                        <input type="checkbox" id="edit_free_shipping" ${product.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
-                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300">
-                                        <span class="text-xs font-bold text-gray-700">Envío Gratis</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- General Tab Content -->
+                    <div id="detailTab-general" class="space-y-4">
 
-                    <!-- Key Stats Grid -->
-                    <div class="px-6 md:px-8">
-                        <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-4 bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-                            <!-- Costo -->
-                            <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Costo ($)</label>
-                                <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
-                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                            </div>
+                        <!-- Editable Fields Section -->
+                        <div class="px-6 md:px-8 space-y-4 mb-6">
                             
-                            <!-- Precio ML (ESPANDIDO PERO LETRA NORMAL) -->
-                            <div class="flex flex-col lg:col-span-2 relative">
-                                <label class="block text-[10px] font-black text-blue-600 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Mercado Libre ($)</label>
-                                <div class="relative flex items-center">
-                                    <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                           class="w-full h-11 pl-4 pr-12 border-2 border-blue-100 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                                    <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1.5 w-9 h-9 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors bg-white/50 backdrop-blur-sm">
-                                        <i data-lucide="calculator" class="w-5 h-5"></i>
+                            <!-- Meli Name -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                                    Nombre en MercadoLibre
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="edit_product_name_meli" 
+                                       value="${product.product_name_meli || ''}" oninput="triggerAutoSave(${product.id})" 
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm placeholder-gray-400 dark:bg-gray-700 dark:text-white" 
+                                       placeholder="Nombre optimizado para publicación...">
+                                    <button id="btn-ai-product_name_meli" onclick="triggerAIPrePublish(${product.id}, 'product_name_meli')" 
+                                        class="px-3 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors shadow-sm dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/50"
+                                        title="Generar con AI">
+                                        <i data-lucide="sparkles" class="h-4 w-4"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Precio TN -->
-                            <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio TN ($)</label>
-                                <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
-                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
-                            </div>
-                            
-                            <!-- Precio Local -->
-                            <div class="flex flex-col">
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Local ($)</label>
-                                <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
-                                       class="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm font-bold text-gray-400 bg-gray-50/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                             <!-- Catalog Link -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                                    Link de Catálogo / Proveedor
+                                </label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-1">
+                                        <input type="text" id="edit_catalog_link" 
+                                               value="${product.catalog_link || ''}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm dark:bg-gray-700 dark:text-white" 
+                                               placeholder="https://...">
+                                        <i data-lucide="link" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                                    </div>
+                                    ${product.catalog_link ? `
+                                    <a href="${product.catalog_link}" target="_blank" 
+                                       class="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 hover:text-blue-600 text-gray-500 dark:text-gray-450 transition-colors shadow-sm"
+                                       title="Abrir enlace">
+                                         <i data-lucide="external-link" class="h-5 w-5"></i>
+                                    </a>` : ''}
+                                </div>
                             </div>
 
-                            <!-- Bottom Row: Marca & Stock & Status -->
-                            <div class="col-span-2 lg:col-span-5 pt-4 mt-1 border-t border-gray-100 flex justify-between items-center">
-                                <div class="flex items-center gap-6">
-                                    <div class="text-sm">
-                                        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Marca:</span>
-                                        <span class="font-bold text-gray-900 ml-1 uppercase tracking-tight">${product.brand || '-'}</span>
+                            <!-- Dimentions (Collapsible) -->
+                            ${(() => {
+                                const raw = product.dimentions || '';
+                                let dH = '', dW = '', dL = '', dWt = '';
+                                if (raw) {
+                                    const parts = raw.split(',');
+                                    const dims = (parts[0] || '').split('x');
+                                    dH = dims[0] || ''; dW = dims[1] || ''; dL = dims[2] || '';
+                                    dWt = parts[1] || '';
+                                }
+                                const hasDims = dH || dW || dL || dWt;
+                                return `
+                            <details class="group bg-gray-50 dark:bg-gray-800/20 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm open:bg-white dark:open:bg-gray-800/40 open:border-blue-200 dark:open:border-blue-900/60" ${hasDims ? 'open' : ''}>
+                                <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors select-none">
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-gray-200/60 dark:bg-gray-700 p-1.5 rounded-lg text-gray-500 dark:text-gray-400 group-open:bg-blue-100 group-open:text-blue-600 dark:group-open:bg-blue-900/40 dark:group-open:text-blue-400 transition-colors">
+                                            <i data-lucide="ruler" class="h-4 w-4"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Dimensiones</span>
+                                            <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-2 font-normal">${hasDims ? dH+'x'+dW+'x'+dL+', '+dWt+'g' : 'Sin cargar'}</span>
+                                        </div>
                                     </div>
-                                    <!-- Stock moved down here -->
-                                    <div class="flex items-center gap-2 border-l border-gray-200 pl-6">
-                                        <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Stock:</span>
-                                        <span class="text-lg font-black text-gray-900">${product.stock || 0}</span>
+                                    <i data-lucide="chevron-down" class="h-4 w-4 text-gray-400 transition-transform group-open:rotate-180"></i>
+                                </summary>
+                                <div class="p-3 pt-1 border-t border-gray-100 dark:border-gray-700">
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div>
+                                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1 font-medium">Alto (cm)</label>
+                                            <input type="number" id="dim_h" value="${dH}" oninput="triggerAutoSave(${product.id})"
+                                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                   placeholder="0" step="1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1 font-medium">Ancho (cm)</label>
+                                            <input type="number" id="dim_w" value="${dW}" oninput="triggerAutoSave(${product.id})"
+                                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                   placeholder="0" step="1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1 font-medium">Largo (cm)</label>
+                                            <input type="number" id="dim_l" value="${dL}" oninput="triggerAutoSave(${product.id})"
+                                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                   placeholder="0" step="1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1 font-medium">Peso (g)</label>
+                                            <input type="number" id="dim_weight" value="${dWt}" oninput="triggerAutoSave(${product.id})"
+                                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                   class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                   placeholder="0" step="1">
+                                        </div>
                                     </div>
                                 </div>
-                                <!-- Status Badge -->
-                                <div>
-                                ${product.status
-                        ? `<span id="detail-status-badge-${product.id}" class="${product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'} px-3 py-1.5 rounded-full text-[10px] font-black uppercase border tracking-widest">${product.status}</span>`
-                        : ''
-                    }
-                                </div>
-                            </div>
+                            </details>`;
+                            })()}
+
                         </div>
-                    </div>
 
-                    <!-- Meli Costs (Collapsible) -->
-                    ${meliCosts ? `
-                    <div class="px-6 md:px-8 mb-6">
-                        <details class="group bg-yellow-50 border border-yellow-200 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
-                            <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-yellow-100/50 transition-colors select-none">
-                                <div class="flex items-center gap-3">
-                                    <div class="bg-yellow-200/50 p-1.5 rounded-lg text-yellow-700">
-                                        <i data-lucide="calculator" class="h-4 w-4"></i>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-xs font-bold text-yellow-800 uppercase tracking-wider">Costo Mercado Libre</span>
+                        <!-- Key Stats Grid -->
+                        <div class="px-6 md:px-8">
+                            <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm">
+                                <!-- Costo -->
+                                <div class="flex flex-col">
+                                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-1.5 uppercase tracking-widest whitespace-nowrap">Costo ($)</label>
+                                    <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
+                                           class="w-full h-11 px-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-800/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                </div>
+                                
+                                <!-- Precio ML (ESPANDIDO PERO LETRA NORMAL) -->
+                                <div class="flex flex-col lg:col-span-2 relative">
+                                    <label class="block text-[10px] font-black text-blue-600 dark:text-blue-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Mercado Libre ($)</label>
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full h-11 pl-4 pr-12 border-2 border-blue-100 dark:border-blue-900/60 rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                        <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1.5 w-9 h-9 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md transition-colors bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm">
+                                            <i data-lucide="calculator" class="w-5 h-5"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="font-mono font-bold text-yellow-800">$ ${Number(meliCosts.total_selling_cost).toLocaleString('es-AR')}</span>
-                                    <i data-lucide="chevron-down" class="h-4 w-4 text-yellow-600 transition-transform group-open:rotate-180"></i>
-                                </div>
-                            </summary>
-                            <div class="p-4 pt-2 border-t border-yellow-200/50">
-                                <div class="space-y-2 text-sm text-yellow-800/80">
-                                    <div class="flex justify-between">
-                                        <span>Comisión por Venta:</span>
-                                        <span class="font-medium">$ ${Number(meliCosts.sale_fee_amount || 0).toLocaleString('es-AR')}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Costo Fijo (Meli):</span>
-                                        <span class="font-medium">$ ${Number(meliCosts.listing_fixed_fee || 0).toLocaleString('es-AR')}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Envío:</span>
-                                        <span class="font-medium">$ ${Number(meliCosts.ship_cost_amount || 0).toLocaleString('es-AR')}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </details>
-                    </div>` : ''}
-                    ${product.meli_id ? `
-                    <div class="mb-6 bg-yellow-50 border border-yellow-300 rounded-xl p-4 flex items-center gap-4">
-                        <div class="flex-shrink-0">
-                            <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-14 object-contain dark:hidden">
-                            <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-14 object-contain hidden dark:block">
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-lg font-bold font-mono text-gray-900 tracking-wide">${product.meli_id}</p>
-                        </div>
-                        ${product.permalink ? `
-                        <a href="${product.permalink}" target="_blank" rel="noopener"
-                           class="flex-shrink-0 p-2.5 bg-yellow-200/60 hover:bg-yellow-300 text-yellow-800 rounded-lg transition-colors border border-yellow-300"
-                           title="${product.permalink}">
-                            <i data-lucide="external-link" class="h-5 w-5"></i>
-                        </a>` : ''}
-                    </div>` : ''}
 
-                    <!-- Validation Issues (Collapsible) -->
-                    <div class="px-6 md:px-8 mb-6">
-                        ${(() => {
-                    const hasIssues = (product.reason && product.reason !== 'None') || (product.remedy && product.remedy !== 'None');
-                    const bgClass = hasIssues ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200';
-                    const textClass = hasIssues ? 'text-orange-800' : 'text-gray-500';
-                    const hoverClass = hasIssues ? 'hover:bg-orange-100' : 'hover:bg-gray-100';
-                    const iconBgClass = hasIssues ? 'bg-orange-200/50 text-orange-700' : 'bg-gray-200/50 text-gray-400';
-                    const subtextClass = hasIssues ? 'text-orange-600/80' : 'text-gray-400';
-                    const chevronClass = hasIssues ? 'text-orange-600' : 'text-gray-400';
-                    return `
-                        <details class="group ${bgClass} border rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
-                            <summary class="flex items-center justify-between p-4 cursor-pointer list-none ${textClass} ${hoverClass} transition-colors select-none">
-                                <div class="flex items-center gap-3">
-                                    <div class="${iconBgClass} p-2 rounded-lg">
-                                        <i data-lucide="${hasIssues ? 'alert-triangle' : 'check-circle'}" class="h-5 w-5"></i>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-sm">${hasIssues ? 'Revisión Requerida' : 'Sin Revisiones Pendientes'}</span>
-                                        <span class="text-xs ${subtextClass}">${hasIssues ? 'Ver detalles de validación' : 'No hay problemas detectados'}</span>
-                                    </div>
+                                <!-- Precio TN -->
+                                <div class="flex flex-col">
+                                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio TN ($)</label>
+                                    <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
+                                           class="w-full h-11 px-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                                 </div>
-                                <i data-lucide="chevron-down" class="h-5 w-5 ${chevronClass} transition-transform group-open:rotate-180"></i>
-                            </summary>
-                            ${hasIssues ? `
-                            <div class="p-4 pt-1 text-sm bg-orange-50/30 border-t border-orange-100/50">
-                                ${product.reason ? `
-                                <div class="mb-3">
-                                    <strong class="block text-xs uppercase tracking-wider text-orange-700/70 mb-1">Motivo:</strong>
-                                    <div class="bg-white p-3 rounded-lg border border-orange-100 text-gray-700 shadow-sm text-xs leading-relaxed font-mono">
-                                        ${product.reason}
-                                    </div>
-                                </div>` : ''}
-                                ${product.remedy ? `
-                                <div>
-                                    <strong class="block text-xs uppercase tracking-wider text-orange-700/70 mb-1">Solución Sugerida:</strong>
-                                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-900 shadow-sm text-xs leading-relaxed flex gap-2">
-                                        <i data-lucide="lightbulb" class="h-4 w-4 flex-shrink-0 mt-0.5 text-blue-500"></i>
-                                        <span>${product.remedy}</span>
-                                    </div>
-                                </div>` : ''}
-                            </div>` : ''}
-                        </details>`;
-                })()}
-                    </div>
+                                
+                                <!-- Precio Local -->
+                                <div class="flex flex-col">
+                                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Local ($)</label>
+                                    <input type="number" id="edit_price_local" value="${product.price || ''}" readonly
+                                           class="w-full h-11 px-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-800/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                </div>
 
-                    <!-- Drive Dropzone -->
-                    <div class="px-6 md:px-8 mb-6">
-                        <div id="drive-dropzone-${product.id}" 
-                             class="relative p-4 rounded-xl border-2 border-dashed transition-all duration-200 group
-                                    ${product.drive_url ? 'bg-blue-50/50 border-blue-200' : 'bg-gray-50 border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'}"
-                             ondragover="event.preventDefault(); this.classList.add('border-blue-500', 'bg-blue-100')"
-                             ondragleave="this.classList.remove('border-blue-500', 'bg-blue-100')"
-                             ondrop="handleDriveDrop(event, ${product.id})"
-                             onclick="if(!event.target.closest('a, button')) document.getElementById('file-input-${product.id}').click()">
-                            
-                            <input type="file" id="file-input-${product.id}" class="hidden" multiple onchange="handleDriveFileSelect(event, ${product.id})">
-                            
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="p-2 rounded-lg ${product.drive_url ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-500'}">
-                                        <i data-lucide="${product.drive_url ? 'folder-check' : 'folder-up'}" class="h-5 w-5"></i>
+                                <!-- Bottom Row: Marca & Stock & Status -->
+                                <div class="col-span-2 lg:col-span-5 pt-4 mt-1 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                    <div class="flex items-center gap-6">
+                                        <div class="text-sm">
+                                            <span class="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-widest">Marca:</span>
+                                            <span class="font-bold text-gray-900 dark:text-white ml-1 uppercase tracking-tight">${product.brand || '-'}</span>
+                                        </div>
+                                        <!-- Stock moved down here -->
+                                        <div class="flex items-center gap-2 border-l border-gray-200 dark:border-gray-700 pl-6">
+                                            <span class="text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-widest">Stock:</span>
+                                            <span class="text-lg font-black text-gray-900 dark:text-white">${product.stock || 0}</span>
+                                        </div>
                                     </div>
+                                    <!-- Status Badge -->
                                     <div>
-                                        <h4 class="text-sm font-semibold ${product.drive_url ? 'text-blue-900' : 'text-gray-700'}">
-                                            ${product.drive_url ? 'Carpeta de Drive' : 'Subir Fotos'}
-                                        </h4>
-                                        <p class="text-xs ${product.drive_url ? 'text-blue-600' : 'text-gray-500'}">
-                                            ${product.drive_url ? 'Arrastra fotos para agregar' : 'Click para subir'}
-                                        </p>
+                                    ${product.status
+                            ? `<span id="detail-status-badge-${product.id}" class="${product.status.toLowerCase() === 'active' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800/40' : 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-800/40'} px-3 py-1.5 rounded-full text-[10px] font-black uppercase border tracking-widest">${product.status}</span>`
+                            : ''
+                        }
                                     </div>
-                                </div>
-                                ${product.drive_url ? `
-                                    <a href="${product.drive_url}" target="_blank" 
-                                       class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                                       title="Abrir en Drive" onclick="event.stopPropagation()">
-                                        <i data-lucide="external-link" class="h-4 w-4"></i>
-                                    </a>
-                                ` : ''}
-                            </div>
-                            
-                            <!-- Upload Overlay -->
-                            <div id="upload-overlay-${product.id}" class="hidden absolute inset-0 bg-white/90 backdrop-blur-[1px] rounded-xl flex items-center justify-center">
-                                <div class="flex items-center gap-3 text-blue-600 font-medium text-sm">
-                                    <div class="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                                    Subiendo...
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Meli Photo Tips link -->
-                    <div class="mb-6 px-6 md:px-8">
-                        <p class="text-xs text-gray-500 flex items-center gap-1.5">
-                            <i data-lucide="help-circle" class="h-3.5 w-3.5 text-gray-400"></i>
-                            Aquí te dejamos un enlace con las fotos recomendadas por Mercado Libre 
-                            <a href="https://www.mercadolibre.com.ar/ayuda/Sacar-bue-nas-fotos-productos_805" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 font-semibold hover:underline flex items-center gap-0.5 transition-all">
-                                Click aquí <i data-lucide="external-link" class="h-3 w-3"></i>
-                            </a>
-                        </p>
-                    </div>
+                        <!-- Meli Costs (Collapsible) -->
+                        ${meliCosts ? `
+                        <div class="px-6 md:px-8 mb-6">
+                            <details class="group bg-yellow-50 dark:bg-yellow-950/10 border border-yellow-200 dark:border-yellow-900/30 rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
+                                <summary class="flex items-center justify-between p-3 cursor-pointer list-none hover:bg-yellow-100/50 dark:hover:bg-yellow-900/20 transition-colors select-none">
+                                    <div class="flex items-center gap-3">
+                                        <div class="bg-yellow-200/50 dark:bg-yellow-900/40 p-1.5 rounded-lg text-yellow-700 dark:text-yellow-400">
+                                            <i data-lucide="calculator" class="h-4 w-4"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-yellow-800 dark:text-yellow-300 uppercase tracking-wider">Costo Mercado Libre</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="font-mono font-bold text-yellow-800 dark:text-yellow-300">$ ${Number(meliCosts.total_selling_cost).toLocaleString('es-AR')}</span>
+                                        <i data-lucide="chevron-down" class="h-4 w-4 text-yellow-600 dark:text-yellow-500 transition-transform group-open:rotate-180"></i>
+                                    </div>
+                                </summary>
+                                <div class="p-4 pt-2 border-t border-yellow-200/50 dark:border-yellow-900/30">
+                                    <div class="space-y-2 text-sm text-yellow-800/80 dark:text-yellow-300/80">
+                                        <div class="flex justify-between">
+                                            <span>Comisión por Venta:</span>
+                                            <span class="font-medium">$ ${Number(meliCosts.sale_fee_amount || 0).toLocaleString('es-AR')}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Costo Fijo (Meli):</span>
+                                            <span class="font-medium">$ ${Number(meliCosts.listing_fixed_fee || 0).toLocaleString('es-AR')}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Envío:</span>
+                                            <span class="font-medium">$ ${Number(meliCosts.ship_cost_amount || 0).toLocaleString('es-AR')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>` : ''}
+                        ${product.meli_id ? `
+                        <div class="mb-6 mx-6 md:mx-8 bg-yellow-50 dark:bg-yellow-950/10 border border-yellow-300 dark:border-yellow-900/30 rounded-xl p-4 flex items-center gap-4">
+                            <div class="flex-shrink-0">
+                                <img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-14 object-contain dark:hidden">
+                                <img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-14 object-contain hidden dark:block">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-lg font-bold font-mono text-gray-900 dark:text-white tracking-wide">${product.meli_id}</p>
+                            </div>
+                            ${product.permalink ? `
+                            <a href="${product.permalink}" target="_blank" rel="noopener"
+                               class="flex-shrink-0 p-2.5 bg-yellow-200/60 dark:bg-yellow-900/30 hover:bg-yellow-300 dark:hover:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 rounded-lg transition-colors border border-yellow-300 dark:border-yellow-800"
+                               title="${product.permalink}">
+                                <i data-lucide="external-link" class="h-5 w-5"></i>
+                            </a>` : ''}
+                        </div>` : ''}
 
-                    <!-- Description Editor -->
-                    <div class="px-6 md:px-8 mb-24 flex-1 flex flex-col min-h-[150px] relative">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex justify-between items-center">
-                            <span>Descripción</span>
-                            <button id="btn-ai-description" onclick="triggerAIPrePublish(${product.id}, 'description')" 
-                                class="px-2 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md border border-purple-200 transition-colors shadow-sm flex items-center gap-1.5 text-xs font-medium"
-                                title="Generar con AI">
-                                <i data-lucide="sparkles" class="h-3 w-3"></i>
-                                Generar con AI
+                        <!-- Validation Issues (Collapsible) -->
+                        <div class="px-6 md:px-8 mb-6">
+                            ${(() => {
+                        const hasIssues = (product.reason && product.reason !== 'None') || (product.remedy && product.remedy !== 'None');
+                        const bgClass = hasIssues ? 'bg-orange-50 border-orange-200 dark:bg-orange-950/10 dark:border-orange-900/30' : 'bg-gray-50 border-gray-200 dark:bg-gray-800/20 dark:border-gray-700';
+                        const textClass = hasIssues ? 'text-orange-800 dark:text-orange-300' : 'text-gray-500 dark:text-gray-400';
+                        const hoverClass = hasIssues ? 'hover:bg-orange-100 dark:hover:bg-orange-950/20' : 'hover:bg-gray-100 dark:hover:bg-gray-800/40';
+                        const iconBgClass = hasIssues ? 'bg-orange-200/50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-gray-200/50 text-gray-400 dark:bg-gray-700 dark:text-gray-500';
+                        const subtextClass = hasIssues ? 'text-orange-600/80 dark:text-orange-400/80' : 'text-gray-400 dark:text-gray-500';
+                        const chevronClass = hasIssues ? 'text-orange-600 dark:text-orange-500' : 'text-gray-400 dark:text-gray-555';
+                        return `
+                            <details class="group ${bgClass} border rounded-xl overflow-hidden transition-all duration-300 open:shadow-sm">
+                                <summary class="flex items-center justify-between p-4 cursor-pointer list-none ${textClass} ${hoverClass} transition-colors select-none">
+                                    <div class="flex items-center gap-3">
+                                        <div class="${iconBgClass} p-2 rounded-lg">
+                                            <i data-lucide="${hasIssues ? 'alert-triangle' : 'check-circle'}" class="h-5 w-5"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-sm">${hasIssues ? 'Revisión Requerida' : 'Sin Revisiones Pendientes'}</span>
+                                            <span class="text-xs ${subtextClass}">${hasIssues ? 'Ver detalles de validación' : 'No hay problemas detectados'}</span>
+                                        </div>
+                                    </div>
+                                    <i data-lucide="chevron-down" class="h-5 w-5 ${chevronClass} transition-transform group-open:rotate-180"></i>
+                                </summary>
+                                ${hasIssues ? `
+                                <div class="p-4 pt-1 text-sm bg-orange-50/30 dark:bg-orange-950/5 border-t border-orange-100/50 dark:border-orange-900/20">
+                                    ${product.reason ? `
+                                    <div class="mb-3">
+                                        <strong class="block text-xs uppercase tracking-wider text-orange-700/70 dark:text-orange-400/70 mb-1">Motivo:</strong>
+                                        <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-orange-100 dark:border-orange-900/35 text-gray-700 dark:text-gray-300 shadow-sm text-xs leading-relaxed font-mono">
+                                            ${product.reason}
+                                        </div>
+                                    </div>` : ''}
+                                    ${product.remedy ? `
+                                    <div>
+                                        <strong class="block text-xs uppercase tracking-wider text-orange-700/70 dark:text-orange-400/70 mb-1">Solución Sugerida:</strong>
+                                        <div class="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30 text-blue-900 dark:text-blue-300 shadow-sm text-xs leading-relaxed flex gap-2">
+                                            <i data-lucide="lightbulb" class="h-4 w-4 flex-shrink-0 mt-0.5 text-blue-500"></i>
+                                            <span>${product.remedy}</span>
+                                        </div>
+                                    </div>` : ''}
+                                </div>` : ''}
+                            </details>`;
+                    })()}
+                        </div>
+
+                        <!-- Drive Dropzone -->
+                        <div class="px-6 md:px-8 mb-6">
+                            <div id="drive-dropzone-${product.id}" 
+                                 class="relative p-4 rounded-xl border-2 border-dashed transition-all duration-200 group
+                                        ${product.drive_url ? 'bg-blue-50/50 dark:bg-blue-950/10 border-blue-200 dark:border-blue-900/30' : 'bg-gray-50 dark:bg-gray-800/10 border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-800 hover:bg-blue-50/30'}"
+                                 ondragover="event.preventDefault(); this.classList.add('border-blue-500', 'bg-blue-100')"
+                                 ondragleave="this.classList.remove('border-blue-500', 'bg-blue-100')"
+                                 ondrop="handleDriveDrop(event, ${product.id})"
+                                 onclick="if(!event.target.closest('a, button')) document.getElementById('file-input-${product.id}').click()">
+                                
+                                <input type="file" id="file-input-${product.id}" class="hidden" multiple onchange="handleDriveFileSelect(event, ${product.id})">
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 rounded-lg ${product.drive_url ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}">
+                                            <i data-lucide="${product.drive_url ? 'folder-check' : 'folder-up'}" class="h-5 w-5"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-semibold ${product.drive_url ? 'text-blue-900 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}">
+                                                ${product.drive_url ? 'Carpeta de Drive' : 'Subir Fotos'}
+                                            </h4>
+                                            <p class="text-xs ${product.drive_url ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}">
+                                                ${product.drive_url ? 'Arrastra fotos para agregar' : 'Click para subir'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    ${product.drive_url ? `
+                                        <a href="${product.drive_url}" target="_blank" 
+                                           class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/40 rounded-lg transition-colors"
+                                           title="Abrir en Drive" onclick="event.stopPropagation()">
+                                            <i data-lucide="external-link" class="h-4 w-4"></i>
+                                        </a>
+                                    ` : ''}
+                                </div>
+                                
+                                <!-- Upload Overlay -->
+                                <div id="upload-overlay-${product.id}" class="hidden absolute inset-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-[1px] rounded-xl flex items-center justify-center">
+                                    <div class="flex items-center gap-3 text-blue-600 dark:text-blue-455 font-medium text-sm">
+                                        <div class="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                                        Subiendo...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meli Photo Tips link -->
+                        <div class="mb-6 px-6 md:px-8">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <i data-lucide="help-circle" class="h-3.5 w-3.5 text-gray-400"></i>
+                                Aquí te dejamos un enlace con las fotos recomendadas por Mercado Libre 
+                                <a href="https://www.mercadolibre.com.ar/ayuda/Sacar-bue-nas-fotos-productos_805" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 font-semibold hover:underline flex items-center gap-0.5 transition-all">
+                                    Click aquí <i data-lucide="external-link" class="h-3 w-3"></i>
+                                </a>
+                            </p>
+                        </div>
+
+                        <!-- Description Editor -->
+                        <div class="px-6 md:px-8 mb-24 flex-1 flex flex-col min-h-[150px] relative">
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex justify-between items-center">
+                                <span>Descripción</span>
+                                <button id="btn-ai-description" onclick="triggerAIPrePublish(${product.id}, 'description')" 
+                                    class="px-2 py-1 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md border border-purple-200 transition-colors shadow-sm flex items-center gap-1.5 text-xs font-medium dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/40"
+                                    title="Generar con AI">
+                                    <i data-lucide="sparkles" class="h-3 w-3"></i>
+                                    Generar con AI
+                                </button>
+                            </label>
+                            <textarea id="edit_description" oninput="triggerAutoSave(${product.id})"
+                                      class="flex-1 w-full p-4 border border-gray-300 dark:border-gray-600 rounded-xl text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-white resize-y min-h-[150px] shadow-inner"
+                                      placeholder="Escribe una descripción detallada del producto...">${product.description || ''}</textarea>
+                        </div>
+
+                    </div> <!-- End detailTab-general -->
+
+                    <!-- Attributes Tab Content -->
+                    <div id="detailTab-attributes" class="hidden space-y-6 px-6 md:px-8 pb-8 flex-1 overflow-y-auto custom-scrollbar">
+                        
+                        <!-- Configuración de Publicación (Migrated) -->
+                        <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 border border-blue-100 dark:border-blue-800/40 rounded-xl shadow-sm">
+                            <label class="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                 <i data-lucide="settings" class="h-3.5 w-3.5"></i> Configuración de Publicación
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <!-- Listing Type -->
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Publicación</label>
+                                    <select id="edit_listing_type_id"
+                                            class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
+                                        <option value="gold_special" ${meliAttrs.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
+                                        <option value="gold_pro" ${meliAttrs.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
+                                    </select>
+                                </div>
+                                <!-- Shipping Mode -->
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Logística</label>
+                                    <select id="edit_mode_shipping"
+                                            class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
+                                        <option value="me2" ${meliAttrs.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
+                                        <option value="me1" ${meliAttrs.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
+                                    </select>
+                                </div>
+                                <!-- Free Shipping -->
+                                <div>
+                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Promoción</label>
+                                    <label class="flex items-center gap-2 cursor-pointer px-3 w-full h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm hover:border-blue-300 transition-all">
+                                        <input type="checkbox" id="edit_free_shipping" ${meliAttrs.free_shipping === 1 ? 'checked' : ''}
+                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-650 dark:bg-gray-600">
+                                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Envío Gratis</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid de Atributos del Modelo Nuevo -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Moneda (Deshabilitado) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="dollar-sign" class="h-3.5 w-3.5"></i> Moneda
+                                </label>
+                                <input type="text" id="attr_currency_id" value="${meliAttrs.currency_id || 'ARS'}" disabled
+                                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed shadow-inner">
+                            </div>
+
+                            <!-- Categoría de MercadoLibre -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
+                                </label>
+                                <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: MLA1234">
+                            </div>
+
+                            <!-- Método de Compra -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i> Método de Compra
+                                </label>
+                                <select id="attr_buying_mode"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="buy_it_now" ${meliAttrs.buying_mode === 'buy_it_now' ? 'selected' : ''}>Comprar ahora (buy_it_now)</option>
+                                    <option value="classified" ${meliAttrs.buying_mode === 'classified' ? 'selected' : ''}>Clasificado (classified)</option>
+                                </select>
+                            </div>
+
+                            <!-- Condición -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="star" class="h-3.5 w-3.5"></i> Condición
+                                </label>
+                                <select id="attr_condition_type"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="new" ${meliAttrs.condition_type === 'new' ? 'selected' : ''}>Nuevo</option>
+                                    <option value="used" ${meliAttrs.condition_type === 'used' ? 'selected' : ''}>Usado</option>
+                                    <option value="reconditioned" ${meliAttrs.condition_type === 'reconditioned' ? 'selected' : ''}>Reacondicionado</option>
+                                </select>
+                            </div>
+
+                            <!-- Logística Meli -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="truck" class="h-3.5 w-3.5"></i> Canal Logístico
+                                </label>
+                                <select id="attr_logistic_type"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="drop_off" ${meliAttrs.logistic_type === 'drop_off' ? 'selected' : ''}>drop_off (Correo tradicional)</option>
+                                    <option value="fulfillment" ${meliAttrs.logistic_type === 'fulfillment' ? 'selected' : ''}>fulfillment (Red Full)</option>
+                                    <option value="cross_docking" ${meliAttrs.logistic_type === 'cross_docking' ? 'selected' : ''}>cross_docking (Colecta / Despacho)</option>
+                                    <option value="self_service" ${meliAttrs.logistic_type === 'self_service' ? 'selected' : ''}>self_service (Envíos Flex)</option>
+                                    <option value="custom" ${meliAttrs.logistic_type === 'custom' ? 'selected' : ''}>custom (Logística propia)</option>
+                                </select>
+                            </div>
+
+                            <!-- Retiro en Local -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex items-center">
+                                <label class="flex items-center gap-3 cursor-pointer w-full mt-5 px-3 py-2 bg-white dark:bg-gray-750 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:border-blue-300 transition-all">
+                                    <input type="checkbox" id="attr_local_pick_up" ${meliAttrs.local_pick_up ? 'checked' : ''}
+                                           class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-600">
+                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
+                                        <i data-lucide="map-pin" class="h-4 w-4 text-gray-500 dark:text-gray-400"></i> Retiro en Local (local_pick_up)
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- IVA -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="percent" class="h-3.5 w-3.5"></i> IVA
+                                    ${requiredBadge(meliAttrs.value_added_tax_required)}
+                                </label>
+                                <select id="attr_value_added_tax"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="48405909" ${meliAttrs.value_added_tax === '48405909' ? 'selected' : ''}>21 % (48405909)</option>
+                                    <option value="48405908" ${meliAttrs.value_added_tax === '48405908' ? 'selected' : ''}>10.5 % (48405908)</option>
+                                    <option value="48405907" ${meliAttrs.value_added_tax === '48405907' ? 'selected' : ''}>0 % (48405907)</option>
+                                    <option value="55043032" ${meliAttrs.value_added_tax === '55043032' ? 'selected' : ''}>Exento (55043032)</option>
+                                    <option value="48405910" ${meliAttrs.value_added_tax === '48405910' ? 'selected' : ''}>27 % (48405910)</option>
+                                </select>
+                            </div>
+
+                            <!-- Impuesto Interno -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="shield-alert" class="h-3.5 w-3.5"></i> Impuesto Interno
+                                    ${requiredBadge(meliAttrs.import_duty_required)}
+                                </label>
+                                <select id="attr_import_duty"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="49553239" ${meliAttrs.import_duty === '49553239' ? 'selected' : ''}>0 % (49553239)</option>
+                                    <option value="49553240" ${meliAttrs.import_duty === '49553240' ? 'selected' : ''}>5 % (49553240)</option>
+                                    <option value="49553241" ${meliAttrs.import_duty === '49553241' ? 'selected' : ''}>10 % (49553241)</option>
+                                    <option value="49553242" ${meliAttrs.import_duty === '49553242' ? 'selected' : ''}>15 % (49553242)</option>
+                                    <option value="49553243" ${meliAttrs.import_duty === '49553243' ? 'selected' : ''}>20 % (49553243)</option>
+                                    <option value="49553244" ${meliAttrs.import_duty === '49553244' ? 'selected' : ''}>25 % (49553244)</option>
+                                    <option value="49553245" ${meliAttrs.import_duty === '49553245' ? 'selected' : ''}>30 % (49553245)</option>
+                                    <option value="49553246" ${meliAttrs.import_duty === '49553246' ? 'selected' : ''}>35 % (49553246)</option>
+                                    <option value="49553247" ${meliAttrs.import_duty === '49553247' ? 'selected' : ''}>40 % (49553247)</option>
+                                    <option value="49553248" ${meliAttrs.import_duty === '49553248' ? 'selected' : ''}>45 % (49553248)</option>
+                                    <option value="49553249" ${meliAttrs.import_duty === '49553249' ? 'selected' : ''}>50 % (49553249)</option>
+                                    <option value="49553250" ${meliAttrs.import_duty === '49553250' ? 'selected' : ''}>55 % (49553250)</option>
+                                    <option value="49553251" ${meliAttrs.import_duty === '49553251' ? 'selected' : ''}>60 % (49553251)</option>
+                                    <option value="49553252" ${meliAttrs.import_duty === '49553252' ? 'selected' : ''}>65 % (49553252)</option>
+                                    <option value="49553253" ${meliAttrs.import_duty === '49553253' ? 'selected' : ''}>70 % (49553253)</option>
+                                </select>
+                            </div>
+
+                            <!-- Tipo de Garantía -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tipo de Garantía
+                                </label>
+                                <select id="attr_warranty_type"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="Garantía del vendedor" ${meliAttrs.warranty_type === 'Garantía del vendedor' ? 'selected' : ''}>Garantía del vendedor</option>
+                                    <option value="Garantía de fábrica" ${meliAttrs.warranty_type === 'Garantía de fábrica' ? 'selected' : ''}>Garantía de fábrica</option>
+                                    <option value="Sin garantía" ${meliAttrs.warranty_type === 'Sin garantía' ? 'selected' : ''}>Sin garantía</option>
+                                </select>
+                            </div>
+
+                            <!-- Tiempo de Garantía -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tiempo de Garantía
+                                </label>
+                                <input type="text" id="attr_warranty_time" value="${meliAttrs.warranty_time || '30 días'}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 30 días">
+                            </div>
+
+                            <!-- Capacidad en volumen -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Capacidad Volumen (Ml)
+                                    ${requiredBadge(meliAttrs.volume_capacity_required)}
+                                </label>
+                                <input type="number" id="attr_volume_capacity" value="${meliAttrs.volume_capacity !== null ? meliAttrs.volume_capacity : ''}"
+                                       oninput="window.validateVolumeCapacity(this)"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
+                                       placeholder="En mililitros. Ej: 500">
+                                <span id="volume_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">La capacidad no debe exceder 1,000,000 Ml (1000L).</span>
+                            </div>
+
+                            <!-- Unidades por pack -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="package" class="h-3.5 w-3.5"></i> Unidades por Pack
+                                    ${requiredBadge(meliAttrs.units_per_pack_required)}
+                                </label>
+                                <input type="number" id="attr_units_per_pack" value="${meliAttrs.units_per_pack !== null ? meliAttrs.units_per_pack : 1}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
+                                       placeholder="Ej: 1">
+                            </div>
+
+                            <!-- Motivo GTIN Vacío -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="barcode" class="h-3.5 w-3.5"></i> Motivo GTIN Vacío
+                                    ${requiredBadge(meliAttrs.empty_gtin_reason_required)}
+                                </label>
+                                <select id="attr_empty_gtin_reason"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="17055160" ${meliAttrs.empty_gtin_reason === '17055160' ? 'selected' : ''}>El producto no tiene código registrado (17055160)</option>
+                                    <option value="17055158" ${meliAttrs.empty_gtin_reason === '17055158' ? 'selected' : ''}>Pieza artesanal (17055158)</option>
+                                    <option value="17055159" ${meliAttrs.empty_gtin_reason === '17055159' ? 'selected' : ''}>Kit o pack (17055159)</option>
+                                    <option value="17055161" ${meliAttrs.empty_gtin_reason === '17055161' ? 'selected' : ''}>Otra razón (17055161)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Atributos No Mapeados -->
+                        <div class="bg-gray-50 dark:bg-gray-800/40 p-4 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm space-y-3">
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="database" class="h-3.5 w-3.5"></i> Atributos No Mapeados (Meli)
+                            </label>
+                            ${formatNotMappedAttributes(meliAttrs.not_mapped_attributes)}
+                        </div>
+
+                        <!-- Guardar Button -->
+                        <div class="pt-4 border-t border-gray-100 dark:border-gray-800/60">
+                            <button onclick="window.saveMeliAttributes(event, ${product.id})" 
+                                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="save" class="h-4 w-4"></i> Guardar Atributos Meli
                             </button>
-                        </label>
-                        <textarea id="edit_description" oninput="triggerAutoSave(${product.id})"
-                                  class="flex-1 w-full p-4 border border-gray-300 rounded-xl text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 resize-y min-h-[150px] shadow-inner"
-                                  placeholder="Escribe una descripción detallada del producto...">${product.description || ''}</textarea>
+                        </div>
+
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="sticky bottom-0 px-6 md:px-8 py-4 bg-white border-t border-gray-100 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
+                    <div class="sticky bottom-0 px-6 md:px-8 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
                         <button onclick="closeModal()" 
-                                class="px-4 py-2 text-sm bg-white text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-all border border-gray-200 shadow-sm">
+                                class="px-4 py-2 text-sm bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-medium transition-all border border-gray-200 dark:border-gray-600 shadow-sm">
                             Cerrar
                         </button>
                         
@@ -1888,6 +2168,143 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (content) content.classList.toggle('hidden');
         if (icon) icon.classList.toggle('rotate-180');
+    };
+
+    window.switchDetailTab = function(tabName) {
+        const generalTab = document.getElementById('detailTab-general');
+        const attrsTab = document.getElementById('detailTab-attributes');
+        const generalBtn = document.getElementById('tabBtn-general');
+        const attrsBtn = document.getElementById('tabBtn-attributes');
+        
+        if (tabName === 'general') {
+            if (generalTab) generalTab.classList.remove('hidden');
+            if (attrsTab) attrsTab.classList.add('hidden');
+            
+            // Switch button styles
+            if (generalBtn) {
+                generalBtn.className = "pb-3 border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold text-sm transition-all focus:outline-none flex items-center gap-2";
+            }
+            if (attrsBtn) {
+                attrsBtn.className = "pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-all focus:outline-none flex items-center gap-2";
+            }
+        } else {
+            if (generalTab) generalTab.classList.add('hidden');
+            if (attrsTab) attrsTab.classList.remove('hidden');
+            
+            // Switch button styles
+            if (generalBtn) {
+                generalBtn.className = "pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-all focus:outline-none flex items-center gap-2";
+            }
+            if (attrsBtn) {
+                attrsBtn.className = "pb-3 border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 font-bold text-sm transition-all focus:outline-none flex items-center gap-2";
+            }
+        }
+        
+        // Scroll parent details pane to top
+        if (generalTab) {
+            const pane = generalTab.parentElement;
+            if (pane) pane.scrollTop = 0;
+        }
+    };
+
+    window.validateVolumeCapacity = function(inputEl) {
+        const val = parseFloat(inputEl.value);
+        const warning = document.getElementById('volume_warning');
+        if (val > 1000000) {
+            if (warning) warning.classList.remove('hidden');
+        } else {
+            if (warning) warning.classList.add('hidden');
+        }
+    };
+
+    window.saveMeliAttributes = async function(event, productId) {
+        event.preventDefault();
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-white"></i> Guardando...';
+        if (window.lucide) lucide.createIcons();
+        btn.disabled = true;
+
+        const payload = {
+            currency_id: 'ARS',
+            buying_mode: document.getElementById('attr_buying_mode').value,
+            condition_type: document.getElementById('attr_condition_type').value,
+            category_id: document.getElementById('attr_category_id').value,
+            local_pick_up: document.getElementById('attr_local_pick_up').checked,
+            logistic_type: document.getElementById('attr_logistic_type').value,
+            warranty_type: document.getElementById('attr_warranty_type').value,
+            warranty_time: document.getElementById('attr_warranty_time').value,
+            volume_capacity: document.getElementById('attr_volume_capacity').value !== "" ? parseFloat(document.getElementById('attr_volume_capacity').value) : null,
+            units_per_pack: document.getElementById('attr_units_per_pack').value !== "" ? parseInt(document.getElementById('attr_units_per_pack').value) : 1,
+            value_added_tax: document.getElementById('attr_value_added_tax').value,
+            import_duty: document.getElementById('attr_import_duty').value,
+            empty_gtin_reason: document.getElementById('attr_empty_gtin_reason').value,
+            listing_type_id: document.getElementById('edit_listing_type_id').value,
+            free_shipping: document.getElementById('edit_free_shipping').checked ? 1 : 0,
+            mode_shipping: document.getElementById('edit_mode_shipping').value
+        };
+
+        // Frontend validation for volume_capacity
+        if (payload.volume_capacity !== null && payload.volume_capacity > 1000000) {
+            showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
+            btn.innerHTML = originalHTML;
+            if (window.lucide) lucide.createIcons();
+            btn.disabled = false;
+            return;
+        }
+
+        try {
+            const response = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    // Fallback to local mock save for offline testing
+                    localStorage.setItem(`mock_meli_attrs_${productId}`, JSON.stringify(payload));
+                    showAlert('Guardado Local (Prueba)', 'El endpoint no fue encontrado (404). Se guardaron los datos localmente en tu navegador.', 'success');
+                    
+                    // Also trigger product patch for the three migrated fields in the product table just in case backend expects it there
+                    try {
+                        await authFetch(`/api/products/${productId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                listing_type_id: payload.listing_type_id,
+                                free_shipping: payload.free_shipping,
+                                mode_shipping: payload.mode_shipping
+                            })
+                        });
+                    } catch(e) {}
+
+                    // Refresh detail modal
+                    if (currentDetailIndex !== -1) {
+                         const currentProduct = state.products[currentDetailIndex];
+                         if (currentProduct) refreshProductDetail(currentProduct.id);
+                    }
+                    return;
+                }
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Error al guardar los atributos');
+            }
+
+            showAlert('Atributos Guardados', 'Los atributos de MercadoLibre fueron actualizados con éxito.', 'success');
+            
+            // Refresh detail modal
+            if (currentDetailIndex !== -1) {
+                 const currentProduct = state.products[currentDetailIndex];
+                 if (currentProduct) refreshProductDetail(currentProduct.id);
+            }
+        } catch (error) {
+            console.error('Error saving attributes:', error);
+            showAlert('Error', error.message, 'error');
+        } finally {
+            btn.innerHTML = originalHTML;
+            if (window.lucide) lucide.createIcons();
+            btn.disabled = false;
+        }
     };
 
     window.openProductDetail = openProductDetail;
