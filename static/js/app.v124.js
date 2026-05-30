@@ -1242,7 +1242,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                 } catch(e) {}
                             })();
-                                              <div class="px-6 md:px-8 flex items-center gap-3 text-sm text-gray-500">
+                        </script>` : ''}
+
+                        <div class="px-6 md:px-8 flex items-center gap-3 text-sm text-gray-500">
                              <span>ID: ${product.id}</span>
                              <span class="text-gray-300">|</span>
                              <span>SKU: ${product.product_code}</span>
