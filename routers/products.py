@@ -312,8 +312,8 @@ async def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = 
 
 
 class PrePublishRequest(BaseModel):
-    prompt: str
-    field: str # 'product_name_meli' or 'description'
+    prompt: Optional[str] = None
+    field: Optional[str] = None # 'product_name_meli' or 'description'
 
 @router.post("/{product_id}/pre-publish")
 def trigger_pre_publish(
@@ -326,16 +326,18 @@ def trigger_pre_publish(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Nested structure as requested by user, but without the 'site' field
+    # Construct webhook data
     data = {
         "event_type": "pre-publish",
         "item_id": product_id,
-        "secret": WEBHOOK_SECRET,
-        "data": {
-            "prompt": request.prompt,
-            "field": request.field
-        }
+        "secret": WEBHOOK_SECRET
     }
+    
+    if request.prompt is not None or request.field is not None:
+        data["data"] = {
+            "prompt": request.prompt or "",
+            "field": request.field or ""
+        }
     
     try:
         print(f"DEBUG: Sending AI pre-publish webhook for item {product_id} (field: {request.field})")
