@@ -29,9 +29,7 @@ class ProductBase(BaseModel):
     dimentions: Optional[str] = None
     catalog_link: Optional[str] = None
     price_mercadolibre: Optional[Decimal] = None
-    listing_type_id: Optional[str] = None
-    free_shipping: Optional[int] = None
-    mode_shipping: Optional[str] = None
+
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
     
@@ -50,9 +48,7 @@ class ProductUpdate(BaseModel):
     cost: Optional[Decimal] = None
     dimentions: Optional[str] = None
     stock: Optional[int] = None
-    listing_type_id: Optional[str] = None
-    free_shipping: Optional[int] = None
-    mode_shipping: Optional[str] = None
+
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
 
