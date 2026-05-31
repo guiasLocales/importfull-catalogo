@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List, Optional
 from db_conn import get_db
 from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse
@@ -314,6 +315,7 @@ async def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = 
 class PrePublishRequest(BaseModel):
     prompt: Optional[str] = None
     field: Optional[str] = None # 'product_name_meli' or 'description'
+    category_id: Optional[str] = None
 
 @router.post("/{product_id}/pre-publish")
 def trigger_pre_publish(
@@ -325,6 +327,20 @@ def trigger_pre_publish(
     product = crud.get_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Update category_id in mercadolibre.attributes if provided
+    if request.category_id:
+        try:
+            db.execute(
+                text("UPDATE mercadolibre.attributes SET category_id = :cat WHERE item_id = :id"),
+                {"cat": request.category_id, "id": str(product_id)}
+            )
+            db.commit()
+            print(f"DEBUG: Updated category_id to {request.category_id} in mercadolibre.attributes for item {product_id}")
+        except Exception as e:
+            db.rollback()
+            print(f"ERROR: Failed to update category_id in database: {e}")
+            raise HTTPException(status_code=500, detail=f"Error actualizando categoría en base de datos: {str(e)}")
 
     # Construct webhook data
     data = {

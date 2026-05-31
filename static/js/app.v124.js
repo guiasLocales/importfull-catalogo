@@ -2356,59 +2356,25 @@ document.addEventListener('DOMContentLoaded', function () {
         selectEl.disabled = true;
         
         try {
-            // Recopilar todos los campos actuales para guardar
-            const payload = {
-                currency_id: 'ARS',
-                buying_mode: document.getElementById('attr_buying_mode').value,
-                condition_type: document.getElementById('attr_condition_type').value,
-                category_id: categoryId,
-                local_pick_up: document.getElementById('attr_local_pick_up').checked,
-                logistic_type: document.getElementById('attr_logistic_type').value,
-                warranty_type: document.getElementById('attr_warranty_type').value,
-                warranty_time: document.getElementById('attr_warranty_time').value,
-                volume_capacity: document.getElementById('attr_volume_capacity').value !== "" ? parseFloat(document.getElementById('attr_volume_capacity').value) : null,
-                units_per_pack: document.getElementById('attr_units_per_pack').value !== "" ? parseInt(document.getElementById('attr_units_per_pack').value) : 1,
-                value_added_tax: document.getElementById('attr_value_added_tax').value,
-                import_duty: document.getElementById('attr_import_duty').value,
-                empty_gtin_reason: document.getElementById('attr_empty_gtin_reason').value,
-                listing_type_id: document.getElementById('edit_listing_type_id').value,
-                free_shipping: document.getElementById('edit_free_shipping').checked ? 1 : 0,
-                mode_shipping: document.getElementById('edit_mode_shipping').value
-            };
-            
-            // Guardar atributos de MercadoLibre (con fallback a localStorage)
-            const saveRes = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            if (!saveRes.ok) {
-                if (saveRes.status === 404) {
-                    localStorage.setItem(`mock_meli_attrs_${productId}`, JSON.stringify(payload));
-                    
-                    try {
-                        await authFetch(`/api/products/${productId}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                listing_type_id: payload.listing_type_id,
-                                free_shipping: payload.free_shipping,
-                                mode_shipping: payload.mode_shipping
-                            })
-                        });
-                    } catch(e) {}
-                } else {
-                    const errData = await saveRes.json().catch(() => ({}));
-                    throw new Error(errData.detail || 'Error al guardar la categoría.');
-                }
+            // Local fallback for offline/localStorage mock
+            const mockKey = `mock_meli_attrs_${productId}`;
+            const mockData = localStorage.getItem(mockKey);
+            let meliAttrs = {};
+            if (mockData) {
+                try {
+                    meliAttrs = JSON.parse(mockData);
+                } catch(e) {}
             }
-            
-            // Disparar evento de pre-publish simplificado
+            meliAttrs.category_id = categoryId;
+            localStorage.setItem(mockKey, JSON.stringify(meliAttrs));
+
+            // Disparar evento de pre-publish pasando la category_id
             const prePubRes = await authFetch(`/api/products/${productId}/pre-publish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
+                body: JSON.stringify({
+                    category_id: categoryId
+                })
             });
             
             if (!prePubRes.ok) {
