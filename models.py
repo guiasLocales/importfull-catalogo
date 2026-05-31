@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Float
+from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Float, JSON
 from datetime import datetime
 from db_conn import Base
 
@@ -170,3 +170,35 @@ class Performance(Base):
     wording_title = Column(Text)
     wording_label = Column(String(255))
     wording_link = Column(Text)
+
+class MercadoLibreAttribute(Base):
+    __tablename__ = "attributes"
+    __table_args__ = {"schema": "mercadolibre"}
+
+    id = Column(String(36), primary_key=True)
+    item_id = Column(Integer, index=True)
+    category_id = Column(String(50))
+    volume_capacity_required = Column(Integer)
+    volume_capacity = Column(Integer)
+    units_per_pack_required = Column(Integer)
+    units_per_pack = Column(Integer)
+    value_added_tax_required = Column(Integer)
+    value_added_tax = Column(Integer)
+    import_duty_required = Column(Integer)
+    import_duty = Column(Integer)
+    empty_gtin_reason_required = Column(Integer)
+    empty_gtin_reason = Column(Integer)
+    warranty_time = Column(String(50))
+    warranty_type = Column(String(50))
+    buying_mode = Column(String(50))
+    condition_type = Column(String(50))
+    currency_id = Column(String(10))
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    not_mapped_attributes = Column(JSON)
+    allowed_options = Column(JSON)
+    local_pick_up = Column(Integer)
+    listing_type_id = Column(String(15))
+    free_shipping = Column(Integer)
+    mode_shipping = Column(String(15))
+    logistic_type = Column(String(20))
+    category_options = Column(JSON)

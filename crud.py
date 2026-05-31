@@ -377,3 +377,32 @@ def update_tn_attributes(db: Session, item_id: int, updates: dict):
 
 def get_tn_product_status(db: Session, attribute_id: int):
     return db.query(TiendaNubeProductStatus).filter(TiendaNubeProductStatus.attribute_id == attribute_id).first()
+
+# --- MercadoLibre Attributes CRUD ---
+import uuid
+from models import MercadoLibreAttribute
+
+def get_meli_attributes(db: Session, item_id: int):
+    return db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
+
+def update_meli_attributes(db: Session, item_id: int, updates: dict):
+    db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
+    if not db_attr:
+        db_attr = MercadoLibreAttribute(
+            id=str(uuid.uuid4()),
+            item_id=item_id,
+            currency_id="ARS",
+            buying_mode="buy_it_now",
+            condition_type="new",
+            local_pick_up=1,
+            logistic_type="drop_off"
+        )
+        db.add(db_attr)
+    
+    for key, value in updates.items():
+        if hasattr(db_attr, key) and key != 'id' and key != 'item_id':
+            setattr(db_attr, key, value)
+    
+    db.commit()
+    db.refresh(db_attr)
+    return db_attr

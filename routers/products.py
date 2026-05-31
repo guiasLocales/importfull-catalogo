@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
-from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse
+from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse, MercadoLibreAttributeSchema
 from routers.auth import get_current_user
 import crud
 import httpx
@@ -312,8 +312,8 @@ async def bulk_publish_tienda_nube(request: BulkPublishTNRequest, db: Session = 
 
 
 class PrePublishRequest(BaseModel):
-    prompt: str
-    field: str # 'product_name_meli' or 'description'
+    prompt: Optional[str] = None
+    field: Optional[str] = None # 'product_name_meli' or 'description'
 
 @router.post("/{product_id}/pre-publish")
 def trigger_pre_publish(
@@ -330,12 +330,14 @@ def trigger_pre_publish(
     data = {
         "event_type": "pre-publish",
         "item_id": product_id,
-        "secret": WEBHOOK_SECRET,
-        "data": {
-            "prompt": request.prompt,
-            "field": request.field
-        }
+        "secret": WEBHOOK_SECRET
     }
+    
+    if request.prompt is not None or request.field is not None:
+        data["data"] = {
+            "prompt": request.prompt or "",
+            "field": request.field or ""
+        }
     
     try:
         print(f"DEBUG: Sending AI pre-publish webhook for item {product_id} (field: {request.field})")
@@ -479,6 +481,31 @@ def get_tienda_nube_status(product_id: int, db: Session = Depends(get_db)):
     if not attrs:
         return None
     return crud.get_tn_product_status(db, attrs.id)
+
+@router.get("/{product_id}/mercadolibre-attributes", response_model=MercadoLibreAttributeSchema)
+def get_mercadolibre_attributes(product_id: int, db: Session = Depends(get_db)):
+    """Fetch extra attributes for MercadoLibre (Category, condition, tax, etc.)"""
+    attrs = crud.get_meli_attributes(db, product_id)
+    if not attrs:
+        raise HTTPException(status_code=404, detail="MercadoLibre attributes not found for this product")
+    return attrs
+
+@router.put("/{product_id}/mercadolibre-attributes", response_model=MercadoLibreAttributeSchema)
+def update_mercadolibre_attributes(
+    product_id: int,
+    request: MercadoLibreAttributeSchema,
+    db: Session = Depends(get_db)
+):
+    """Update or create extra attributes for MercadoLibre"""
+    updates = request.dict(exclude_unset=True)
+    updates['item_id'] = product_id
+    try:
+        attrs = crud.update_meli_attributes(db, product_id, updates)
+        return attrs
+    except Exception as e:
+        print(f"Error updating ML attributes: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
 
 @router.get("/drive-image/{file_id}")
 def get_drive_image(file_id: str, size: str = "thumbnail"):

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from decimal import Decimal
 
@@ -271,6 +271,37 @@ class TiendaNubeStatusResponse(BaseModel):
     variant_id: Optional[int] = None
     response: Optional[str] = None
     updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class MercadoLibreAttributeSchema(BaseModel):
+    id: Optional[str] = None
+    item_id: Optional[int] = None
+    category_id: Optional[str] = None
+    volume_capacity_required: Optional[int] = None
+    volume_capacity: Optional[int] = None
+    units_per_pack_required: Optional[int] = None
+    units_per_pack: Optional[int] = None
+    value_added_tax_required: Optional[int] = None
+    value_added_tax: Optional[int] = None
+    import_duty_required: Optional[int] = None
+    import_duty: Optional[int] = None
+    empty_gtin_reason_required: Optional[int] = None
+    empty_gtin_reason: Optional[int] = None
+    warranty_time: Optional[str] = None
+    warranty_type: Optional[str] = None
+    buying_mode: Optional[str] = None
+    condition_type: Optional[str] = None
+    currency_id: Optional[str] = None
+    not_mapped_attributes: Optional[Any] = None
+    allowed_options: Optional[Any] = None
+    local_pick_up: Optional[int] = None
+    listing_type_id: Optional[str] = None
+    free_shipping: Optional[int] = None
+    mode_shipping: Optional[str] = None
+    logistic_type: Optional[str] = None
+    category_options: Optional[Any] = None
 
     class Config:
         from_attributes = True

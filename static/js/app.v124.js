@@ -1087,10 +1087,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     empty_gtin_reason_required: false,
                     not_mapped_attributes: null,
                     allowed_options: null,
-                    category_options: [
-                        {"domain_id": "MLA-DRINKING_GLASS_WASHERS", "category_id": "MLA455560", "domain_name": "Lavadores de vasos", "category_name": "Lava Vasos y Copas"},
-                        {"domain_id": "DRINK_GLASS", "category_id": "MLA455565", "domain_name": "Vaso", "category_name": "Vasos"}
-                    ],
+                    category_options: null,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1124,13 +1121,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error("Error parsing category_options:", e);
                 }
             }
-            // Fallback mock for testing in case categoryOptions is empty or null
-            if (!categoryOptions || !Array.isArray(categoryOptions) || categoryOptions.length === 0) {
-                categoryOptions = [
-                    {"domain_id": "MLA-DRINKING_GLASS_WASHERS", "category_id": "MLA455560", "domain_name": "Lavadores de vasos", "category_name": "Lava Vasos y Copas"},
-                    {"domain_id": "DRINK_GLASS", "category_id": "MLA455565", "domain_name": "Vaso", "category_name": "Vasos"}
-                ];
-            }
+
 
             const html = `
             <div class="is-product-detail max-w-5xl flex flex-col md:flex-row h-full min-h-0 relative w-full">
@@ -2378,13 +2369,32 @@ document.addEventListener('DOMContentLoaded', function () {
             meliAttrs.category_id = categoryId;
             localStorage.setItem(mockKey, JSON.stringify(meliAttrs));
 
-            // Disparar evento de pre-publish pasando la category_id
-            const prePubRes = await authFetch(`/api/products/${productId}/pre-publish`, {
-                method: 'POST',
+            // 1. Guardar la category_id en la tabla attributes de mercadolibre
+            const saveRes = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     category_id: categoryId
                 })
+            });
+
+            if (!saveRes.ok) {
+                if (saveRes.status !== 404) {
+                    const text = await saveRes.text();
+                    let errorMsg = 'Error al guardar la categoría';
+                    try {
+                        const errData = JSON.parse(text);
+                        if (errData.detail) errorMsg = errData.detail;
+                    } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+            }
+
+            // 2. Disparar evento de pre-publish sin data (webhook simplificado)
+            const prePubRes = await authFetch(`/api/products/${productId}/pre-publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
             });
             
             if (!prePubRes.ok) {
@@ -2397,7 +2407,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMsg);
             }
             
-            showAlert('Categoría Aplicada', 'Categoría guardada y evento de Pre-Publish ejecutado con éxito en segundo plano.', 'success');
+            showAlert('Categoría Aplicada', 'Categoría guardada y evento de Pre-Publish ejecutado con éxito.', 'success');
             
         } catch(error) {
             console.error('Error changing category options:', error);
