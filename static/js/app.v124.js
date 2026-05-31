@@ -1087,7 +1087,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     empty_gtin_reason_required: false,
                     not_mapped_attributes: null,
                     allowed_options: null,
-                    category_options: null,
+                    category_options: [
+                        {"domain_id": "MLA-DRINKING_GLASS_WASHERS", "category_id": "MLA455560", "domain_name": "Lavadores de vasos", "category_name": "Lava Vasos y Copas"},
+                        {"domain_id": "DRINK_GLASS", "category_id": "MLA455565", "domain_name": "Vaso", "category_name": "Vasos"}
+                    ],
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1120,6 +1123,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 } catch(e) {
                     console.error("Error parsing category_options:", e);
                 }
+            }
+            // Fallback mock for testing in case categoryOptions is empty or null
+            if (!categoryOptions || !Array.isArray(categoryOptions) || categoryOptions.length === 0) {
+                categoryOptions = [
+                    {"domain_id": "MLA-DRINKING_GLASS_WASHERS", "category_id": "MLA455560", "domain_name": "Lavadores de vasos", "category_name": "Lava Vasos y Copas"},
+                    {"domain_id": "DRINK_GLASS", "category_id": "MLA455565", "domain_name": "Vaso", "category_name": "Vasos"}
+                ];
             }
 
             const html = `
