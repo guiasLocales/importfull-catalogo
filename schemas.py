@@ -302,6 +302,8 @@ class MercadoLibreAttributeSchema(BaseModel):
     mode_shipping: Optional[str] = None
     logistic_type: Optional[str] = None
     category_options: Optional[Any] = None
+    ink_color_required: Optional[int] = None
+    ink_color: Optional[str] = None
 
     class Config:
         from_attributes = True

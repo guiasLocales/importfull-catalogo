@@ -202,3 +202,5 @@ class MercadoLibreAttribute(Base):
     mode_shipping = Column(String(15))
     logistic_type = Column(String(20))
     category_options = Column(JSON)
+    ink_color_required = Column(Integer)
+    ink_color = Column(String(25))

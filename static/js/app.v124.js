@@ -1088,6 +1088,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     not_mapped_attributes: null,
                     allowed_options: null,
                     category_options: null,
+                    ink_color: '',
+                    ink_color_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1836,6 +1838,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                        placeholder="Ej: 1">
                             </div>
 
+                            <!-- Color de Tinta -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="droplet" class="h-3.5 w-3.5"></i> Color de Tinta
+                                    ${requiredBadge(meliAttrs.ink_color_required)}
+                                </label>
+                                <input type="text" id="attr_ink_color" value="${meliAttrs.ink_color || ''}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: azul, negro, rojo">
+                            </div>
+
                             <!-- Motivo GTIN Vacío -->
                             <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -2273,6 +2286,7 @@ document.addEventListener('DOMContentLoaded', function () {
             value_added_tax: document.getElementById('attr_value_added_tax').value,
             import_duty: document.getElementById('attr_import_duty').value,
             empty_gtin_reason: document.getElementById('attr_empty_gtin_reason').value,
+            ink_color: document.getElementById('attr_ink_color').value,
             listing_type_id: document.getElementById('edit_listing_type_id').value,
             free_shipping: document.getElementById('edit_free_shipping').checked ? 1 : 0,
             mode_shipping: document.getElementById('edit_mode_shipping').value
