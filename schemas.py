@@ -304,6 +304,36 @@ class MercadoLibreAttributeSchema(BaseModel):
     category_options: Optional[Any] = None
     ink_color_required: Optional[int] = None
     ink_color: Optional[str] = None
+    pot_type_required: Optional[int] = None
+    pot_type: Optional[str] = None
+    product_type_required: Optional[int] = None
+    product_type: Optional[str] = None
+    output_connectors_required: Optional[int] = None
+    output_connectors: Optional[str] = None
+    surveillance_camera_type_required: Optional[int] = None
+    surveillance_camera_type: Optional[str] = None
+    camera_locations_required: Optional[int] = None
+    camera_locations: Optional[str] = None
+    cable_and_adapter_type_required: Optional[int] = None
+    cable_and_adapter_type: Optional[str] = None
+    data_storage_capacity_required: Optional[int] = None
+    data_storage_capacity: Optional[str] = None
+    usb_port_version_required: Optional[int] = None
+    usb_port_version: Optional[str] = None
+    capacity_required: Optional[int] = None
+    capacity: Optional[str] = None
+    power_supply_type_required: Optional[int] = None
+    power_supply_type: Optional[str] = None
+    grading_required: Optional[int] = None
+    grading: Optional[str] = None
+    with_usb_required: Optional[int] = None
+    with_usb: Optional[str] = None
+    size_required: Optional[int] = None
+    color_required: Optional[int] = None
+    gender_required: Optional[int] = None
+    size: Optional[str] = None
+    color: Optional[str] = None
+    gender: Optional[str] = None
 
     class Config:
         from_attributes = True

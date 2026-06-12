@@ -1090,6 +1090,36 @@ document.addEventListener('DOMContentLoaded', function () {
                     category_options: null,
                     ink_color: '',
                     ink_color_required: false,
+                    pot_type: '',
+                    pot_type_required: false,
+                    product_type: '',
+                    product_type_required: false,
+                    output_connectors: '',
+                    output_connectors_required: false,
+                    surveillance_camera_type: '',
+                    surveillance_camera_type_required: false,
+                    camera_locations: '',
+                    camera_locations_required: false,
+                    cable_and_adapter_type: '',
+                    cable_and_adapter_type_required: false,
+                    data_storage_capacity: '',
+                    data_storage_capacity_required: false,
+                    usb_port_version: '',
+                    usb_port_version_required: false,
+                    capacity: '',
+                    capacity_required: false,
+                    power_supply_type: '',
+                    power_supply_type_required: false,
+                    grading: '',
+                    grading_required: false,
+                    with_usb: '',
+                    with_usb_required: false,
+                    size: '',
+                    size_required: false,
+                    color: '',
+                    color_required: false,
+                    gender: '',
+                    gender_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1121,6 +1151,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     categoryOptions = typeof meliAttrs.category_options === 'string' ? JSON.parse(meliAttrs.category_options) : meliAttrs.category_options;
                 } catch(e) {
                     console.error("Error parsing category_options:", e);
+                }
+            }
+
+            // Parse allowed_options if present
+            let allowedOptions = null;
+            if (meliAttrs && meliAttrs.allowed_options) {
+                try {
+                    allowedOptions = typeof meliAttrs.allowed_options === 'string' ? JSON.parse(meliAttrs.allowed_options) : meliAttrs.allowed_options;
+                } catch(e) {
+                    console.error("Error parsing allowed_options:", e);
                 }
             }
 
@@ -1849,6 +1889,226 @@ document.addEventListener('DOMContentLoaded', function () {
                                        placeholder="Ej: azul, negro, rojo">
                             </div>
 
+                            <!-- Tipo de Olla -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Tipo de Olla
+                                    ${requiredBadge(meliAttrs.pot_type_required)}
+                                </label>
+                                <input type="text" id="attr_pot_type" value="${meliAttrs.pot_type || ''}" maxlength="100"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: cacerola, flanero">
+                            </div>
+
+                            <!-- Tipo de Producto -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Tipo de Producto
+                                    ${requiredBadge(meliAttrs.product_type_required)}
+                                </label>
+                                ${(() => {
+                                    let ptOptions = (allowedOptions && allowedOptions.product_type) ? allowedOptions.product_type : null;
+                                    if (typeof ptOptions === 'string') {
+                                        try { ptOptions = JSON.parse(ptOptions); } catch(e) {}
+                                    }
+                                    if (ptOptions && Array.isArray(ptOptions) && ptOptions.length > 0) {
+                                        return `
+                                            <select id="attr_product_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                                <option value="">Seleccionar...</option>
+                                                ${ptOptions.map(opt => {
+                                                    const val = typeof opt === 'object' ? (opt.name || opt.id || '') : opt;
+                                                    return `<option value="${val}" ${meliAttrs.product_type === val ? 'selected' : ''}>${val}</option>`;
+                                                }).join('')}
+                                            </select>
+                                        `;
+                                    } else {
+                                        return `
+                                            <input type="text" id="attr_product_type" value="${meliAttrs.product_type || ''}" maxlength="100"
+                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                                   placeholder="Ej: Tipo de producto">
+                                        `;
+                                    }
+                                })()}
+                            </div>
+
+                            <!-- Puertas de Salida -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Puertas de Salida
+                                    ${requiredBadge(meliAttrs.output_connectors_required)}
+                                </label>
+                                <input type="text" id="attr_output_connectors" value="${meliAttrs.output_connectors || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400 mb-2"
+                                       placeholder="Ej: XLR, USB-C (se pueden combinar)">
+                                <div class="flex flex-wrap gap-1.5 mt-1">
+                                    ${(() => {
+                                        const connectorsList = ["Jack 2.5 mm", "Jack 3.5 mm", "Jack 6.3 mm", "Micro-USB", "Mini-USB", "Mini-XLR", "USB-C", "XLR"];
+                                        const currentConnectors = meliAttrs.output_connectors ? meliAttrs.output_connectors.split(',').map(s => s.trim()) : [];
+                                        return connectorsList.map(opt => {
+                                            const active = currentConnectors.includes(opt);
+                                            return `<span onclick="window.toggleConnector(this, '${opt}')" 
+                                                          class="cursor-pointer px-2 py-0.5 text-[11px] font-medium border rounded-md transition-all select-none hover:scale-105 active:scale-95 ${active ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}">
+                                                        ${opt}
+                                                    </span>`;
+                                        }).join('');
+                                    })()}
+                                </div>
+                            </div>
+
+                            <!-- Tipo de Cámara de Seguridad -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="camera" class="h-3.5 w-3.5"></i> Tipo de Cámara
+                                    ${requiredBadge(meliAttrs.surveillance_camera_type_required)}
+                                </label>
+                                <input type="text" id="attr_surveillance_camera_type" value="${meliAttrs.surveillance_camera_type || ''}" maxlength="100"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Domo, IP, Infrarroja">
+                            </div>
+
+                            <!-- Disposición de la Cámara de Seguridad -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Disposición de la Cámara
+                                    ${requiredBadge(meliAttrs.camera_locations_required)}
+                                </label>
+                                <select id="attr_camera_locations"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Interior" ${meliAttrs.camera_locations === 'Interior' ? 'selected' : ''}>Interior</option>
+                                    <option value="Exterior" ${meliAttrs.camera_locations === 'Exterior' ? 'selected' : ''}>Exterior</option>
+                                    <option value="Interior/Exterior" ${meliAttrs.camera_locations === 'Interior/Exterior' ? 'selected' : ''}>Interior/Exterior</option>
+                                </select>
+                            </div>
+
+                            <!-- Cable y Tipo de Adaptador -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Cable / Tipo de Adaptador
+                                    ${requiredBadge(meliAttrs.cable_and_adapter_type_required)}
+                                </label>
+                                <input type="text" id="attr_cable_and_adapter_type" value="${meliAttrs.cable_and_adapter_type || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: RCA, VGA, XLR, HDMI, DisplayPort, USB-C">
+                            </div>
+
+                            <!-- Capacidad de Almacenamiento Digital -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i> Almacenamiento Digital
+                                    ${requiredBadge(meliAttrs.data_storage_capacity_required)}
+                                </label>
+                                <input type="text" id="attr_data_storage_capacity" value="${meliAttrs.data_storage_capacity || ''}" maxlength="25"
+                                       oninput="window.validateCapacity(this, 'data_storage_capacity_warning')"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 25 GB, 5 TB">
+                                <span id="data_storage_capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
+                            </div>
+
+                            <!-- Tipo de Puerto USB -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="usb" class="h-3.5 w-3.5"></i> Tipo de Puerto USB
+                                    ${requiredBadge(meliAttrs.usb_port_version_required)}
+                                </label>
+                                <input type="text" id="attr_usb_port_version" value="${meliAttrs.usb_port_version || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 3.1, 3.1 Gen 1, 3.1 Gen 2">
+                            </div>
+
+                            <!-- Capacidad de Almacenamiento Digital #2 -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i> Capacidad (#2)
+                                    ${requiredBadge(meliAttrs.capacity_required)}
+                                </label>
+                                <input type="text" id="attr_capacity" value="${meliAttrs.capacity || ''}" maxlength="25"
+                                       oninput="window.validateCapacity(this, 'capacity_warning')"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 25 GB, 5 TB">
+                                <span id="capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
+                            </div>
+
+                            <!-- Tipo de Alimentación -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="zap" class="h-3.5 w-3.5"></i> Tipo de Alimentación
+                                    ${requiredBadge(meliAttrs.power_supply_type_required)}
+                                </label>
+                                <input type="text" id="attr_power_supply_type" value="${meliAttrs.power_supply_type || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Bateria, Corriente domestica, Energia solar">
+                            </div>
+
+                            <!-- Clasificación -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="award" class="h-3.5 w-3.5"></i> Clasificación
+                                    ${requiredBadge(meliAttrs.grading_required)}
+                                </label>
+                                <select id="attr_grading"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Excelente" ${meliAttrs.grading === 'Excelente' ? 'selected' : ''}>Excelente</option>
+                                    <option value="Bueno" ${meliAttrs.grading === 'Bueno' ? 'selected' : ''}>Bueno</option>
+                                    <option value="Aceptable" ${meliAttrs.grading === 'Aceptable' ? 'selected' : ''}>Aceptable</option>
+                                </select>
+                            </div>
+
+                            <!-- Posee USB -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="usb" class="h-3.5 w-3.5"></i> Posee USB
+                                    ${requiredBadge(meliAttrs.with_usb_required)}
+                                </label>
+                                <select id="attr_with_usb"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Si" ${meliAttrs.with_usb === 'Si' ? 'selected' : ''}>Si</option>
+                                    <option value="No" ${meliAttrs.with_usb === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+
+                            <!-- Tamaño -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="ruler" class="h-3.5 w-3.5"></i> Tamaño
+                                    ${requiredBadge(meliAttrs.size_required)}
+                                </label>
+                                <input type="text" id="attr_size" value="${meliAttrs.size || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: L, 42, 38">
+                            </div>
+
+                            <!-- Color -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="palette" class="h-3.5 w-3.5"></i> Color
+                                    ${requiredBadge(meliAttrs.color_required)}
+                                </label>
+                                <input type="text" id="attr_color" value="${meliAttrs.color || ''}" maxlength="255"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Rojo, Azul, Verde">
+                            </div>
+
+                            <!-- Género -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="users" class="h-3.5 w-3.5"></i> Género
+                                    ${requiredBadge(meliAttrs.gender_required)}
+                                </label>
+                                <select id="attr_gender"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Mujer" ${meliAttrs.gender === 'Mujer' ? 'selected' : ''}>Mujer</option>
+                                    <option value="Hombre" ${meliAttrs.gender === 'Hombre' ? 'selected' : ''}>Hombre</option>
+                                    <option value="Niñas" ${meliAttrs.gender === 'Niñas' ? 'selected' : ''}>Niñas</option>
+                                    <option value="Niños" ${meliAttrs.gender === 'Niños' ? 'selected' : ''}>Niños</option>
+                                    <option value="Sin género infantil" ${meliAttrs.gender === 'Sin género infantil' ? 'selected' : ''}>Sin género infantil</option>
+                                    <option value="Sin género" ${meliAttrs.gender === 'Sin género' ? 'selected' : ''}>Sin género</option>
+                                </select>
+                            </div>
+
                             <!-- Motivo GTIN Vacío -->
                             <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -2264,6 +2524,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    window.toggleConnector = function(badge, option) {
+        const input = document.getElementById('attr_output_connectors');
+        if (!input) return;
+        let val = input.value.trim();
+        let parts = val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+        if (parts.includes(option)) {
+            parts = parts.filter(p => p !== option);
+            badge.classList.remove('bg-blue-100', 'text-blue-800', 'border-blue-300', 'dark:bg-blue-900/40', 'dark:text-blue-300', 'dark:border-blue-800');
+            badge.classList.add('bg-gray-100', 'text-gray-600', 'border-gray-200', 'dark:bg-gray-800', 'dark:text-gray-400', 'dark:border-gray-700');
+        } else {
+            parts.push(option);
+            badge.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300', 'dark:bg-blue-900/40', 'dark:text-blue-300', 'dark:border-blue-800');
+            badge.classList.remove('bg-gray-100', 'text-gray-600', 'border-gray-200', 'dark:bg-gray-800', 'dark:text-gray-400', 'dark:border-gray-700');
+        }
+        input.value = parts.join(', ');
+    };
+
+    window.validateCapacity = function(inputEl, warningElId) {
+        const val = inputEl.value.trim();
+        const warning = document.getElementById(warningElId);
+        if (!val) {
+            if (warning) warning.classList.add('hidden');
+            return true;
+        }
+        const isValid = /^\d+(\.\d+)?\s*(kb|mb|gb|tb|pb)$/i.test(val);
+        if (!isValid) {
+            if (warning) warning.classList.remove('hidden');
+            return false;
+        } else {
+            if (warning) warning.classList.add('hidden');
+            return true;
+        }
+    };
+
     window.saveMeliAttributes = async function(event, productId) {
         event.preventDefault();
         const btn = event.currentTarget;
@@ -2272,29 +2566,60 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.lucide) lucide.createIcons();
         btn.disabled = true;
 
+        const getVal = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        };
+
         const payload = {
             currency_id: 'ARS',
-            buying_mode: document.getElementById('attr_buying_mode').value,
-            condition_type: document.getElementById('attr_condition_type').value,
-            category_id: document.getElementById('attr_category_id').value,
-            local_pick_up: document.getElementById('attr_local_pick_up').checked,
-            logistic_type: document.getElementById('attr_logistic_type').value,
-            warranty_type: document.getElementById('attr_warranty_type').value,
-            warranty_time: document.getElementById('attr_warranty_time').value,
-            volume_capacity: document.getElementById('attr_volume_capacity').value !== "" ? parseFloat(document.getElementById('attr_volume_capacity').value) : null,
-            units_per_pack: document.getElementById('attr_units_per_pack').value !== "" ? parseInt(document.getElementById('attr_units_per_pack').value) : 1,
-            value_added_tax: document.getElementById('attr_value_added_tax').value,
-            import_duty: document.getElementById('attr_import_duty').value,
-            empty_gtin_reason: document.getElementById('attr_empty_gtin_reason').value,
-            ink_color: document.getElementById('attr_ink_color').value,
-            listing_type_id: document.getElementById('edit_listing_type_id').value,
-            free_shipping: document.getElementById('edit_free_shipping').checked ? 1 : 0,
-            mode_shipping: document.getElementById('edit_mode_shipping').value
+            buying_mode: getVal('attr_buying_mode'),
+            condition_type: getVal('attr_condition_type'),
+            category_id: getVal('attr_category_id'),
+            local_pick_up: document.getElementById('attr_local_pick_up')?.checked ? 1 : 0,
+            logistic_type: getVal('attr_logistic_type'),
+            warranty_type: getVal('attr_warranty_type'),
+            warranty_time: getVal('attr_warranty_time'),
+            volume_capacity: getVal('attr_volume_capacity') !== "" ? parseFloat(getVal('attr_volume_capacity')) : null,
+            units_per_pack: getVal('attr_units_per_pack') !== "" ? parseInt(getVal('attr_units_per_pack')) : 1,
+            value_added_tax: getVal('attr_value_added_tax'),
+            import_duty: getVal('attr_import_duty'),
+            empty_gtin_reason: getVal('attr_empty_gtin_reason'),
+            ink_color: getVal('attr_ink_color'),
+            pot_type: getVal('attr_pot_type'),
+            product_type: getVal('attr_product_type'),
+            output_connectors: getVal('attr_output_connectors'),
+            surveillance_camera_type: getVal('attr_surveillance_camera_type'),
+            camera_locations: getVal('attr_camera_locations'),
+            cable_and_adapter_type: getVal('attr_cable_and_adapter_type'),
+            data_storage_capacity: getVal('attr_data_storage_capacity'),
+            usb_port_version: getVal('attr_usb_port_version'),
+            capacity: getVal('attr_capacity'),
+            power_supply_type: getVal('attr_power_supply_type'),
+            grading: getVal('attr_grading'),
+            with_usb: getVal('attr_with_usb'),
+            size: getVal('attr_size'),
+            color: getVal('attr_color'),
+            gender: getVal('attr_gender'),
+            listing_type_id: getVal('edit_listing_type_id'),
+            free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
+            mode_shipping: getVal('edit_mode_shipping')
         };
 
         // Frontend validation for volume_capacity
         if (payload.volume_capacity !== null && payload.volume_capacity > 1000000) {
             showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
+            btn.innerHTML = originalHTML;
+            if (window.lucide) lucide.createIcons();
+            btn.disabled = false;
+            return;
+        }
+
+        // Validate capacity fields
+        const isDataStorageValid = window.validateCapacity(document.getElementById('attr_data_storage_capacity'), 'data_storage_capacity_warning');
+        const isCapacityValid = window.validateCapacity(document.getElementById('attr_capacity'), 'capacity_warning');
+        if (!isDataStorageValid || !isCapacityValid) {
+            showAlert('Validación', 'Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB) en los campos de capacidad.', 'error');
             btn.innerHTML = originalHTML;
             if (window.lucide) lucide.createIcons();
             btn.disabled = false;
