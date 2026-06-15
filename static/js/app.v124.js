@@ -2571,39 +2571,44 @@ document.addEventListener('DOMContentLoaded', function () {
             return el ? el.value : '';
         };
 
+        const getValOrNull = (id) => {
+            const val = getVal(id).trim();
+            return val === '' ? null : val;
+        };
+
         const payload = {
             currency_id: 'ARS',
-            buying_mode: getVal('attr_buying_mode'),
-            condition_type: getVal('attr_condition_type'),
-            category_id: getVal('attr_category_id'),
+            buying_mode: getValOrNull('attr_buying_mode'),
+            condition_type: getValOrNull('attr_condition_type'),
+            category_id: getValOrNull('attr_category_id'),
             local_pick_up: document.getElementById('attr_local_pick_up')?.checked ? 1 : 0,
-            logistic_type: getVal('attr_logistic_type'),
-            warranty_type: getVal('attr_warranty_type'),
-            warranty_time: getVal('attr_warranty_time'),
+            logistic_type: getValOrNull('attr_logistic_type'),
+            warranty_type: getValOrNull('attr_warranty_type'),
+            warranty_time: getValOrNull('attr_warranty_time'),
             volume_capacity: getVal('attr_volume_capacity') !== "" ? parseFloat(getVal('attr_volume_capacity')) : null,
             units_per_pack: getVal('attr_units_per_pack') !== "" ? parseInt(getVal('attr_units_per_pack')) : 1,
-            value_added_tax: getVal('attr_value_added_tax'),
-            import_duty: getVal('attr_import_duty'),
-            empty_gtin_reason: getVal('attr_empty_gtin_reason'),
-            ink_color: getVal('attr_ink_color'),
-            pot_type: getVal('attr_pot_type'),
-            product_type: getVal('attr_product_type'),
-            output_connectors: getVal('attr_output_connectors'),
-            surveillance_camera_type: getVal('attr_surveillance_camera_type'),
-            camera_locations: getVal('attr_camera_locations'),
-            cable_and_adapter_type: getVal('attr_cable_and_adapter_type'),
-            data_storage_capacity: getVal('attr_data_storage_capacity'),
-            usb_port_version: getVal('attr_usb_port_version'),
-            capacity: getVal('attr_capacity'),
-            power_supply_type: getVal('attr_power_supply_type'),
-            grading: getVal('attr_grading'),
-            with_usb: getVal('attr_with_usb'),
-            size: getVal('attr_size'),
-            color: getVal('attr_color'),
-            gender: getVal('attr_gender'),
-            listing_type_id: getVal('edit_listing_type_id'),
+            value_added_tax: getValOrNull('attr_value_added_tax'),
+            import_duty: getValOrNull('attr_import_duty'),
+            empty_gtin_reason: getValOrNull('attr_empty_gtin_reason'),
+            ink_color: getValOrNull('attr_ink_color'),
+            pot_type: getValOrNull('attr_pot_type'),
+            product_type: getValOrNull('attr_product_type'),
+            output_connectors: getValOrNull('attr_output_connectors'),
+            surveillance_camera_type: getValOrNull('attr_surveillance_camera_type'),
+            camera_locations: getValOrNull('attr_camera_locations'),
+            cable_and_adapter_type: getValOrNull('attr_cable_and_adapter_type'),
+            data_storage_capacity: getValOrNull('attr_data_storage_capacity'),
+            usb_port_version: getValOrNull('attr_usb_port_version'),
+            capacity: getValOrNull('attr_capacity'),
+            power_supply_type: getValOrNull('attr_power_supply_type'),
+            grading: getValOrNull('attr_grading'),
+            with_usb: getValOrNull('attr_with_usb'),
+            size: getValOrNull('attr_size'),
+            color: getValOrNull('attr_color'),
+            gender: getValOrNull('attr_gender'),
+            listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
-            mode_shipping: getVal('edit_mode_shipping')
+            mode_shipping: getValOrNull('edit_mode_shipping')
         };
 
         // Frontend validation for volume_capacity
@@ -2708,12 +2713,11 @@ document.addEventListener('DOMContentLoaded', function () {
             meliAttrs.category_id = categoryId;
             localStorage.setItem(mockKey, JSON.stringify(meliAttrs));
 
-            // 1. Guardar la category_id en la tabla attributes de mercadolibre
             const saveRes = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    category_id: categoryId
+                    category_id: categoryId || null
                 })
             });
 
