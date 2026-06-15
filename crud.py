@@ -401,8 +401,6 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
     
     for key, value in updates.items():
         if hasattr(db_attr, key) and key != 'id' and key != 'item_id':
-            if isinstance(value, str) and value.strip() == "":
-                value = None
             setattr(db_attr, key, value)
     
     db.commit()
