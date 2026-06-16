@@ -1907,7 +1907,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.product_type_required)}
                                 </label>
                                 ${(() => {
-                                    let ptOptions = (allowedOptions && allowedOptions.product_type) ? allowedOptions.product_type : null;
+                                    let ptOptions = null;
+                                    if (allowedOptions) {
+                                        if (allowedOptions.product_type) {
+                                            ptOptions = allowedOptions.product_type;
+                                        } else if (allowedOptions.settings && allowedOptions.settings.required_attributes) {
+                                            const reqAttrs = allowedOptions.settings.required_attributes;
+                                            const prodTypeAttr = reqAttrs.PRODUCT_TYPE || reqAttrs.product_type;
+                                            if (prodTypeAttr && prodTypeAttr.values) {
+                                                ptOptions = prodTypeAttr.values;
+                                            }
+                                        }
+                                    }
                                     if (typeof ptOptions === 'string') {
                                         try { ptOptions = JSON.parse(ptOptions); } catch(e) {}
                                     }
