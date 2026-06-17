@@ -1923,15 +1923,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                     if (ptOptions && Array.isArray(ptOptions) && ptOptions.length > 0) {
                                         return `
-                                            <input type="text" id="attr_product_type" list="product_type_options" value="${meliAttrs.product_type || ''}" maxlength="100"
-                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                                   placeholder="Ej: Tipo de producto">
-                                            <datalist id="product_type_options">
+                                            <select id="attr_product_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                                <option value="">Seleccionar...</option>
                                                 ${ptOptions.map(opt => {
                                                     const val = typeof opt === 'object' ? (opt.name || opt.id || '') : opt;
-                                                    return `<option value="${val}"></option>`;
+                                                    return `<option value="${val}" ${meliAttrs.product_type === val ? 'selected' : ''}>${val}</option>`;
                                                 }).join('')}
-                                            </datalist>
+                                            </select>
                                         `;
                                     } else {
                                         return `
@@ -2388,6 +2386,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // Toggle publish from detail view and refresh the modal
     // Toggle publish from detail view and refresh the modal
     window.togglePublishFromDetail = async (productId, publish) => {
+        // Automatically save the form attributes first before publishing
+        if (publish) {
+            const saveSuccess = await window.saveMeliAttributes(null, productId);
+            if (!saveSuccess) {
+                return;
+            }
+        }
+
         const loadingText = publish ? 'Publicando...' : 'Pausando...';
 
         const button = event?.target?.closest('button');
@@ -2446,6 +2452,14 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.disabled = true;
 
         try {
+            // Automatically save the form attributes first before notifying
+            const saveSuccess = await window.saveMeliAttributes(null, productId);
+            if (!saveSuccess) {
+                if (icon) icon.classList.remove('animate-spin');
+                btn.disabled = false;
+                return;
+            }
+
             const response = await authFetch(`/api/products/${productId}/notify`, {
                 method: 'POST'
             });
@@ -2571,12 +2585,14 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.saveMeliAttributes = async function(event, productId) {
-        event.preventDefault();
-        const btn = event.currentTarget;
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-white"></i> Guardando...';
-        if (window.lucide) lucide.createIcons();
-        btn.disabled = true;
+        if (event) event.preventDefault();
+        const btn = event ? event.currentTarget : null;
+        const originalHTML = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-white"></i> Guardando...';
+            if (window.lucide) lucide.createIcons();
+            btn.disabled = true;
+        }
 
         const getVal = (id) => {
             const el = document.getElementById(id);
@@ -2693,7 +2709,7 @@ document.addEventListener('DOMContentLoaded', function () {
                          const currentProduct = state.products[currentDetailIndex];
                          if (currentProduct) refreshProductDetail(currentProduct.id);
                     }
-                    return;
+                    return true;
                 }
                 const errData = await response.json().catch(() => ({}));
                 throw new Error(errData.detail || 'Error al guardar los atributos');
@@ -2706,13 +2722,17 @@ document.addEventListener('DOMContentLoaded', function () {
                  const currentProduct = state.products[currentDetailIndex];
                  if (currentProduct) refreshProductDetail(currentProduct.id);
             }
+            return true;
         } catch (error) {
             console.error('Error saving attributes:', error);
             showAlert('Error', error.message, 'error');
+            return false;
         } finally {
-            btn.innerHTML = originalHTML;
-            if (window.lucide) lucide.createIcons();
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+                btn.disabled = false;
+            }
         }
     };
 
