@@ -46,8 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentView: 'inventory'
     };
 
-
-    // DOM Elements
+    let currentMeliAttrs = null;
     const elements = {
         container: document.getElementById('productsContainer'),
         loading: document.getElementById('loadingOverlay'),
@@ -1125,7 +1124,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     mode_shipping: product.mode_shipping || 'me1'
                 };
             }
-            
+
+            currentMeliAttrs = meliAttrs;
+
             // Try to fetch automated ML costs
             let meliCosts = null;
             if (product.product_code) {
@@ -2143,6 +2144,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             ${formatNotMappedAttributes(meliAttrs.not_mapped_attributes)}
                         </div>
 
+                    </div>
+
                     <!-- Footer Actions -->
                     <div class="sticky bottom-0 px-6 md:px-8 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
                         <button onclick="closeModal()" 
@@ -2657,7 +2660,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const payload = {};
         for (const key in fullPayload) {
             const newVal = fullPayload[key];
-            const oldVal = meliAttrs ? meliAttrs[key] : undefined;
+            const oldVal = currentMeliAttrs ? currentMeliAttrs[key] : undefined;
             
             // Normalize comparison for null/undefined/empty string
             const isNewFalsy = (newVal === null || newVal === undefined || newVal === "");
@@ -2759,10 +2762,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     } catch(e) {}
 
-                    // Update local meliAttrs
-                    if (meliAttrs) {
+                    // Update local currentMeliAttrs
+                    if (currentMeliAttrs) {
                         for (const key in payload) {
-                            meliAttrs[key] = payload[key];
+                            currentMeliAttrs[key] = payload[key];
                         }
                     }
 
@@ -2789,10 +2792,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }, 2000);
             }
 
-            // Update local meliAttrs
-            if (meliAttrs) {
+            // Update local currentMeliAttrs
+            if (currentMeliAttrs) {
                 for (const key in payload) {
-                    meliAttrs[key] = payload[key];
+                    currentMeliAttrs[key] = payload[key];
                 }
             }
             
