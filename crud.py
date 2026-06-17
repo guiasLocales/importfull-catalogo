@@ -386,6 +386,12 @@ def get_meli_attributes(db: Session, item_id: int):
     return db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
 
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
+    # Sanitize warranty_type to avoid check constraint violations in DB (allow only exact values or NULL)
+    if 'warranty_type' in updates:
+        w_val = updates['warranty_type']
+        if w_val and w_val not in ["Garantía del vendedor", "Garantía de fábrica", "Garantia del vendedor", "Garantia de fabrica"]:
+            updates['warranty_type'] = None
+
     db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
     if not db_attr:
         db_attr = MercadoLibreAttribute(

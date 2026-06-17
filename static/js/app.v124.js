@@ -1838,9 +1838,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </label>
                                 <select id="attr_warranty_type"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="Garantía del vendedor" ${meliAttrs.warranty_type === 'Garantía del vendedor' ? 'selected' : ''}>Garantía del vendedor</option>
+                                    <option value="Garantía del vendedor" ${(!meliAttrs.warranty_type || meliAttrs.warranty_type !== 'Garantía de fábrica') ? 'selected' : ''}>Garantía del vendedor</option>
                                     <option value="Garantía de fábrica" ${meliAttrs.warranty_type === 'Garantía de fábrica' ? 'selected' : ''}>Garantía de fábrica</option>
-                                    <option value="Sin garantía" ${meliAttrs.warranty_type === 'Sin garantía' ? 'selected' : ''}>Sin garantía</option>
                                 </select>
                             </div>
 
