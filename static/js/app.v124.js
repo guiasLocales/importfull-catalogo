@@ -1923,13 +1923,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                     if (ptOptions && Array.isArray(ptOptions) && ptOptions.length > 0) {
                                         return `
-                                            <select id="attr_product_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                                <option value="">Seleccionar...</option>
+                                            <input type="text" id="attr_product_type" list="product_type_options" value="${meliAttrs.product_type || ''}" maxlength="100"
+                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                                   placeholder="Ej: Tipo de producto">
+                                            <datalist id="product_type_options">
                                                 ${ptOptions.map(opt => {
                                                     const val = typeof opt === 'object' ? (opt.name || opt.id || '') : opt;
-                                                    return `<option value="${val}" ${meliAttrs.product_type === val ? 'selected' : ''}>${val}</option>`;
+                                                    return `<option value="${val}"></option>`;
                                                 }).join('')}
-                                            </select>
+                                            </datalist>
                                         `;
                                     } else {
                                         return `
@@ -2586,7 +2588,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return val === '' ? null : val;
         };
 
-        const payload = {
+        const fullPayload = {
             currency_id: 'ARS',
             buying_mode: getValOrNull('attr_buying_mode'),
             condition_type: getValOrNull('attr_condition_type'),
@@ -2621,8 +2623,27 @@ document.addEventListener('DOMContentLoaded', function () {
             mode_shipping: getValOrNull('edit_mode_shipping')
         };
 
+        const payload = {};
+        for (const key in fullPayload) {
+            const newVal = fullPayload[key];
+            const oldVal = meliAttrs ? meliAttrs[key] : undefined;
+            
+            // Normalize comparison for null/undefined/empty string
+            const isNewFalsy = (newVal === null || newVal === undefined || newVal === "");
+            const isOldFalsy = (oldVal === null || oldVal === undefined || oldVal === "");
+            
+            if (isNewFalsy && isOldFalsy) {
+                continue;
+            }
+            
+            // Loose comparison to handle numbers vs strings
+            if (String(newVal) !== String(oldVal)) {
+                payload[key] = newVal;
+            }
+        }
+
         // Frontend validation for volume_capacity
-        if (payload.volume_capacity !== null && payload.volume_capacity > 1000000) {
+        if (fullPayload.volume_capacity !== null && fullPayload.volume_capacity > 1000000) {
             showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
             btn.innerHTML = originalHTML;
             if (window.lucide) lucide.createIcons();
