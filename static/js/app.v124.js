@@ -1670,7 +1670,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <!-- Listing Type -->
                                 <div>
                                     <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Publicación</label>
-                                    <select id="edit_listing_type_id"
+                                    <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
                                             class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
                                         <option value="gold_special" ${meliAttrs.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
                                         <option value="gold_pro" ${meliAttrs.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
@@ -1679,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <!-- Shipping Mode -->
                                 <div>
                                     <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Logística</label>
-                                    <select id="edit_mode_shipping"
+                                    <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
                                             class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
                                         <option value="me2" ${meliAttrs.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
                                         <option value="me1" ${meliAttrs.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
@@ -1689,8 +1689,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div>
                                     <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Promoción</label>
                                     <label class="flex items-center gap-2 cursor-pointer px-3 w-full h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm hover:border-blue-300 transition-all">
-                                        <input type="checkbox" id="edit_free_shipping" ${meliAttrs.free_shipping === 1 ? 'checked' : ''}
-                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-650 dark:bg-gray-600">
+                                        <input type="checkbox" id="edit_free_shipping" ${meliAttrs.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
+                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-655 dark:bg-gray-600">
                                         <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Envío Gratis</span>
                                     </label>
                                 </div>
@@ -1732,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                            class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
                                            placeholder="ID de Categoría (Seleccionado arriba)">
                                 ` : `
-                                    <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}"
+                                    <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                            placeholder="Ej: MLA1234">
                                 `}
@@ -1743,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                     <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i> Método de Compra
                                 </label>
-                                <select id="attr_buying_mode"
+                                <select id="attr_buying_mode" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="buy_it_now" ${meliAttrs.buying_mode === 'buy_it_now' ? 'selected' : ''}>Comprar ahora (buy_it_now)</option>
                                     <option value="classified" ${meliAttrs.buying_mode === 'classified' ? 'selected' : ''}>Clasificado (classified)</option>
@@ -1755,7 +1755,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                     <i data-lucide="star" class="h-3.5 w-3.5"></i> Condición
                                 </label>
-                                <select id="attr_condition_type"
+                                <select id="attr_condition_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="new" ${meliAttrs.condition_type === 'new' ? 'selected' : ''}>Nuevo</option>
                                     <option value="used" ${meliAttrs.condition_type === 'used' ? 'selected' : ''}>Usado</option>
@@ -1768,7 +1768,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                     <i data-lucide="truck" class="h-3.5 w-3.5"></i> Canal Logístico
                                 </label>
-                                <select id="attr_logistic_type"
+                                <select id="attr_logistic_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="drop_off" ${meliAttrs.logistic_type === 'drop_off' ? 'selected' : ''}>drop_off (Correo tradicional)</option>
                                     <option value="fulfillment" ${meliAttrs.logistic_type === 'fulfillment' ? 'selected' : ''}>fulfillment (Red Full)</option>
@@ -1781,7 +1781,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <!-- Retiro en Local -->
                             <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex items-center">
                                 <label class="flex items-center gap-3 cursor-pointer w-full mt-5 px-3 py-2 bg-white dark:bg-gray-750 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:border-blue-300 transition-all">
-                                    <input type="checkbox" id="attr_local_pick_up" ${meliAttrs.local_pick_up ? 'checked' : ''}
+                                    <input type="checkbox" id="attr_local_pick_up" ${meliAttrs.local_pick_up ? 'checked' : ''} onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                            class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-600">
                                     <span class="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
                                         <i data-lucide="map-pin" class="h-4 w-4 text-gray-500 dark:text-gray-400"></i> Retiro en Local (local_pick_up)
@@ -1795,7 +1795,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="percent" class="h-3.5 w-3.5"></i> IVA
                                     ${requiredBadge(meliAttrs.value_added_tax_required)}
                                 </label>
-                                <select id="attr_value_added_tax"
+                                <select id="attr_value_added_tax" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="48405909" ${meliAttrs.value_added_tax === '48405909' ? 'selected' : ''}>21 % (48405909)</option>
                                     <option value="48405908" ${meliAttrs.value_added_tax === '48405908' ? 'selected' : ''}>10.5 % (48405908)</option>
@@ -1811,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="shield-alert" class="h-3.5 w-3.5"></i> Impuesto Interno
                                     ${requiredBadge(meliAttrs.import_duty_required)}
                                 </label>
-                                <select id="attr_import_duty"
+                                <select id="attr_import_duty" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="49553239" ${meliAttrs.import_duty === '49553239' ? 'selected' : ''}>0 % (49553239)</option>
                                     <option value="49553240" ${meliAttrs.import_duty === '49553240' ? 'selected' : ''}>5 % (49553240)</option>
@@ -1836,7 +1836,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                     <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tipo de Garantía
                                 </label>
-                                <select id="attr_warranty_type"
+                                <select id="attr_warranty_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="Garantía del vendedor" ${(!meliAttrs.warranty_type || meliAttrs.warranty_type !== 'Garantía de fábrica') ? 'selected' : ''}>Garantía del vendedor</option>
                                     <option value="Garantía de fábrica" ${meliAttrs.warranty_type === 'Garantía de fábrica' ? 'selected' : ''}>Garantía de fábrica</option>
@@ -1848,7 +1848,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                     <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tiempo de Garantía
                                 </label>
-                                <input type="text" id="attr_warranty_time" value="${meliAttrs.warranty_time || '30 días'}"
+                                <input type="text" id="attr_warranty_time" value="${meliAttrs.warranty_time || '30 días'}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: 30 días">
                             </div>
@@ -1860,7 +1860,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.volume_capacity_required)}
                                 </label>
                                 <input type="number" id="attr_volume_capacity" value="${meliAttrs.volume_capacity !== null ? meliAttrs.volume_capacity : ''}"
-                                       oninput="window.validateVolumeCapacity(this)"
+                                       oninput="window.validateVolumeCapacity(this); window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
                                        placeholder="En mililitros. Ej: 500">
                                 <span id="volume_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">La capacidad no debe exceder 1,000,000 Ml (1000L).</span>
@@ -1872,7 +1872,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="package" class="h-3.5 w-3.5"></i> Unidades por Pack
                                     ${requiredBadge(meliAttrs.units_per_pack_required)}
                                 </label>
-                                <input type="number" id="attr_units_per_pack" value="${meliAttrs.units_per_pack !== null ? meliAttrs.units_per_pack : 1}"
+                                <input type="number" id="attr_units_per_pack" value="${meliAttrs.units_per_pack !== null ? meliAttrs.units_per_pack : 1}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
                                        placeholder="Ej: 1">
                             </div>
@@ -1883,7 +1883,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="droplet" class="h-3.5 w-3.5"></i> Color de Tinta
                                     ${requiredBadge(meliAttrs.ink_color_required)}
                                 </label>
-                                <input type="text" id="attr_ink_color" value="${meliAttrs.ink_color || ''}"
+                                <input type="text" id="attr_ink_color" value="${meliAttrs.ink_color || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: azul, negro, rojo">
                             </div>
@@ -1894,7 +1894,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="box" class="h-3.5 w-3.5"></i> Tipo de Olla
                                     ${requiredBadge(meliAttrs.pot_type_required)}
                                 </label>
-                                <input type="text" id="attr_pot_type" value="${meliAttrs.pot_type || ''}" maxlength="100"
+                                <input type="text" id="attr_pot_type" value="${meliAttrs.pot_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: cacerola, flanero">
                             </div>
@@ -1923,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     }
                                     if (ptOptions && Array.isArray(ptOptions) && ptOptions.length > 0) {
                                         return `
-                                            <select id="attr_product_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                            <select id="attr_product_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                                 <option value="">Seleccionar...</option>
                                                 ${ptOptions.map(opt => {
                                                     const val = typeof opt === 'object' ? (opt.name || opt.id || '') : opt;
@@ -1933,7 +1933,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         `;
                                     } else {
                                         return `
-                                            <input type="text" id="attr_product_type" value="${meliAttrs.product_type || ''}" maxlength="100"
+                                            <input type="text" id="attr_product_type" value="${meliAttrs.product_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                                    placeholder="Ej: Tipo de producto">
                                         `;
@@ -1947,7 +1947,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="plug" class="h-3.5 w-3.5"></i> Puertas de Salida
                                     ${requiredBadge(meliAttrs.output_connectors_required)}
                                 </label>
-                                <input type="text" id="attr_output_connectors" value="${meliAttrs.output_connectors || ''}" maxlength="255"
+                                <input type="text" id="attr_output_connectors" value="${meliAttrs.output_connectors || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400 mb-2"
                                        placeholder="Ej: XLR, USB-C (se pueden combinar)">
                                 <div class="flex flex-wrap gap-1.5 mt-1">
@@ -1956,7 +1956,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         const currentConnectors = meliAttrs.output_connectors ? meliAttrs.output_connectors.split(',').map(s => s.trim()) : [];
                                         return connectorsList.map(opt => {
                                             const active = currentConnectors.includes(opt);
-                                            return `<span onclick="window.toggleConnector(this, '${opt}')" 
+                                            return `<span onclick="window.toggleConnector(this, '${opt}', ${product.id})" 
                                                           class="cursor-pointer px-2 py-0.5 text-[11px] font-medium border rounded-md transition-all select-none hover:scale-105 active:scale-95 ${active ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}">
                                                         ${opt}
                                                     </span>`;
@@ -1971,7 +1971,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="camera" class="h-3.5 w-3.5"></i> Tipo de Cámara
                                     ${requiredBadge(meliAttrs.surveillance_camera_type_required)}
                                 </label>
-                                <input type="text" id="attr_surveillance_camera_type" value="${meliAttrs.surveillance_camera_type || ''}" maxlength="100"
+                                <input type="text" id="attr_surveillance_camera_type" value="${meliAttrs.surveillance_camera_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: Domo, IP, Infrarroja">
                             </div>
@@ -1982,7 +1982,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Disposición de la Cámara
                                     ${requiredBadge(meliAttrs.camera_locations_required)}
                                 </label>
-                                <select id="attr_camera_locations"
+                                <select id="attr_camera_locations" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="">Seleccionar...</option>
                                     <option value="Interior" ${meliAttrs.camera_locations === 'Interior' ? 'selected' : ''}>Interior</option>
@@ -1997,7 +1997,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="plug" class="h-3.5 w-3.5"></i> Cable / Tipo de Adaptador
                                     ${requiredBadge(meliAttrs.cable_and_adapter_type_required)}
                                 </label>
-                                <input type="text" id="attr_cable_and_adapter_type" value="${meliAttrs.cable_and_adapter_type || ''}" maxlength="255"
+                                <input type="text" id="attr_cable_and_adapter_type" value="${meliAttrs.cable_and_adapter_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: RCA, VGA, XLR, HDMI, DisplayPort, USB-C">
                             </div>
@@ -2009,7 +2009,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.data_storage_capacity_required)}
                                 </label>
                                 <input type="text" id="attr_data_storage_capacity" value="${meliAttrs.data_storage_capacity || ''}" maxlength="25"
-                                       oninput="window.validateCapacity(this, 'data_storage_capacity_warning')"
+                                       oninput="window.validateCapacity(this, 'data_storage_capacity_warning'); window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: 25 GB, 5 TB">
                                 <span id="data_storage_capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
@@ -2021,7 +2021,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="usb" class="h-3.5 w-3.5"></i> Tipo de Puerto USB
                                     ${requiredBadge(meliAttrs.usb_port_version_required)}
                                 </label>
-                                <input type="text" id="attr_usb_port_version" value="${meliAttrs.usb_port_version || ''}" maxlength="255"
+                                <input type="text" id="attr_usb_port_version" value="${meliAttrs.usb_port_version || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: 3.1, 3.1 Gen 1, 3.1 Gen 2">
                             </div>
@@ -2033,7 +2033,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.capacity_required)}
                                 </label>
                                 <input type="text" id="attr_capacity" value="${meliAttrs.capacity || ''}" maxlength="25"
-                                       oninput="window.validateCapacity(this, 'capacity_warning')"
+                                       oninput="window.validateCapacity(this, 'capacity_warning'); window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: 25 GB, 5 TB">
                                 <span id="capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
@@ -2045,7 +2045,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="zap" class="h-3.5 w-3.5"></i> Tipo de Alimentación
                                     ${requiredBadge(meliAttrs.power_supply_type_required)}
                                 </label>
-                                <input type="text" id="attr_power_supply_type" value="${meliAttrs.power_supply_type || ''}" maxlength="255"
+                                <input type="text" id="attr_power_supply_type" value="${meliAttrs.power_supply_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: Bateria, Corriente domestica, Energia solar">
                             </div>
@@ -2056,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="award" class="h-3.5 w-3.5"></i> Clasificación
                                     ${requiredBadge(meliAttrs.grading_required)}
                                 </label>
-                                <select id="attr_grading"
+                                <select id="attr_grading" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="">Seleccionar...</option>
                                     <option value="Excelente" ${meliAttrs.grading === 'Excelente' ? 'selected' : ''}>Excelente</option>
@@ -2071,7 +2071,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="usb" class="h-3.5 w-3.5"></i> Posee USB
                                     ${requiredBadge(meliAttrs.with_usb_required)}
                                 </label>
-                                <select id="attr_with_usb"
+                                <select id="attr_with_usb" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="">Seleccionar...</option>
                                     <option value="Si" ${meliAttrs.with_usb === 'Si' ? 'selected' : ''}>Si</option>
@@ -2085,7 +2085,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="ruler" class="h-3.5 w-3.5"></i> Tamaño
                                     ${requiredBadge(meliAttrs.size_required)}
                                 </label>
-                                <input type="text" id="attr_size" value="${meliAttrs.size || ''}" maxlength="255"
+                                <input type="text" id="attr_size" value="${meliAttrs.size || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: L, 42, 38">
                             </div>
@@ -2096,7 +2096,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="palette" class="h-3.5 w-3.5"></i> Color
                                     ${requiredBadge(meliAttrs.color_required)}
                                 </label>
-                                <input type="text" id="attr_color" value="${meliAttrs.color || ''}" maxlength="255"
+                                <input type="text" id="attr_color" value="${meliAttrs.color || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: Rojo, Azul, Verde">
                             </div>
@@ -2107,7 +2107,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="users" class="h-3.5 w-3.5"></i> Género
                                     ${requiredBadge(meliAttrs.gender_required)}
                                 </label>
-                                <select id="attr_gender"
+                                <select id="attr_gender" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="">Seleccionar...</option>
                                     <option value="Mujer" ${meliAttrs.gender === 'Mujer' ? 'selected' : ''}>Mujer</option>
@@ -2125,7 +2125,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i data-lucide="barcode" class="h-3.5 w-3.5"></i> Motivo GTIN Vacío
                                     ${requiredBadge(meliAttrs.empty_gtin_reason_required)}
                                 </label>
-                                <select id="attr_empty_gtin_reason"
+                                <select id="attr_empty_gtin_reason" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
                                     <option value="17055160" ${meliAttrs.empty_gtin_reason === '17055160' ? 'selected' : ''}>El producto no tiene código registrado (17055160)</option>
                                     <option value="17055158" ${meliAttrs.empty_gtin_reason === '17055158' ? 'selected' : ''}>Pieza artesanal (17055158)</option>
@@ -2142,16 +2142,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             </label>
                             ${formatNotMappedAttributes(meliAttrs.not_mapped_attributes)}
                         </div>
-
-                        <!-- Guardar Button -->
-                        <div class="pt-4 border-t border-gray-100 dark:border-gray-800/60">
-                            <button onclick="window.saveMeliAttributes(event, ${product.id})" 
-                                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                                <i data-lucide="save" class="h-4 w-4"></i> Guardar Atributos Meli
-                            </button>
-                        </div>
-
-                    </div>
 
                     <!-- Footer Actions -->
                     <div class="sticky bottom-0 px-6 md:px-8 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 z-10 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)]">
@@ -2550,7 +2540,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.toggleConnector = function(badge, option) {
+    window.toggleConnector = function(badge, option, productId) {
         const input = document.getElementById('attr_output_connectors');
         if (!input) return;
         let val = input.value.trim();
@@ -2565,6 +2555,9 @@ document.addEventListener('DOMContentLoaded', function () {
             badge.classList.remove('bg-gray-100', 'text-gray-600', 'border-gray-200', 'dark:bg-gray-800', 'dark:text-gray-400', 'dark:border-gray-700');
         }
         input.value = parts.join(', ');
+        if (productId) {
+            window.triggerMeliAttributesAutoSave(productId);
+        }
     };
 
     window.validateCapacity = function(inputEl, warningElId) {
@@ -2584,7 +2577,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.saveMeliAttributes = async function(event, productId) {
+    const debouncedMeliAttributesSave = (productId) => {
+        if (window._meliAutoSaveTimer) clearTimeout(window._meliAutoSaveTimer);
+
+        const statusEl = document.getElementById('auto-save-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="text-gray-400 italic text-xs">Cambios pendientes...</span>';
+        }
+
+        window._meliAutoSaveTimer = setTimeout(async () => {
+            await window.saveMeliAttributes(null, productId, true);
+        }, 800);
+    };
+
+    window.triggerMeliAttributesAutoSave = (productId) => {
+        debouncedMeliAttributesSave(productId);
+    };
+
+    window.saveMeliAttributes = async function(event, productId, isAutoSave = false) {
         if (event) event.preventDefault();
         const btn = event ? event.currentTarget : null;
         const originalHTML = btn ? btn.innerHTML : '';
@@ -2592,6 +2602,11 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-white"></i> Guardando...';
             if (window.lucide) lucide.createIcons();
             btn.disabled = true;
+        }
+
+        const statusEl = document.getElementById('auto-save-status');
+        if (isAutoSave && statusEl) {
+            statusEl.innerHTML = '<span class="flex items-center gap-1.5 text-blue-600 animate-pulse text-xs font-medium"><div class="h-2 w-2 bg-blue-600 rounded-full"></div> Guardando...</span>';
         }
 
         const getVal = (id) => {
@@ -2658,24 +2673,59 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        if (Object.keys(payload).length === 0) {
+            if (isAutoSave) {
+                if (statusEl) {
+                    statusEl.innerHTML = '<span class="text-green-600 flex items-center gap-1 text-xs font-bold"><i data-lucide="check" class="h-3 w-3"></i> Guardado</span>';
+                    if (window.lucide) lucide.createIcons();
+                    setTimeout(() => {
+                        if (statusEl && statusEl.innerText.includes('Guardado')) {
+                            statusEl.innerHTML = '';
+                        }
+                    }, 2000);
+                }
+                return true;
+            }
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+                btn.disabled = false;
+            }
+            return true;
+        }
+
         // Frontend validation for volume_capacity
         if (fullPayload.volume_capacity !== null && fullPayload.volume_capacity > 1000000) {
-            showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
-            btn.innerHTML = originalHTML;
-            if (window.lucide) lucide.createIcons();
-            btn.disabled = false;
-            return;
+            if (!isAutoSave) {
+                showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
+            }
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+                btn.disabled = false;
+            }
+            if (isAutoSave && statusEl) {
+                statusEl.innerHTML = '<span class="text-red-600 text-xs font-medium">Error de validación</span>';
+            }
+            return false;
         }
 
         // Validate capacity fields
         const isDataStorageValid = window.validateCapacity(document.getElementById('attr_data_storage_capacity'), 'data_storage_capacity_warning');
         const isCapacityValid = window.validateCapacity(document.getElementById('attr_capacity'), 'capacity_warning');
         if (!isDataStorageValid || !isCapacityValid) {
-            showAlert('Validación', 'Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB) en los campos de capacidad.', 'error');
-            btn.innerHTML = originalHTML;
-            if (window.lucide) lucide.createIcons();
-            btn.disabled = false;
-            return;
+            if (!isAutoSave) {
+                showAlert('Validación', 'Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB) en los campos de capacidad.', 'error');
+            }
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                if (window.lucide) lucide.createIcons();
+                btn.disabled = false;
+            }
+            if (isAutoSave && statusEl) {
+                statusEl.innerHTML = '<span class="text-red-600 text-xs font-medium">Error de validación</span>';
+            }
+            return false;
         }
 
         try {
@@ -2689,7 +2739,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.status === 404) {
                     // Fallback to local mock save for offline testing
                     localStorage.setItem(`mock_meli_attrs_${productId}`, JSON.stringify(payload));
-                    showAlert('Guardado Local (Prueba)', 'El endpoint no fue encontrado (404). Se guardaron los datos localmente en tu navegador.', 'success');
+                    if (!isAutoSave) {
+                        showAlert('Guardado Local (Prueba)', 'El endpoint no fue encontrado (404). Se guardaron los datos localmente en tu navegador.', 'success');
+                    } else if (statusEl) {
+                        statusEl.innerHTML = '<span class="text-green-600 flex items-center gap-1 text-xs font-bold"><i data-lucide="check" class="h-3 w-3"></i> Guardado Local</span>';
+                        if (window.lucide) lucide.createIcons();
+                    }
                     
                     // Also trigger product patch for the three migrated fields in the product table just in case backend expects it there
                     try {
@@ -2704,8 +2759,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     } catch(e) {}
 
+                    // Update local meliAttrs
+                    if (meliAttrs) {
+                        for (const key in payload) {
+                            meliAttrs[key] = payload[key];
+                        }
+                    }
+
                     // Refresh detail modal
-                    if (currentDetailIndex !== -1) {
+                    if (!isAutoSave && currentDetailIndex !== -1) {
                          const currentProduct = state.products[currentDetailIndex];
                          if (currentProduct) refreshProductDetail(currentProduct.id);
                     }
@@ -2715,17 +2777,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errData.detail || 'Error al guardar los atributos');
             }
 
-            showAlert('Atributos Guardados', 'Los atributos de MercadoLibre fueron actualizados con éxito.', 'success');
+            if (!isAutoSave) {
+                showAlert('Atributos Guardados', 'Los atributos de MercadoLibre fueron actualizados con éxito.', 'success');
+            } else if (statusEl) {
+                statusEl.innerHTML = '<span class="text-green-600 flex items-center gap-1 text-xs font-bold"><i data-lucide="check" class="h-3 w-3"></i> Guardado</span>';
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => {
+                    if (statusEl && statusEl.innerText.includes('Guardado')) {
+                        statusEl.innerHTML = '';
+                    }
+                }, 2000);
+            }
+
+            // Update local meliAttrs
+            if (meliAttrs) {
+                for (const key in payload) {
+                    meliAttrs[key] = payload[key];
+                }
+            }
             
             // Refresh detail modal
-            if (currentDetailIndex !== -1) {
+            if (!isAutoSave && currentDetailIndex !== -1) {
                  const currentProduct = state.products[currentDetailIndex];
                  if (currentProduct) refreshProductDetail(currentProduct.id);
             }
             return true;
         } catch (error) {
             console.error('Error saving attributes:', error);
-            showAlert('Error', error.message, 'error');
+            if (!isAutoSave) {
+                showAlert('Error', error.message, 'error');
+            } else if (statusEl) {
+                statusEl.innerHTML = `<span class="text-red-600 text-xs font-medium" title="${error.message.replace(/"/g, '&quot;')}">Error al guardar</span>`;
+            }
             return false;
         } finally {
             if (btn) {
