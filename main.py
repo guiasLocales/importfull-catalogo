@@ -177,8 +177,15 @@ def db_check():
 
 
 @app.on_event("startup")
-def create_default_user():
-    """Create default admin user on startup if it doesn't exist"""
+def startup_tasks():
+    """Run migrations and create default admin user on startup"""
+    try:
+        from auto_migrate import run_migrations
+        print("Running database migrations on startup...")
+        run_migrations()
+    except Exception as e:
+        print(f"Error running auto migrations: {e}")
+
     try:
         db = SessionLocal()
         user = crud.get_user_by_username(db, username="admin")

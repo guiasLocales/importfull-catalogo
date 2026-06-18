@@ -1119,6 +1119,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     color_required: false,
                     gender: '',
                     gender_required: false,
+                    name: '',
+                    name_required: false,
+                    iron_type: '',
+                    iron_type_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -2120,6 +2124,28 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </select>
                             </div>
 
+                            <!-- Nombre (name) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="file-text" class="h-3.5 w-3.5"></i> Nombre
+                                    ${requiredBadge(meliAttrs.name_required)}
+                                </label>
+                                <input type="text" id="attr_name" value="${meliAttrs.name || product.product_name || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Nombre para MercadoLibre (255 caracteres)">
+                            </div>
+
+                            <!-- Tipo de Plancha (iron_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Tipo de Plancha
+                                    ${requiredBadge(meliAttrs.iron_type_required)}
+                                </label>
+                                <input type="text" id="attr_iron_type" value="${meliAttrs.iron_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Seca, Vapor (100 caracteres)">
+                            </div>
+
                             <!-- Motivo GTIN Vacío -->
                             <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -2652,6 +2678,8 @@ document.addEventListener('DOMContentLoaded', function () {
             size: getValOrNull('attr_size'),
             color: getValOrNull('attr_color'),
             gender: getValOrNull('attr_gender'),
+            name: getValOrNull('attr_name'),
+            iron_type: getValOrNull('attr_iron_type'),
             listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
             mode_shipping: getValOrNull('edit_mode_shipping')

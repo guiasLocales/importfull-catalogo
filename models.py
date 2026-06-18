@@ -234,3 +234,7 @@ class MercadoLibreAttribute(Base):
     size = Column(String(255))
     color = Column(String(255))
     gender = Column(String(25))
+    name = Column(String(255))
+    name_required = Column(Integer, default=0)
+    iron_type = Column(String(100))
+    iron_type_required = Column(Integer, default=0)

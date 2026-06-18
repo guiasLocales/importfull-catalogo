@@ -8,10 +8,9 @@ from db_conn import SessionLocal
 
 def run_migrations():
     """Run database migrations"""
+    # 1. Logo columns in inventory_users
     try:
         db = SessionLocal()
-        
-        # Check if columns exist
         result = db.execute(text("""
             SELECT COLUMN_NAME 
             FROM INFORMATION_SCHEMA.COLUMNS 
@@ -21,34 +20,27 @@ def run_migrations():
         """))
         existing_columns = {row[0] for row in result}
         
-        # Add missing columns
         if 'logo_light_url' not in existing_columns:
             print("Auto-migration: Adding logo_light_url column...")
             db.execute(text("ALTER TABLE inventory_users ADD COLUMN logo_light_url VARCHAR(255)"))
             db.commit()
-            print("✓ Added logo_light_url column")
+            print("[OK] Added logo_light_url column")
             
         if 'logo_dark_url' not in existing_columns:
             print("Auto-migration: Adding logo_dark_url column...")
             db.execute(text("ALTER TABLE inventory_users ADD COLUMN logo_dark_url VARCHAR(255)"))
             db.commit()
-            print("✓ Added logo_dark_url column")
+            print("[OK] Added logo_dark_url column")
         
         db.close()
-        print("✓ Migrations completed")
-        return True
-        
+        print("[OK] Users migrations completed")
     except Exception as e:
-        print(f"Migration error (may already be applied): {e}")
-        return False
+        print(f"Users migration error: {e}")
 
-    # --- Migration: Drop meli_id from scrapped_competence (User Request) ---
+    # 2. Drop meli_id from scrapped_competence
     try:
         db = SessionLocal()
-        # Check if column exists in mercadolibre.scrapped_competence
         print("Checking for 'meli_id' in 'mercadolibre.scrapped_competence'...")
-        
-        # MySQL specific: Check information_schema
         result = db.execute(text("""
             SELECT count(*) 
             FROM INFORMATION_SCHEMA.COLUMNS 
@@ -60,7 +52,6 @@ def run_migrations():
         
         if exists:
             print("Found 'meli_id'. Dropping...")
-            # Drop index first just in case
             try:
                 db.execute(text("ALTER TABLE mercadolibre.scrapped_competence DROP INDEX ix_mercadolibre_scrapped_competence_meli_id"))
                 print("Index dropped.")
@@ -72,12 +63,52 @@ def run_migrations():
             print("Column 'meli_id' dropped successfully.")
         else:
             print("'meli_id' not found (already dropped).")
-            
         db.close()
-        return True
-
     except Exception as e:
         print(f"Competence migration error: {e}")
+
+    # 3. New attributes columns: name, name_required, iron_type, iron_type_required
+    try:
+        db = SessionLocal()
+        print("Checking for new columns in 'mercadolibre.attributes'...")
+        result = db.execute(text("""
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = 'mercadolibre' 
+            AND TABLE_NAME = 'attributes'
+            AND COLUMN_NAME IN ('name', 'name_required', 'iron_type', 'iron_type_required')
+        """))
+        existing_attr_cols = {row[0] for row in result}
+        
+        if 'name' not in existing_attr_cols:
+            print("Auto-migration: Adding name column to mercadolibre.attributes...")
+            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN name VARCHAR(255)"))
+            db.commit()
+            print("[OK] Added name column")
+            
+        if 'name_required' not in existing_attr_cols:
+            print("Auto-migration: Adding name_required column to mercadolibre.attributes...")
+            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN name_required INT DEFAULT 0"))
+            db.commit()
+            print("[OK] Added name_required column")
+            
+        if 'iron_type' not in existing_attr_cols:
+            print("Auto-migration: Adding iron_type column to mercadolibre.attributes...")
+            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN iron_type VARCHAR(100)"))
+            db.commit()
+            print("[OK] Added iron_type column")
+            
+        if 'iron_type_required' not in existing_attr_cols:
+            print("Auto-migration: Adding iron_type_required column to mercadolibre.attributes...")
+            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN iron_type_required INT DEFAULT 0"))
+            db.commit()
+            print("[OK] Added iron_type_required column")
+            
+        db.close()
+        print("[OK] Attributes migrations completed")
+        return True
+    except Exception as e:
+        print(f"Attributes migration error: {e}")
         return False
 
 if __name__ == "__main__":

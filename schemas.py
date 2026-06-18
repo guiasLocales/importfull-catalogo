@@ -334,6 +334,10 @@ class MercadoLibreAttributeSchema(BaseModel):
     size: Optional[str] = None
     color: Optional[str] = None
     gender: Optional[str] = None
+    name: Optional[str] = None
+    name_required: Optional[int] = None
+    iron_type: Optional[str] = None
+    iron_type_required: Optional[int] = None
 
     class Config:
         from_attributes = True
