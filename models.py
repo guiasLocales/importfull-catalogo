@@ -238,3 +238,5 @@ class MercadoLibreAttribute(Base):
     name_required = Column(Integer, default=0)
     iron_type = Column(String(100))
     iron_type_required = Column(Integer, default=0)
+    input_connector = Column(String(255))
+    input_connector_required = Column(Integer, default=0)

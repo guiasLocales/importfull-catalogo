@@ -338,6 +338,8 @@ class MercadoLibreAttributeSchema(BaseModel):
     name_required: Optional[int] = None
     iron_type: Optional[str] = None
     iron_type_required: Optional[int] = None
+    input_connector: Optional[str] = None
+    input_connector_required: Optional[int] = None
 
     class Config:
         from_attributes = True

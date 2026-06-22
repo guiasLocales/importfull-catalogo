@@ -1129,6 +1129,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     name_required: false,
                     iron_type: '',
                     iron_type_required: false,
+                    input_connector: '',
+                    input_connector_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1976,6 +1978,30 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
 
+                            <!-- Puertas de Entrada -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Puertas de Entrada
+                                    ${requiredBadge(meliAttrs.input_connector_required)}
+                                </label>
+                                <input type="text" id="attr_input_connector" value="${meliAttrs.input_connector || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400 mb-2"
+                                       placeholder="Ej: XLR, USB-C (se pueden combinar)">
+                                <div class="flex flex-wrap gap-1.5 mt-1">
+                                    ${(() => {
+                                        const connectorsList = ["Jack 2.5 mm", "Jack 3.5 mm", "Jack 6.3 mm", "Micro-USB", "Mini-USB", "Mini-XLR", "USB-C", "XLR"];
+                                        const currentConnectors = meliAttrs.input_connector ? meliAttrs.input_connector.split(',').map(s => s.trim()) : [];
+                                        return connectorsList.map(opt => {
+                                            const active = currentConnectors.includes(opt);
+                                            return `<span onclick="window.toggleConnector(this, '${opt}', ${product.id}, 'attr_input_connector')" 
+                                                          class="cursor-pointer px-2 py-0.5 text-[11px] font-medium border rounded-md transition-all select-none hover:scale-105 active:scale-95 ${active ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}">
+                                                        ${opt}
+                                                    </span>`;
+                                        }).join('');
+                                    })()}
+                                </div>
+                            </div>
+
                             <!-- Tipo de Cámara de Seguridad -->
                             <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -2575,8 +2601,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    window.toggleConnector = function(badge, option, productId) {
-        const input = document.getElementById('attr_output_connectors');
+    window.toggleConnector = function(badge, option, productId, inputId = 'attr_output_connectors') {
+        const input = document.getElementById(inputId);
         if (!input) return;
         let val = input.value.trim();
         let parts = val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -2686,6 +2712,7 @@ document.addEventListener('DOMContentLoaded', function () {
             gender: getValOrNull('attr_gender'),
             name: getValOrNull('attr_name'),
             iron_type: getValOrNull('attr_iron_type'),
+            input_connector: getValOrNull('attr_input_connector'),
             listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
             mode_shipping: getValOrNull('edit_mode_shipping')
