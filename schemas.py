@@ -341,3 +341,48 @@ class MercadoLibreAttributeSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class OrderMetricResponse(BaseModel):
+    total_sales_count: int
+    total_units_sold: float
+    total_gross_income: float
+    total_fee: float
+    total_net_income: float
+    average_order_value: float
+
+class OrderListItem(BaseModel):
+    venta_id: str
+    created_at: datetime
+    item_id: str
+    title: str
+    category_id: Optional[str] = None
+    condition_item: Optional[str] = None
+    quantity: float
+    unit_price: float
+    gross_price: float
+    sale_fee: float
+    currency_id: str
+
+class OrderListResponse(BaseModel):
+    total: int
+    orders: List[OrderListItem]
+
+class OrderChartItem(BaseModel):
+    date: str
+    revenue: float
+    orders_count: int
+    quantity: float
+
+class TopProductItem(BaseModel):
+    title: str
+    item_id: str
+    quantity: float
+    revenue: float
+
+class TopCategoryItem(BaseModel):
+    category_id: str
+    revenue: float
+
+class TopStatsResponse(BaseModel):
+    top_products: List[TopProductItem]
+    top_categories: List[TopCategoryItem]

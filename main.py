@@ -20,7 +20,7 @@ except Exception as e:
     raise
 
 try:
-    from routers import products, metadata, auth, competence, prompts, drive_auth, selling, performance
+    from routers import products, metadata, auth, competence, prompts, drive_auth, selling, performance, orders
     print("DEBUG: Imported routers", file=sys.stderr)
 except Exception as e:
     print(f"ERROR: Failed to import routers: {e}", file=sys.stderr)
@@ -68,6 +68,7 @@ app.include_router(prompts.router)
 app.include_router(drive_auth.router)
 app.include_router(selling.router)
 app.include_router(performance.router)
+app.include_router(orders.router)
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

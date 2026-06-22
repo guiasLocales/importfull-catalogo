@@ -258,7 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
             tiendanube: document.getElementById('tiendaNubeView'),
             competence: document.getElementById('competenceView'),
             settings: document.getElementById('settingsView'),
-            prompts: document.getElementById('promptsView')
+            prompts: document.getElementById('promptsView'),
+            orders: document.getElementById('ordersView')
         };
         
         const navButtons = {
@@ -267,7 +268,8 @@ document.addEventListener('DOMContentLoaded', function () {
             tiendanube: document.getElementById('navTiendaNube'),
             competence: document.getElementById('navCompetence'),
             settings: document.getElementById('navSettings'),
-            prompts: document.getElementById('navPrompts')
+            prompts: document.getElementById('navPrompts'),
+            orders: document.getElementById('navOrders')
         };
         
         state.currentView = viewName;
@@ -342,6 +344,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 5. Load data with error handling per view
         try {
+            if (viewName === 'orders') {
+                if (typeof fetchOrdersDashboardData === 'function') fetchOrdersDashboardData();
+                else console.warn("fetchOrdersDashboardData function missing");
+            }
             if (viewName === 'mercadolibre') {
                 if (typeof loadMeliProducts === 'function') loadMeliProducts();
                 else console.warn("loadMeliProducts function missing");
@@ -5428,6 +5434,310 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
+    };
+
+    // --- MercadoLibre Orders Dashboard ---
+    let ordersDebounceTimer = null;
+    state.ordersPageLimit = 10;
+    state.ordersPageOffset = 0;
+
+    window.triggerOrderFilterChange = () => {
+        if (ordersDebounceTimer) clearTimeout(ordersDebounceTimer);
+        ordersDebounceTimer = setTimeout(() => {
+            state.ordersPageOffset = 0;
+            fetchOrdersDashboardData();
+        }, 300);
+    };
+
+    window.changeOrdersPage = (direction) => {
+        state.ordersPageOffset += direction * state.ordersPageLimit;
+        if (state.ordersPageOffset < 0) state.ordersPageOffset = 0;
+        fetchOrdersDashboardData(true);
+    };
+
+    function getFilterDates(filterType) {
+        const today = new Date();
+        const formatDate = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const r = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${r}`;
+        };
+        const todayStr = formatDate(today);
+        
+        if (filterType === 'today') {
+            return { start: todayStr, end: todayStr };
+        } else if (filterType === 'yesterday') {
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+            return { start: formatDate(yesterday), end: formatDate(yesterday) };
+        } else if (filterType === 'last_7_days') {
+            const past = new Date();
+            past.setDate(today.getDate() - 7);
+            return { start: formatDate(past), end: todayStr };
+        } else if (filterType === 'last_30_days') {
+            const past = new Date();
+            past.setDate(today.getDate() - 30);
+            return { start: formatDate(past), end: todayStr };
+        } else if (filterType === 'this_month') {
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            return { start: formatDate(firstDay), end: todayStr };
+        }
+        return { start: null, end: null };
+    }
+
+    let cachedMetrics = null;
+    let cachedChartData = null;
+    let cachedTopStats = null;
+
+    window.fetchOrdersDashboardData = async (paginationOnly = false) => {
+        const searchVal = document.getElementById('orderSearchInput')?.value || '';
+        const dateFilter = document.getElementById('orderDateFilter')?.value || 'all_time';
+        const conditionFilter = document.getElementById('orderConditionFilter')?.value || '';
+        
+        const { start, end } = getFilterDates(dateFilter);
+        
+        let queryParams = `?limit=${state.ordersPageLimit}&offset=${state.ordersPageOffset}`;
+        if (start) queryParams += `&start_date=${start}`;
+        if (end) queryParams += `&end_date=${end}`;
+        if (conditionFilter) queryParams += `&condition_item=${conditionFilter}`;
+        if (searchVal) queryParams += `&search=${encodeURIComponent(searchVal)}`;
+        
+        try {
+            const tbody = document.getElementById('ordersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-blue-600 mx-auto"></i> Cargando órdenes...</td></tr>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+            
+            if (paginationOnly && cachedMetrics && cachedChartData && cachedTopStats) {
+                const listRes = await authFetch(`/api/orders/list${queryParams}`);
+                if (!listRes.ok) throw new Error('Error al cargar listado de órdenes');
+                const listData = await listRes.json();
+                
+                renderOrdersDashboard(cachedMetrics, listData, cachedChartData, cachedTopStats);
+            } else {
+                let metricsParams = '';
+                if (start) metricsParams += `&start_date=${start}`;
+                if (end) metricsParams += `&end_date=${end}`;
+                if (conditionFilter) metricsParams += `&condition_item=${conditionFilter}`;
+                if (searchVal) metricsParams += `&search=${encodeURIComponent(searchVal)}`;
+                if (metricsParams) metricsParams = '?' + metricsParams.substring(1);
+                
+                const [metricsRes, listRes, chartRes, statsRes] = await Promise.all([
+                    authFetch(`/api/orders/metrics${metricsParams}`),
+                    authFetch(`/api/orders/list${queryParams}`),
+                    authFetch(`/api/orders/chart-data${metricsParams}`),
+                    authFetch(`/api/orders/top-stats${metricsParams}`)
+                ]);
+                
+                if (!metricsRes.ok || !listRes.ok || !chartRes.ok || !statsRes.ok) {
+                    throw new Error('Error al cargar datos del dashboard');
+                }
+                
+                cachedMetrics = await metricsRes.json();
+                const listData = await listRes.json();
+                cachedChartData = await chartRes.json();
+                cachedTopStats = await statsRes.json();
+                
+                renderOrdersDashboard(cachedMetrics, listData, cachedChartData, cachedTopStats);
+            }
+        } catch (error) {
+            console.error("Dashboard Fetch Error:", error);
+            showAlert('Error', error.message, 'error');
+        }
+    };
+
+    window.renderOrdersDashboard = (metrics, listData, chartData, topStats) => {
+        const formatCurrency = (val) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
+        
+        document.getElementById('metricGrossRevenue').innerText = formatCurrency(metrics.total_gross_income);
+        document.getElementById('metricNetRevenue').innerText = formatCurrency(metrics.total_net_income);
+        document.getElementById('metricOrdersCount').innerText = metrics.total_sales_count.toLocaleString();
+        document.getElementById('metricUnitsSold').innerText = Math.round(metrics.total_units_sold).toLocaleString();
+        
+        const topProdList = document.getElementById('topProductsList');
+        if (topProdList) {
+            if (topStats.top_products && topStats.top_products.length > 0) {
+                topProdList.innerHTML = topStats.top_products.map((p, idx) => `
+                    <div class="flex items-center justify-between p-2 rounded bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700/50">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="font-black text-gray-400 w-4">${idx + 1}</span>
+                            <div class="min-w-0">
+                                <p class="font-bold text-gray-800 dark:text-white truncate" title="${p.title}">${p.title}</p>
+                                <p class="text-[10px] text-gray-400">ID: ${p.item_id} • ${Math.round(p.quantity)} u.</p>
+                            </div>
+                        </div>
+                        <span class="font-extrabold text-blue-600 dark:text-blue-400 whitespace-nowrap ml-2">${formatCurrency(p.revenue)}</span>
+                    </div>
+                `).join('');
+            } else {
+                topProdList.innerHTML = `<div class="text-gray-400 italic text-center py-6">No hay datos de productos</div>`;
+            }
+        }
+
+        const tbody = document.getElementById('ordersTableBody');
+        if (tbody) {
+            if (listData.orders && listData.orders.length > 0) {
+                tbody.innerHTML = listData.orders.map(o => {
+                    const dateObj = new Date(o.created_at);
+                    const formattedDate = dateObj.toLocaleDateString('es-AR') + ' ' + String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0');
+                    const netIncome = o.gross_price - o.sale_fee;
+                    
+                    const conditionBadge = o.condition_item === 'new' 
+                        ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">Nuevo</span>` 
+                        : `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">Usado</span>`;
+                    
+                    return `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-gray-750/30 transition-colors">
+                            <td class="py-3 px-5 font-mono text-xs font-bold text-gray-500">${o.venta_id}</td>
+                            <td class="py-3 px-5 text-xs text-gray-500 whitespace-nowrap">${formattedDate}</td>
+                            <td class="py-3 px-5 min-w-[200px]">
+                                <div class="font-bold text-gray-800 dark:text-white">${o.title}</div>
+                                <div class="text-[10px] text-gray-400 flex items-center gap-1.5 mt-0.5">
+                                    ID: ${o.item_id} • ${conditionBadge}
+                                </div>
+                            </td>
+                            <td class="py-3 px-5 text-center font-bold">${Math.round(o.quantity)}</td>
+                            <td class="py-3 px-5 text-right font-medium">${formatCurrency(o.unit_price)}</td>
+                            <td class="py-3 px-5 text-right font-extrabold text-gray-900 dark:text-white">${formatCurrency(o.gross_price)}</td>
+                            <td class="py-3 px-5 text-right text-orange-600 dark:text-orange-400 font-semibold">${formatCurrency(o.sale_fee)}</td>
+                            <td class="py-3 px-5 text-right text-green-600 dark:text-green-400 font-extrabold">${formatCurrency(netIncome)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td></tr>`;
+            }
+        }
+
+        const badgeCount = document.getElementById('ordersTotalCountBadge');
+        if (badgeCount) badgeCount.innerText = `${listData.total} órdenes`;
+        
+        const prevBtn = document.getElementById('btnOrdersPrev');
+        const nextBtn = document.getElementById('btnOrdersNext');
+        const pagText = document.getElementById('ordersPaginationText');
+        
+        if (prevBtn && nextBtn && pagText) {
+            const startIdx = listData.total === 0 ? 0 : state.ordersPageOffset + 1;
+            const endIdx = Math.min(state.ordersPageOffset + state.ordersPageLimit, listData.total);
+            pagText.innerText = `Mostrando ${startIdx}-${endIdx} de ${listData.total} órdenes`;
+            
+            prevBtn.disabled = state.ordersPageOffset === 0;
+            nextBtn.disabled = endIdx >= listData.total;
+        }
+
+        initSalesChart(chartData);
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    };
+
+    window.initSalesChart = (chartData) => {
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#9ca3af' : '#4b5563';
+        const gridColor = isDark ? '#374151' : '#e5e7eb';
+        
+        const canvas = document.getElementById('salesChartCanvas');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (window.mySalesChart) {
+            window.mySalesChart.destroy();
+        }
+        
+        if (!chartData || chartData.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '14px sans-serif';
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.fillText('No hay datos disponibles para el periodo seleccionado', canvas.width / 2, canvas.height / 2);
+            return;
+        }
+        
+        const labels = chartData.map(d => {
+            const parts = d.date.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}`;
+            }
+            return d.date;
+        });
+        const revenues = chartData.map(d => d.revenue);
+        
+        let gradient = ctx.createLinearGradient(0, 0, 0, 160);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+        
+        if (typeof Chart === 'undefined') {
+            console.error("Chart.js is not loaded!");
+            return;
+        }
+        
+        window.mySalesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: revenues,
+                    borderColor: '#3b82f6',
+                    borderWidth: 2.5,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: isDark ? '#1f2937' : '#ffffff',
+                    pointHoverRadius: 6,
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                        titleColor: isDark ? '#ffffff' : '#111827',
+                        bodyColor: isDark ? '#e5e7eb' : '#374151',
+                        borderColor: isDark ? '#374151' : '#e5e7eb',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return ' Ventas: ' + new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: { size: 10 }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: gridColor
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: { size: 10 },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString('es-AR');
+                            }
+                        }
+                    }
+                }
+            }
+        });
     };
 
     // Initial load - check auth FIRST, only load data if authenticated

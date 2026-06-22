@@ -26,6 +26,8 @@
     </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Custom scrollbar for table container */
         .scrollbar-hide::-webkit-scrollbar {
@@ -325,6 +327,13 @@
                             <img src="/static/img/meli-logo-dark.png" alt="ML"
                                 class="h-9 mr-3 object-contain hidden dark:block">
                             MercadoLibre
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="switchView('orders'); closeMobileMenu()" id="navOrders"
+                            class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            <i data-lucide="bar-chart-2" class="h-5 w-5 mr-3"></i>
+                            Ventas Meli
                         </button>
                     </li>
                     <li>
@@ -859,6 +868,172 @@
                                 <span id="tnPageNum" class="text-sm font-bold text-indigo-600 dark:text-indigo-400">1</span>
                                 <button id="tnBtnNext" disabled class="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 border border-transparent hover:border-gray-200 dark:hover:border-gray-500 text-gray-500 transition-all disabled:opacity-30">
                                     <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders/Dashboard View -->
+                <div id="ordersView" class="hidden h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-hidden bg-gray-50 dark:bg-gray-900">
+                    <!-- Header & Title -->
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 flex-none">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="h-7 w-7 text-blue-600"></i>
+                                Ventas MercadoLibre
+                            </h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Panel de analíticas e historial de órdenes en tiempo real</p>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Search -->
+                            <div class="relative min-w-[200px]">
+                                <input type="text" id="orderSearchInput" placeholder="Buscar venta, item, título..." oninput="window.triggerOrderFilterChange()"
+                                    class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
+                                <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                            </div>
+                            
+                            <!-- Date Filter -->
+                            <select id="orderDateFilter" onchange="window.triggerOrderFilterChange()"
+                                class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                <option value="all_time" selected>Todo el historial</option>
+                                <option value="today">Hoy</option>
+                                <option value="yesterday">Ayer</option>
+                                <option value="last_7_days">Últimos 7 días</option>
+                                <option value="last_30_days">Últimos 30 días</option>
+                                <option value="this_month">Este mes</option>
+                            </select>
+
+                            <!-- Condition Filter -->
+                            <select id="orderConditionFilter" onchange="window.triggerOrderFilterChange()"
+                                class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                <option value="">Todas las condiciones</option>
+                                <option value="new">Nuevos</option>
+                                <option value="used">Usados</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid (KPIs) -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 flex-none">
+                        <!-- Revenue Card -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Ingresos Brutos</span>
+                                <h3 id="metricGrossRevenue" class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">$0.00</h3>
+                            </div>
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                                <i data-lucide="dollar-sign" class="h-6 w-6"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Net Profit Card -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Ingreso Neto (Menos Fee)</span>
+                                <h3 id="metricNetRevenue" class="text-xl sm:text-2xl font-extrabold text-green-600 dark:text-green-400">$0.00</h3>
+                            </div>
+                            <div class="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
+                                <i data-lucide="trending-up" class="h-6 w-6"></i>
+                            </div>
+                        </div>
+
+                        <!-- Orders Count Card -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Órdenes Totales</span>
+                                <h3 id="metricOrdersCount" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400">0</h3>
+                            </div>
+                            <div class="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
+                                <i data-lucide="shopping-cart" class="h-6 w-6"></i>
+                            </div>
+                        </div>
+
+                        <!-- Units Sold Card -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Unidades Vendidas</span>
+                                <h3 id="metricUnitsSold" class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">0</h3>
+                            </div>
+                            <div class="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
+                                <i data-lucide="package" class="h-6 w-6"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Area: Chart & Leaderboards -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 flex-none max-h-[300px] overflow-hidden">
+                        <!-- Chart Panel -->
+                        <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex flex-col h-full">
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
+                                <i data-lucide="activity" class="h-4 w-4 text-blue-500"></i> Evolución de Ventas Diarias
+                            </span>
+                            <div class="flex-1 relative min-h-[180px] max-h-[220px]">
+                                <canvas id="salesChartCanvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Leaderboards Panel -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex flex-col h-full overflow-y-auto custom-scrollbar">
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
+                                <i data-lucide="award" class="h-4 w-4 text-yellow-500"></i> Top 5 Productos Vendidos
+                            </span>
+                            <div id="topProductsList" class="space-y-2 flex-1 text-xs">
+                                <!-- Populated dynamically -->
+                                <div class="text-gray-400 italic text-center py-4">No hay datos de productos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Area: Orders Table -->
+                    <div class="flex-1 min-h-[200px] bg-white dark:bg-gray-800 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
+                        <!-- Table header -->
+                        <div class="px-5 py-4 border-b border-gray-150 dark:border-gray-700 flex items-center justify-between flex-none">
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="list" class="h-4 w-4"></i> Listado de Órdenes
+                            </span>
+                            <span id="ordersTotalCountBadge" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold px-2 py-0.5 rounded-full">
+                                0 órdenes
+                            </span>
+                        </div>
+
+                        <!-- Table body (scrollable) -->
+                        <div class="flex-1 overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-750 text-slate-400 dark:text-gray-400 uppercase text-[10px] font-bold tracking-wider sticky top-0 z-10">
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">ID Venta</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">Fecha</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">Producto</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-center">Unidades</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-right">Precio Unitario</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-right">Monto Bruto</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-right text-orange-500">Comisión</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-right text-green-500 font-bold">Monto Neto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody" class="divide-y divide-gray-150 dark:divide-gray-700 text-sm">
+                                    <!-- Populated dynamically -->
+                                    <tr>
+                                        <td colspan="8" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Table pagination (flex-none) -->
+                        <div class="px-5 py-3 border-t border-gray-150 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex items-center justify-between flex-none">
+                            <span id="ordersPaginationText" class="text-xs text-gray-500">Mostrando 0-0 de 0 órdenes</span>
+                            <div class="flex items-center gap-2">
+                                <button id="btnOrdersPrev" onclick="window.changeOrdersPage(-1)" disabled
+                                    class="p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-left" class="h-4 w-4 text-gray-600"></i>
+                                </button>
+                                <button id="btnOrdersNext" onclick="window.changeOrdersPage(1)" disabled
+                                    class="p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    <i data-lucide="chevron-right" class="h-4 w-4 text-gray-600"></i>
                                 </button>
                             </div>
                         </div>
