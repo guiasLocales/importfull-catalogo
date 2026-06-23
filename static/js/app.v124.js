@@ -2828,6 +2828,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.validateCapacity = function(inputEl, warningElId) {
+        if (!inputEl) return true;
         const val = inputEl.value.trim();
         const warning = document.getElementById(warningElId);
         if (!val) {
@@ -2876,7 +2877,8 @@ document.addEventListener('DOMContentLoaded', function () {
             statusEl.innerHTML = '<span class="flex items-center gap-1.5 text-blue-600 animate-pulse text-xs font-medium"><div class="h-2 w-2 bg-blue-600 rounded-full"></div> Guardando...</span>';
         }
 
-        const getVal = (id) => {
+        try {
+            const getVal = (id) => {
             const el = document.getElementById(id);
             return el ? el.value : '';
         };
@@ -3006,7 +3008,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
-        try {
+        // try removed
+        
             const response = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
