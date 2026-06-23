@@ -382,8 +382,84 @@ def get_tn_product_status(db: Session, attribute_id: int):
 import uuid
 from models import MercadoLibreAttribute
 
+MAP_ATTRIBUTES = {
+    "INPUT_CONNECTOR": "input_connector",
+    "OUTPUT_CONNECTOR": "output_connectors",
+    "PRODUCT_TYPE": "product_type",
+    "VOLUME_CAPACITY": "volume_capacity",
+    "UNITS_PER_PACK": "units_per_pack",
+    "INK_COLOR": "ink_color",
+    "POT_TYPE": "pot_type",
+    "SURVEILLANCE_CAMERA_TYPE": "surveillance_camera_type",
+    "CAMERA_LOCATIONS": "camera_locations",
+    "CABLE_AND_ADAPTER_TYPE": "cable_and_adapter_type",
+    "DATA_STORAGE_CAPACITY": "data_storage_capacity",
+    "USB_PORT_VERSION": "usb_port_version",
+    "CAPACITY": "capacity",
+    "POWER_SUPPLY_TYPE": "power_supply_type",
+    "GRADING": "grading",
+    "WITH_USB": "with_usb",
+    "SIZE": "size",
+    "COLOR": "color",
+    "GENDER": "gender",
+    "NAME": "name",
+    "IRON_TYPE": "iron_type",
+    "THERMAL_CONTAINER_TYPE": "thermal_container_type",
+    "IS_FACTORY_KIT": "is_factory_kit",
+    "PIECES_NUMBER": "pieces_number",
+    "MATERIAL": "material",
+    "DRINKING_GLASS_PRODUCT_TYPE": "drinking_glass_product_type",
+    "MAKEUP_FORMAT": "makeup_format",
+    "EYELINER_TYPE": "eyeliner_type",
+    "BACKPACK_TYPE": "backpack_type"
+}
+
 def get_meli_attributes(db: Session, item_id: int):
-    return db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
+    import json
+    attrs = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
+    if attrs:
+        # Auto-heal required fields from allowed_options and not_mapped_attributes
+        required_ids = set()
+        if attrs.allowed_options:
+            try:
+                allowed = json.loads(attrs.allowed_options) if isinstance(attrs.allowed_options, str) else attrs.allowed_options
+                req_attrs = allowed.get("settings", {}).get("required_attributes", {})
+                for attr_id in req_attrs.keys():
+                    required_ids.add(attr_id.upper())
+            except Exception as e:
+                print(f"Error parsing allowed_options: {e}")
+                
+        if attrs.not_mapped_attributes:
+            try:
+                not_mapped = json.loads(attrs.not_mapped_attributes) if isinstance(attrs.not_mapped_attributes, str) else attrs.not_mapped_attributes
+                if isinstance(not_mapped, list):
+                    for item in not_mapped:
+                        attr_id = item.get("id")
+                        tags = item.get("tags", {})
+                        if attr_id and (tags.get("required") is True or tags.get("catalog_required") is True):
+                            required_ids.add(attr_id.upper())
+            except Exception as e:
+                print(f"Error parsing not_mapped_attributes: {e}")
+                
+        updated = False
+        for attr_id in required_ids:
+            col_base = MAP_ATTRIBUTES.get(attr_id)
+            if col_base:
+                col_req = f"{col_base}_required"
+                if hasattr(attrs, col_req):
+                    if getattr(attrs, col_req) != 1:
+                        setattr(attrs, col_req, 1)
+                        updated = True
+                        
+        if updated:
+            try:
+                db.commit()
+                db.refresh(attrs)
+            except Exception as e:
+                db.rollback()
+                print(f"Error auto-healing required attributes: {e}")
+                
+    return attrs
 
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
     # Sanitize warranty_type to avoid check constraint violations in DB (allow only exact values or NULL)
