@@ -340,6 +340,22 @@ class MercadoLibreAttributeSchema(BaseModel):
     iron_type_required: Optional[int] = None
     input_connector: Optional[str] = None
     input_connector_required: Optional[int] = None
+    thermal_container_type: Optional[str] = None
+    thermal_container_type_required: Optional[int] = None
+    is_factory_kit: Optional[str] = None
+    is_factory_kit_required: Optional[int] = None
+    pieces_number: Optional[int] = None
+    pieces_number_required: Optional[int] = None
+    material: Optional[str] = None
+    material_required: Optional[int] = None
+    drinking_glass_product_type: Optional[str] = None
+    drinking_glass_product_type_required: Optional[int] = None
+    makeup_format: Optional[str] = None
+    makeup_format_required: Optional[int] = None
+    eyeliner_type: Optional[str] = None
+    eyeliner_type_required: Optional[int] = None
+    backpack_type: Optional[str] = None
+    backpack_type_required: Optional[int] = None
 
     class Config:
         from_attributes = True

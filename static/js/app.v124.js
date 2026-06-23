@@ -1131,6 +1131,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     iron_type_required: false,
                     input_connector: '',
                     input_connector_required: false,
+                    thermal_container_type: '',
+                    thermal_container_type_required: false,
+                    is_factory_kit: '',
+                    is_factory_kit_required: false,
+                    pieces_number: null,
+                    pieces_number_required: false,
+                    material: '',
+                    material_required: false,
+                    drinking_glass_product_type: '',
+                    drinking_glass_product_type_required: false,
+                    makeup_format: '',
+                    makeup_format_required: false,
+                    eyeliner_type: '',
+                    eyeliner_type_required: false,
+                    backpack_type: '',
+                    backpack_type_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -2192,6 +2208,116 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <option value="17055161" ${meliAttrs.empty_gtin_reason === '17055161' ? 'selected' : ''}>Otra razón (17055161)</option>
                                 </select>
                             </div>
+
+                            <!-- Tipo de Recipiente (thermal_container_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Tipo de Recipiente
+                                    ${requiredBadge(meliAttrs.thermal_container_type_required)}
+                                </label>
+                                <select id="attr_thermal_container_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Taza" ${meliAttrs.thermal_container_type === 'Taza' ? 'selected' : ''}>Taza</option>
+                                    <option value="Vaso" ${meliAttrs.thermal_container_type === 'Vaso' ? 'selected' : ''}>Vaso</option>
+                                </select>
+                            </div>
+
+                            <!-- Es Kit de Fábrica (is_factory_kit) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5" title="Si el kit viene armado de Fábrica elige Si, si el kit fue armado por ti elige No">
+                                    <i data-lucide="help-circle" class="h-3.5 w-3.5 text-blue-500"></i> Es Kit de Fábrica
+                                    ${requiredBadge(meliAttrs.is_factory_kit_required)}
+                                </label>
+                                <select id="attr_is_factory_kit" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Si" ${meliAttrs.is_factory_kit === 'Si' ? 'selected' : ''}>Si</option>
+                                    <option value="No" ${meliAttrs.is_factory_kit === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+
+                            <!-- Cantidad de Piezas (pieces_number) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="layers" class="h-3.5 w-3.5"></i> Cantidad de Piezas
+                                    ${requiredBadge(meliAttrs.pieces_number_required)}
+                                </label>
+                                <input type="number" id="attr_pieces_number" value="${meliAttrs.pieces_number !== null && meliAttrs.pieces_number !== undefined ? meliAttrs.pieces_number : ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
+                                       placeholder="Ej: 12">
+                            </div>
+
+                            <!-- Material (material) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="info" class="h-3.5 w-3.5"></i> Material
+                                    ${requiredBadge(meliAttrs.material_required)}
+                                </label>
+                                <input type="text" id="attr_material" value="${meliAttrs.material || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Hierro, Teflon, Aluminio">
+                            </div>
+
+                            <!-- Tipo de Producto Vasos (drinking_glass_product_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Tipo de Producto (Vasos)
+                                    ${requiredBadge(meliAttrs.drinking_glass_product_type_required)}
+                                </label>
+                                <select id="attr_drinking_glass_product_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Taza" ${meliAttrs.drinking_glass_product_type === 'Taza' ? 'selected' : ''}>Taza</option>
+                                    <option value="Vaso" ${meliAttrs.drinking_glass_product_type === 'Vaso' ? 'selected' : ''}>Vaso</option>
+                                </select>
+                            </div>
+
+                            <!-- Formato de Maquillaje (makeup_format) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Formato de Maquillaje
+                                    ${requiredBadge(meliAttrs.makeup_format_required)}
+                                </label>
+                                <input type="text" id="attr_makeup_format" value="${meliAttrs.makeup_format || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Liquido, Barra, Polvo">
+                            </div>
+
+                            <!-- Formato de Delineador (eyeliner_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="edit" class="h-3.5 w-3.5"></i> Formato de Delineador
+                                    ${requiredBadge(meliAttrs.eyeliner_type_required)}
+                                </label>
+                                <select id="attr_eyeliner_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Retractil" ${meliAttrs.eyeliner_type === 'Retractil' ? 'selected' : ''}>Retractil</option>
+                                    <option value="Lapiz" ${meliAttrs.eyeliner_type === 'Lapiz' ? 'selected' : ''}>Lapiz</option>
+                                    <option value="Gel" ${meliAttrs.eyeliner_type === 'Gel' ? 'selected' : ''}>Gel</option>
+                                    <option value="Crema" ${meliAttrs.eyeliner_type === 'Crema' ? 'selected' : ''}>Crema</option>
+                                    <option value="Liquido" ${meliAttrs.eyeliner_type === 'Liquido' ? 'selected' : ''}>Liquido</option>
+                                    <option value="Marcador" ${meliAttrs.eyeliner_type === 'Marcador' ? 'selected' : ''}>Marcador</option>
+                                </select>
+                            </div>
+
+                            <!-- Tipo de Mochila (backpack_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="package" class="h-3.5 w-3.5"></i> Tipo de Mochila
+                                    ${requiredBadge(meliAttrs.backpack_type_required)}
+                                </label>
+                                <select id="attr_backpack_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Escolar" ${meliAttrs.backpack_type === 'Escolar' ? 'selected' : ''}>Escolar</option>
+                                    <option value="Viaje" ${meliAttrs.backpack_type === 'Viaje' ? 'selected' : ''}>Viaje</option>
+                                    <option value="Urbana" ${meliAttrs.backpack_type === 'Urbana' ? 'selected' : ''}>Urbana</option>
+                                    <option value="Deportiva" ${meliAttrs.backpack_type === 'Deportiva' ? 'selected' : ''}>Deportiva</option>
+                                    <option value="Tactica" ${meliAttrs.backpack_type === 'Tactica' ? 'selected' : ''}>Tactica</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- Atributos No Mapeados -->
@@ -2713,6 +2839,14 @@ document.addEventListener('DOMContentLoaded', function () {
             name: getValOrNull('attr_name'),
             iron_type: getValOrNull('attr_iron_type'),
             input_connector: getValOrNull('attr_input_connector'),
+            thermal_container_type: getValOrNull('attr_thermal_container_type'),
+            is_factory_kit: getValOrNull('attr_is_factory_kit'),
+            pieces_number: getVal('attr_pieces_number') !== "" ? parseInt(getVal('attr_pieces_number')) : null,
+            material: getValOrNull('attr_material'),
+            drinking_glass_product_type: getValOrNull('attr_drinking_glass_product_type'),
+            makeup_format: getValOrNull('attr_makeup_format'),
+            eyeliner_type: getValOrNull('attr_eyeliner_type'),
+            backpack_type: getValOrNull('attr_backpack_type'),
             listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
             mode_shipping: getValOrNull('edit_mode_shipping')

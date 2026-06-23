@@ -67,54 +67,69 @@ def run_migrations():
     except Exception as e:
         print(f"Competence migration error: {e}")
 
-    # 3. New attributes columns: name, name_required, iron_type, iron_type_required, input_connector, input_connector_required
+    # 3. New attributes columns
     try:
         db = SessionLocal()
         print("Checking for new columns in 'mercadolibre.attributes'...")
-        result = db.execute(text("""
+        
+        # Define all attribute columns to check
+        columns_to_check = [
+            'name', 'name_required', 'iron_type', 'iron_type_required', 
+            'input_connector', 'input_connector_required',
+            'thermal_container_type', 'thermal_container_type_required',
+            'is_factory_kit', 'is_factory_kit_required',
+            'pieces_number', 'pieces_number_required',
+            'material', 'material_required',
+            'drinking_glass_product_type', 'drinking_glass_product_type_required',
+            'makeup_format', 'makeup_format_required',
+            'eyeliner_type', 'eyeliner_type_required',
+            'backpack_type', 'backpack_type_required'
+        ]
+        
+        # Format list for SQL query
+        cols_formatted = ", ".join([f"'{c}'" for c in columns_to_check])
+        
+        result = db.execute(text(f"""
             SELECT COLUMN_NAME 
             FROM INFORMATION_SCHEMA.COLUMNS 
             WHERE TABLE_SCHEMA = 'mercadolibre' 
             AND TABLE_NAME = 'attributes'
-            AND COLUMN_NAME IN ('name', 'name_required', 'iron_type', 'iron_type_required', 'input_connector', 'input_connector_required')
+            AND COLUMN_NAME IN ({cols_formatted})
         """))
         existing_attr_cols = {row[0] for row in result}
         
-        if 'name' not in existing_attr_cols:
-            print("Auto-migration: Adding name column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN name VARCHAR(255)"))
-            db.commit()
-            print("[OK] Added name column")
-            
-        if 'name_required' not in existing_attr_cols:
-            print("Auto-migration: Adding name_required column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN name_required INT DEFAULT 0"))
-            db.commit()
-            print("[OK] Added name_required column")
-            
-        if 'iron_type' not in existing_attr_cols:
-            print("Auto-migration: Adding iron_type column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN iron_type VARCHAR(100)"))
-            db.commit()
-            print("[OK] Added iron_type column")
-            
-        if 'iron_type_required' not in existing_attr_cols:
-            print("Auto-migration: Adding iron_type_required column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN iron_type_required INT DEFAULT 0"))
-            db.commit()
-            print("[OK] Added iron_type_required column")
-
-        if 'input_connector' not in existing_attr_cols:
-            print("Auto-migration: Adding input_connector column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN input_connector VARCHAR(255)"))
-            db.commit()
-            print("[OK] Added input_connector column")
-
-        if 'input_connector_required' not in existing_attr_cols:
-            print("Auto-migration: Adding input_connector_required column to mercadolibre.attributes...")
-            db.execute(text("ALTER TABLE mercadolibre.attributes ADD COLUMN input_connector_required INT DEFAULT 0"))
-            db.commit()
-            print("[OK] Added input_connector_required column")
+        # Simple migrations using helper list
+        new_cols_definitions = [
+            ("name", "VARCHAR(255)"),
+            ("name_required", "INT DEFAULT 0"),
+            ("iron_type", "VARCHAR(100)"),
+            ("iron_type_required", "INT DEFAULT 0"),
+            ("input_connector", "VARCHAR(255)"),
+            ("input_connector_required", "INT DEFAULT 0"),
+            ("thermal_container_type", "VARCHAR(255)"),
+            ("thermal_container_type_required", "INT DEFAULT 0"),
+            ("is_factory_kit", "VARCHAR(50)"),
+            ("is_factory_kit_required", "INT DEFAULT 0"),
+            ("pieces_number", "INT"),
+            ("pieces_number_required", "INT DEFAULT 0"),
+            ("material", "VARCHAR(255)"),
+            ("material_required", "INT DEFAULT 0"),
+            ("drinking_glass_product_type", "VARCHAR(255)"),
+            ("drinking_glass_product_type_required", "INT DEFAULT 0"),
+            ("makeup_format", "VARCHAR(255)"),
+            ("makeup_format_required", "INT DEFAULT 0"),
+            ("eyeliner_type", "VARCHAR(255)"),
+            ("eyeliner_type_required", "INT DEFAULT 0"),
+            ("backpack_type", "VARCHAR(255)"),
+            ("backpack_type_required", "INT DEFAULT 0")
+        ]
+        
+        for col_name, col_type in new_cols_definitions:
+            if col_name not in existing_attr_cols:
+                print(f"Auto-migration: Adding {col_name} column to mercadolibre.attributes...")
+                db.execute(text(f"ALTER TABLE mercadolibre.attributes ADD COLUMN {col_name} {col_type}"))
+                db.commit()
+                print(f"[OK] Added {col_name} column")
             
         db.close()
         print("[OK] Attributes migrations completed")
