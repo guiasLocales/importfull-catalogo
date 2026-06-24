@@ -461,6 +461,26 @@ def get_meli_attributes(db: Session, item_id: int):
                 
     return attrs
 
+def find_best_value_match(selected_str, allowed_values):
+    if not selected_str or not allowed_values:
+        return None, None
+        
+    selected_norm = selected_str.lower().replace(" ", "").replace("-", "")
+    
+    # Try exact normalized match first
+    for val in allowed_values:
+        val_name = val.get("name", "")
+        if val_name.lower().replace(" ", "").replace("-", "") == selected_norm:
+            return val.get("id"), val_name
+            
+    # Try partial/contains match
+    for val in allowed_values:
+        val_name = val.get("name", "")
+        if selected_norm in val_name.lower().replace(" ", "").replace("-", "") or val_name.lower().replace(" ", "").replace("-", "") in selected_norm:
+            return val.get("id"), val_name
+            
+    return None, selected_str
+
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
     # Sanitize warranty_type to avoid check constraint violations in DB (allow only exact values or NULL)
     if 'warranty_type' in updates:
@@ -480,7 +500,72 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
             logistic_type="drop_off"
         )
         db.add(db_attr)
+        db.flush()
     
+    # --- AUTO-HEALING & VALUE NORMALIZATION FOR NOT_MAPPED_ATTRIBUTES ---
+    import json
+    REV_MAP_ATTRIBUTES = {v: k for k, v in MAP_ATTRIBUTES.items()}
+    
+    not_mapped = []
+    if db_attr.not_mapped_attributes:
+        try:
+            not_mapped = json.loads(db_attr.not_mapped_attributes) if isinstance(db_attr.not_mapped_attributes, str) else db_attr.not_mapped_attributes
+            if not isinstance(not_mapped, list):
+                not_mapped = []
+        except Exception as e:
+            print(f"Error loading not_mapped_attributes in update: {e}")
+
+    updated_not_mapped = False
+    
+    for key, value in list(updates.items()):
+        if key in REV_MAP_ATTRIBUTES:
+            attr_id = REV_MAP_ATTRIBUTES[key]
+            
+            # Find in not_mapped
+            attr_dict = None
+            for item in not_mapped:
+                if item.get("id") == attr_id:
+                    attr_dict = item
+                    break
+                    
+            if attr_dict:
+                if not value:
+                    if "value_id" in attr_dict: del attr_dict["value_id"]
+                    if "value_name" in attr_dict: del attr_dict["value_name"]
+                    updated_not_mapped = True
+                else:
+                    selected_parts = [s.strip() for s in str(value).split(",") if s.strip()]
+                    allowed_vals = attr_dict.get("values", [])
+                    if not isinstance(allowed_vals, list):
+                        allowed_vals = []
+                        
+                    matched_ids = []
+                    matched_names = []
+                    for part in selected_parts:
+                        val_id, val_name = find_best_value_match(part, allowed_vals)
+                        if val_id:
+                            matched_ids.append(val_id)
+                        matched_names.append(val_name)
+                        
+                    normalized_str = ", ".join(matched_names)
+                    updates[key] = normalized_str # Update the database column in updates dict
+                    
+                    if len(matched_ids) == 1:
+                        attr_dict["value_id"] = matched_ids[0]
+                        attr_dict["value_name"] = matched_names[0]
+                    elif len(matched_ids) > 1:
+                        attr_dict["value_id"] = None
+                        attr_dict["value_name"] = normalized_str
+                    else:
+                        attr_dict["value_id"] = None
+                        attr_dict["value_name"] = normalized_str
+                    updated_not_mapped = True
+
+    if updated_not_mapped:
+        db_attr.not_mapped_attributes = not_mapped
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(db_attr, "not_mapped_attributes")
+        
     for key, value in updates.items():
         if hasattr(db_attr, key) and key != 'id' and key != 'item_id':
             setattr(db_attr, key, value)
