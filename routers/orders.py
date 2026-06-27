@@ -141,10 +141,10 @@ def get_orders_list(
                 title=r.title,
                 category_id=r.category_id,
                 condition_item=r.condition_item,
-                quantity=float(r.quantity),
-                unit_price=float(r.unit_price),
-                gross_price=float(r.gross_price),
-                sale_fee=float(r.sale_fee),
+                quantity=float(r.quantity or 0.0),
+                unit_price=float(r.unit_price or 0.0),
+                gross_price=float(r.gross_price or 0.0),
+                sale_fee=float(r.sale_fee or 0.0),
                 currency_id=r.currency_id
             ))
             
