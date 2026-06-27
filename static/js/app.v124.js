@@ -43,7 +43,10 @@ document.addEventListener('DOMContentLoaded', function () {
             stock_filter: '',
             channel_filter: ''
         },
-        currentView: 'inventory'
+        currentView: 'inventory',
+        meliPage: 1,
+        meliLimit: 100,
+        meliTotal: 0
     };
 
     let currentMeliAttrs = null;
@@ -77,7 +80,13 @@ document.addEventListener('DOMContentLoaded', function () {
         modalBody: document.getElementById('modalBody'),
         pageIndicator: document.getElementById('pageIndicator'),
         btnNewProduct: document.getElementById('btnNewProduct'),
-        btnConnectDrive: document.getElementById('btnConnectDrive')
+        btnConnectDrive: document.getElementById('btnConnectDrive'),
+        btnMeliPrev: document.getElementById('btnMeliPrev'),
+        btnMeliNext: document.getElementById('btnMeliNext'),
+        meliPageStart: document.getElementById('meliPageStart'),
+        meliPageEnd: document.getElementById('meliPageEnd'),
+        meliTotalPagination: document.getElementById('meliTotalPagination'),
+        meliLimitSelector: document.getElementById('meliLimitSelector')
     };
 
     // --- Check for Auth Success in URL ---
@@ -4470,22 +4479,37 @@ document.addEventListener('DOMContentLoaded', function () {
             if (state.sortBy) params.append('sort_by', state.sortBy);
             if (state.sortOrder) params.append('sort_order', state.sortOrder);
 
+            // Add pagination params
+            const skip = (state.meliPage - 1) * state.meliLimit;
+            params.append('skip', skip);
+            params.append('limit', state.meliLimit);
+
             const response = await authFetch(`/api/products/meli?${params.toString()}`);
             if (!response.ok) throw new Error('Error loading ML products');
 
             const data = await response.json();
             const products = data.products || [];
+            state.meliTotal = data.total || 0;
 
             // Update counters
             const activeCount = document.getElementById('meliActiveCount');
             const pausedCount = document.getElementById('meliPausedCount');
             const totalCount = document.getElementById('meliTotalCount');
-            const showingCount = document.getElementById('meliShowing');
 
             if (activeCount) activeCount.textContent = data.active_count || 0;
             if (pausedCount) pausedCount.textContent = data.paused_count || 0;
             if (totalCount) totalCount.textContent = data.total || 0;
-            if (showingCount) showingCount.textContent = products.length;
+
+            // Update pagination UI
+            const startIdx = products.length > 0 ? (state.meliPage - 1) * state.meliLimit + 1 : 0;
+            const endIdx = startIdx + products.length - 1;
+
+            if (elements.meliTotalPagination) elements.meliTotalPagination.textContent = state.meliTotal;
+            if (elements.meliPageStart) elements.meliPageStart.textContent = startIdx;
+            if (elements.meliPageEnd) elements.meliPageEnd.textContent = endIdx;
+
+            if (elements.btnMeliPrev) elements.btnMeliPrev.disabled = state.meliPage === 1;
+            if (elements.btnMeliNext) elements.btnMeliNext.disabled = products.length < state.meliLimit || endIdx >= state.meliTotal;
 
             // Render table
             if (products.length === 0) {
@@ -4689,12 +4713,44 @@ document.addEventListener('DOMContentLoaded', function () {
     if (meliSearchInput) {
         meliSearchInput.addEventListener('input', () => {
             clearTimeout(meliDebounceTimer);
+            state.meliPage = 1; // Reset to page 1
             meliDebounceTimer = setTimeout(loadMeliProducts, 300);
         });
     }
 
     if (meliStatusFilter) {
-        meliStatusFilter.addEventListener('change', loadMeliProducts);
+        meliStatusFilter.addEventListener('change', () => {
+            state.meliPage = 1; // Reset to page 1
+            loadMeliProducts();
+        });
+    }
+
+    if (elements.btnMeliPrev) {
+        elements.btnMeliPrev.addEventListener('click', () => {
+            if (state.meliPage > 1) {
+                state.meliPage--;
+                loadMeliProducts();
+            }
+        });
+    }
+
+    if (elements.btnMeliNext) {
+        elements.btnMeliNext.addEventListener('click', () => {
+            const startIdx = (state.meliPage - 1) * state.meliLimit + 1;
+            const endIdx = startIdx + state.meliLimit - 1;
+            if (endIdx < state.meliTotal) {
+                state.meliPage++;
+                loadMeliProducts();
+            }
+        });
+    }
+
+    if (elements.meliLimitSelector) {
+        elements.meliLimitSelector.addEventListener('change', (e) => {
+            state.meliLimit = parseInt(e.target.value) || 100;
+            state.meliPage = 1;
+            loadMeliProducts();
+        });
     }
 
     async function fetchMeliScoresBulk(meliIds) {

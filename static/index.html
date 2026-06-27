@@ -1174,8 +1174,33 @@
                         <!-- Pagination -->
                         <div
                             class="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between text-sm flex-none">
-                            <span class="text-gray-600 dark:text-gray-400">Mostrando <span id="meliShowing">0</span>
-                                productos</span>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-gray-600 dark:text-gray-400">
+                                    Mostrando <span id="meliPageStart" class="font-medium text-gray-900 dark:text-white">0</span> - 
+                                    <span id="meliPageEnd" class="font-medium text-gray-900 dark:text-white">0</span> de 
+                                    <span id="meliTotalPagination" class="font-medium text-gray-900 dark:text-white">0</span> productos
+                                </span>
+                                <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                                    <span>Mostrar:</span>
+                                    <select id="meliLimitSelector"
+                                        class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 p-1">
+                                        <option value="50">50</option>
+                                        <option value="100" selected>100</option>
+                                        <option value="200">200</option>
+                                        <option value="500">500</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="btnMeliPrev"
+                                    class="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                                    <i data-lucide="chevron-left" class="h-5 w-5"></i>
+                                </button>
+                                <button id="btnMeliNext"
+                                    class="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                                    <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1548,8 +1573,8 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=154"></script>
-    <script src="/static/js/app.v124.js?v=154"></script>
+    <script src="/static/js/tienda-nube.js?v=155"></script>
+    <script src="/static/js/app.v124.js?v=155"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 
