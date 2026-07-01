@@ -1170,6 +1170,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     eyeliner_type_required: false,
                     backpack_type: '',
                     backpack_type_required: false,
+                    faucet_control_type: '',
+                    faucet_control_type_required: false,
+                    makeup_brushes_number: null,
+                    makeup_brushes_number_required: false,
+                    finish: '',
+                    finish_required: false,
+                    lip_liner_type: '',
+                    lip_liner_type_required: false,
+                    board_game_name: '',
+                    board_game_name_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -2405,6 +2415,71 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </select>
                             </div>
                             `)}
+
+                            ${showIfRequired(meliAttrs.faucet_control_type_required, `
+                            <!-- Tipo de Control de Griferia (faucet_control_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="settings" class="h-3.5 w-3.5"></i> Tipo de control de grifería
+                                    ${requiredBadge(meliAttrs.faucet_control_type_required)}
+                                </label>
+                                <input type="text" id="attr_faucet_control_type" value="${meliAttrs.faucet_control_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: monocomando, doble comando">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.makeup_brushes_number_required, `
+                            <!-- Cantidad de Brochas (makeup_brushes_number) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="hash" class="h-3.5 w-3.5"></i> Cantidad de brochas
+                                    ${requiredBadge(meliAttrs.makeup_brushes_number_required)}
+                                </label>
+                                <input type="number" id="attr_makeup_brushes_number" value="${meliAttrs.makeup_brushes_number !== null && meliAttrs.makeup_brushes_number !== undefined ? meliAttrs.makeup_brushes_number : ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 12">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.finish_required, `
+                            <!-- Acabado (finish) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Acabado
+                                    ${requiredBadge(meliAttrs.finish_required)}
+                                </label>
+                                <input type="text" id="attr_finish" value="${meliAttrs.finish || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: mate, cremoso, metalizado">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.lip_liner_type_required, `
+                            <!-- Tipo de Delineador (lip_liner_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="pen-tool" class="h-3.5 w-3.5"></i> Tipo de delineador
+                                    ${requiredBadge(meliAttrs.lip_liner_type_required)}
+                                </label>
+                                <input type="text" id="attr_lip_liner_type" value="${meliAttrs.lip_liner_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: gel, liquido, lapiz">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.board_game_name_required, `
+                            <!-- Nombre del Tablero de Juego (board_game_name) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="dices" class="h-3.5 w-3.5"></i> Nombre del tablero de juego
+                                    ${requiredBadge(meliAttrs.board_game_name_required)}
+                                </label>
+                                <input type="text" id="attr_board_game_name" value="${meliAttrs.board_game_name || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Ajedrez, Ludo, Damas">
+                            </div>
+                            `)}
                         </div>
 
                         ${hasNotMappedAttributes(meliAttrs.not_mapped_attributes) ? `
@@ -2938,6 +3013,11 @@ document.addEventListener('DOMContentLoaded', function () {
             makeup_format: getValOrNull('attr_makeup_format'),
             eyeliner_type: getValOrNull('attr_eyeliner_type'),
             backpack_type: getValOrNull('attr_backpack_type'),
+            faucet_control_type: getValOrNull('attr_faucet_control_type'),
+            makeup_brushes_number: getVal('attr_makeup_brushes_number') !== "" ? parseInt(getVal('attr_makeup_brushes_number')) : null,
+            finish: getValOrNull('attr_finish'),
+            lip_liner_type: getValOrNull('attr_lip_liner_type'),
+            board_game_name: getValOrNull('attr_board_game_name'),
             listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
             mode_shipping: getValOrNull('edit_mode_shipping')
