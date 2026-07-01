@@ -3023,8 +3023,63 @@ document.addEventListener('DOMContentLoaded', function () {
             mode_shipping: getValOrNull('edit_mode_shipping')
         };
 
+        const elementMapping = {
+            buying_mode: 'attr_buying_mode',
+            condition_type: 'attr_condition_type',
+            category_id: 'attr_category_id',
+            local_pick_up: 'attr_local_pick_up',
+            logistic_type: 'attr_logistic_type',
+            warranty_type: 'attr_warranty_type',
+            warranty_time: 'attr_warranty_time',
+            volume_capacity: 'attr_volume_capacity',
+            units_per_pack: 'attr_units_per_pack',
+            value_added_tax: 'attr_value_added_tax',
+            import_duty: 'attr_import_duty',
+            empty_gtin_reason: 'attr_empty_gtin_reason',
+            ink_color: 'attr_ink_color',
+            pot_type: 'attr_pot_type',
+            product_type: 'attr_product_type',
+            output_connectors: 'attr_output_connectors',
+            surveillance_camera_type: 'attr_surveillance_camera_type',
+            camera_locations: 'attr_camera_locations',
+            cable_and_adapter_type: 'attr_cable_and_adapter_type',
+            data_storage_capacity: 'attr_data_storage_capacity',
+            usb_port_version: 'attr_usb_port_version',
+            capacity: 'attr_capacity',
+            power_supply_type: 'attr_power_supply_type',
+            grading: 'attr_grading',
+            with_usb: 'attr_with_usb',
+            size: 'attr_size',
+            color: 'attr_color',
+            gender: 'attr_gender',
+            name: 'attr_name',
+            iron_type: 'attr_iron_type',
+            input_connector: 'attr_input_connector',
+            thermal_container_type: 'attr_thermal_container_type',
+            is_factory_kit: 'attr_is_factory_kit',
+            pieces_number: 'attr_pieces_number',
+            material: 'attr_material',
+            drinking_glass_product_type: 'attr_drinking_glass_product_type',
+            makeup_format: 'attr_makeup_format',
+            eyeliner_type: 'attr_eyeliner_type',
+            backpack_type: 'attr_backpack_type',
+            faucet_control_type: 'attr_faucet_control_type',
+            makeup_brushes_number: 'attr_makeup_brushes_number',
+            finish: 'attr_finish',
+            lip_liner_type: 'attr_lip_liner_type',
+            board_game_name: 'attr_board_game_name',
+            listing_type_id: 'edit_listing_type_id',
+            free_shipping: 'edit_free_shipping',
+            mode_shipping: 'edit_mode_shipping'
+        };
+
         const payload = {};
         for (const key in fullPayload) {
+            const domId = elementMapping[key];
+            if (domId && !document.getElementById(domId)) {
+                // The input field is not rendered in the DOM, so it was not modified
+                continue;
+            }
             const newVal = fullPayload[key];
             const oldVal = currentMeliAttrs ? currentMeliAttrs[key] : undefined;
             
