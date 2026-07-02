@@ -488,6 +488,51 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
         if w_val and w_val not in ["Garantía del vendedor", "Garantía de fábrica", "Garantia del vendedor", "Garantia de fabrica"]:
             updates['warranty_type'] = None
 
+    # Sanitize value_added_tax (mapping ML IDs to percentages)
+    if 'value_added_tax' in updates:
+        val = str(updates['value_added_tax']) if updates['value_added_tax'] is not None else None
+        vat_mapping = {
+            "48405909": "21",
+            "48405908": "10.5",
+            "48405907": "0",
+            "55043032": "0",
+            "48405910": "27"
+        }
+        if val in vat_mapping:
+            val = vat_mapping[val]
+        # Validate against check constraint, fallback to default '21' if invalid/unknown
+        if val not in ["21", "10.5", "0", "27"]:
+            val = "21"
+        updates['value_added_tax'] = val
+
+    # Sanitize import_duty (mapping ML IDs to percentages)
+    if 'import_duty' in updates:
+        val = str(updates['import_duty']) if updates['import_duty'] is not None else None
+        duty_mapping = {
+            "49553239": "0",
+            "49553240": "5",
+            "49553241": "10",
+            "49553242": "15",
+            "49553243": "20",
+            "49553244": "25",
+            "49553245": "30",
+            "49553246": "35",
+            "49553247": "40",
+            "49553248": "45",
+            "49553249": "0",
+            "49553250": "0",
+            "49553251": "0",
+            "49553252": "0",
+            "49553253": "70"
+        }
+        if val in duty_mapping:
+            val = duty_mapping[val]
+        # Validate against check constraint, fallback to default '0' if invalid/unknown
+        allowed_duty = ["0", "1", "2.5", "4", "5", "8", "9.5", "10", "14", "15", "18", "19", "20", "23", "25", "26", "70"]
+        if val not in allowed_duty:
+            val = "0"
+        updates['import_duty'] = val
+
     db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
     if not db_attr:
         db_attr = MercadoLibreAttribute(

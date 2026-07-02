@@ -284,9 +284,9 @@ class MercadoLibreAttributeSchema(BaseModel):
     units_per_pack_required: Optional[int] = None
     units_per_pack: Optional[int] = None
     value_added_tax_required: Optional[int] = None
-    value_added_tax: Optional[int] = None
+    value_added_tax: Optional[str] = None
     import_duty_required: Optional[int] = None
-    import_duty: Optional[int] = None
+    import_duty: Optional[str] = None
     empty_gtin_reason_required: Optional[int] = None
     empty_gtin_reason: Optional[int] = None
     warranty_time: Optional[str] = None
