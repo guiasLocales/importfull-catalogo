@@ -411,7 +411,12 @@ MAP_ATTRIBUTES = {
     "DRINKING_GLASS_PRODUCT_TYPE": "drinking_glass_product_type",
     "MAKEUP_FORMAT": "makeup_format",
     "EYELINER_TYPE": "eyeliner_type",
-    "BACKPACK_TYPE": "backpack_type"
+    "BACKPACK_TYPE": "backpack_type",
+    "FAUCET_CONTROL_TYPE": "faucet_control_type",
+    "MAKEUP_BRUSHES_NUMBER": "makeup_brushes_number",
+    "FINISH": "finish",
+    "LIP_LINER_TYPE": "lip_liner_type",
+    "BOARD_GAME_NAME": "board_game_name"
 }
 
 def get_meli_attributes(db: Session, item_id: int):

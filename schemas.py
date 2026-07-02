@@ -356,6 +356,16 @@ class MercadoLibreAttributeSchema(BaseModel):
     eyeliner_type_required: Optional[int] = None
     backpack_type: Optional[str] = None
     backpack_type_required: Optional[int] = None
+    faucet_control_type: Optional[str] = None
+    faucet_control_type_required: Optional[int] = None
+    makeup_brushes_number: Optional[int] = None
+    makeup_brushes_number_required: Optional[int] = None
+    finish: Optional[str] = None
+    finish_required: Optional[int] = None
+    lip_liner_type: Optional[str] = None
+    lip_liner_type_required: Optional[int] = None
+    board_game_name: Optional[str] = None
+    board_game_name_required: Optional[int] = None
 
     class Config:
         from_attributes = True
