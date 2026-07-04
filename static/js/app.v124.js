@@ -1180,6 +1180,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     lip_liner_type_required: false,
                     board_game_name: '',
                     board_game_name_required: false,
+                    part_number: '',
+                    part_number_required: false,
+                    vehicle_type: '',
+                    vehicle_type_required: false,
+                    voleyball_ground_type: '',
+                    voleyball_ground_type_required: false,
+                    scale: '',
+                    scale_required: false,
+                    includes_assembly_manual: '',
+                    includes_assembly_manual_required: false,
+                    with_sound: '',
+                    with_sound_required: false,
+                    roller_skates_size: '',
+                    roller_skates_size_required: false,
+                    roller_skates_type: '',
+                    roller_skates_type_required: false,
+                    with_brakes: '',
+                    with_brakes_required: false,
+                    age_group: '',
+                    age_group_required: false,
                     listing_type_id: product.listing_type_id || 'gold_special',
                     free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
                     mode_shipping: product.mode_shipping || 'me1'
@@ -1859,12 +1879,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.value_added_tax_required)}
                                 </label>
                                 <select id="attr_value_added_tax" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="48405909" ${meliAttrs.value_added_tax === '48405909' ? 'selected' : ''}>21 % (48405909)</option>
-                                    <option value="48405908" ${meliAttrs.value_added_tax === '48405908' ? 'selected' : ''}>10.5 % (48405908)</option>
-                                    <option value="48405907" ${meliAttrs.value_added_tax === '48405907' ? 'selected' : ''}>0 % (48405907)</option>
-                                    <option value="55043032" ${meliAttrs.value_added_tax === '55043032' ? 'selected' : ''}>Exento (55043032)</option>
-                                    <option value="48405910" ${meliAttrs.value_added_tax === '48405910' ? 'selected' : ''}>27 % (48405910)</option>
+                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="21" ${String(meliAttrs.value_added_tax) === '21' ? 'selected' : ''}>21 % (48405909)</option>
+                                    <option value="10.5" ${String(meliAttrs.value_added_tax) === '10.5' ? 'selected' : ''}>10.5 % (48405908)</option>
+                                    <option value="0" ${String(meliAttrs.value_added_tax) === '0' ? 'selected' : ''}>0 % (48405907)</option>
+                                    <option value="0" ${String(meliAttrs.value_added_tax) === 'Exento' ? 'selected' : ''}>Exento (55043032)</option>
+                                    <option value="27" ${String(meliAttrs.value_added_tax) === '27' ? 'selected' : ''}>27 % (48405910)</option>
                                 </select>
                             </div>
                             `)}
@@ -1877,22 +1897,22 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${requiredBadge(meliAttrs.import_duty_required)}
                                 </label>
                                 <select id="attr_import_duty" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="49553239" ${meliAttrs.import_duty === '49553239' ? 'selected' : ''}>0 % (49553239)</option>
-                                    <option value="49553240" ${meliAttrs.import_duty === '49553240' ? 'selected' : ''}>5 % (49553240)</option>
-                                    <option value="49553241" ${meliAttrs.import_duty === '49553241' ? 'selected' : ''}>10 % (49553241)</option>
-                                    <option value="49553242" ${meliAttrs.import_duty === '49553242' ? 'selected' : ''}>15 % (49553242)</option>
-                                    <option value="49553243" ${meliAttrs.import_duty === '49553243' ? 'selected' : ''}>20 % (49553243)</option>
-                                    <option value="49553244" ${meliAttrs.import_duty === '49553244' ? 'selected' : ''}>25 % (49553244)</option>
-                                    <option value="49553245" ${meliAttrs.import_duty === '49553245' ? 'selected' : ''}>30 % (49553245)</option>
-                                    <option value="49553246" ${meliAttrs.import_duty === '49553246' ? 'selected' : ''}>35 % (49553246)</option>
-                                    <option value="49553247" ${meliAttrs.import_duty === '49553247' ? 'selected' : ''}>40 % (49553247)</option>
-                                    <option value="49553248" ${meliAttrs.import_duty === '49553248' ? 'selected' : ''}>45 % (49553248)</option>
-                                    <option value="49553249" ${meliAttrs.import_duty === '49553249' ? 'selected' : ''}>50 % (49553249)</option>
-                                    <option value="49553250" ${meliAttrs.import_duty === '49553250' ? 'selected' : ''}>55 % (49553250)</option>
-                                    <option value="49553251" ${meliAttrs.import_duty === '49553251' ? 'selected' : ''}>60 % (49553251)</option>
-                                    <option value="49553252" ${meliAttrs.import_duty === '49553252' ? 'selected' : ''}>65 % (49553252)</option>
-                                    <option value="49553253" ${meliAttrs.import_duty === '49553253' ? 'selected' : ''}>70 % (49553253)</option>
+                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="0" ${String(meliAttrs.import_duty) === '0' ? 'selected' : ''}>0 % (49553239)</option>
+                                    <option value="5" ${String(meliAttrs.import_duty) === '5' ? 'selected' : ''}>5 % (49553240)</option>
+                                    <option value="10" ${String(meliAttrs.import_duty) === '10' ? 'selected' : ''}>10 % (49553241)</option>
+                                    <option value="15" ${String(meliAttrs.import_duty) === '15' ? 'selected' : ''}>15 % (49553242)</option>
+                                    <option value="20" ${String(meliAttrs.import_duty) === '20' ? 'selected' : ''}>20 % (49553243)</option>
+                                    <option value="25" ${String(meliAttrs.import_duty) === '25' ? 'selected' : ''}>25 % (49553244)</option>
+                                    <option value="30" ${String(meliAttrs.import_duty) === '30' ? 'selected' : ''}>30 % (49553245)</option>
+                                    <option value="35" ${String(meliAttrs.import_duty) === '35' ? 'selected' : ''}>35 % (49553246)</option>
+                                    <option value="40" ${String(meliAttrs.import_duty) === '40' ? 'selected' : ''}>40 % (49553247)</option>
+                                    <option value="45" ${String(meliAttrs.import_duty) === '45' ? 'selected' : ''}>45 % (49553248)</option>
+                                    <option value="0" ${String(meliAttrs.import_duty) === '50' ? 'selected' : ''}>50 % (49553249)</option>
+                                    <option value="0" ${String(meliAttrs.import_duty) === '55' ? 'selected' : ''}>55 % (49553250)</option>
+                                    <option value="0" ${String(meliAttrs.import_duty) === '60' ? 'selected' : ''}>60 % (49553251)</option>
+                                    <option value="0" ${String(meliAttrs.import_duty) === '65' ? 'selected' : ''}>65 % (49553252)</option>
+                                    <option value="70" ${String(meliAttrs.import_duty) === '70' ? 'selected' : ''}>70 % (49553253)</option>
                                 </select>
                             </div>
                             `)}
@@ -2480,6 +2500,154 @@ document.addEventListener('DOMContentLoaded', function () {
                                        placeholder="Ej: Ajedrez, Ludo, Damas">
                             </div>
                             `)}
+
+                            ${showIfRequired(meliAttrs.part_number_required, `
+                            <!-- Número de Pieza (part_number) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="binary" class="h-3.5 w-3.5"></i> Número de pieza
+                                    ${requiredBadge(meliAttrs.part_number_required)}
+                                </label>
+                                <input type="text" id="attr_part_number" value="${meliAttrs.part_number || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: PX-99281">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.vehicle_type_required, `
+                            <!-- Tipo de Vehículo (vehicle_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="car" class="h-3.5 w-3.5"></i> Tipo de vehículo
+                                    ${requiredBadge(meliAttrs.vehicle_type_required)}
+                                </label>
+                                <select id="attr_vehicle_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Auto/Camioneta" ${meliAttrs.vehicle_type === 'Auto/Camioneta' ? 'selected' : ''}>Auto/Camioneta</option>
+                                </select>
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.voleyball_ground_type_required, `
+                            <!-- Tipo de Superficie de Volleyball (voleyball_ground_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="layers" class="h-3.5 w-3.5"></i> Tipo de superficie (Vóley)
+                                    ${requiredBadge(meliAttrs.voleyball_ground_type_required)}
+                                </label>
+                                <input type="text" id="attr_voleyball_ground_type" value="${meliAttrs.voleyball_ground_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: Arena, Madera, Cemento">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.scale_required, `
+                            <!-- Escala (scale) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="maximize-2" class="h-3.5 w-3.5"></i> Escala
+                                    ${requiredBadge(meliAttrs.scale_required)}
+                                </label>
+                                <input type="text" id="attr_scale" value="${meliAttrs.scale || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: 1:72, 1:35">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.includes_assembly_manual_required, `
+                            <!-- Incluye manual de ensamblado (includes_assembly_manual) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="book-open" class="h-3.5 w-3.5"></i> Manual de ensamblado
+                                    ${requiredBadge(meliAttrs.includes_assembly_manual_required)}
+                                </label>
+                                <select id="attr_includes_assembly_manual" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Si" ${meliAttrs.includes_assembly_manual === 'Si' ? 'selected' : ''}>Si</option>
+                                    <option value="No" ${meliAttrs.includes_assembly_manual === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.with_sound_required, `
+                            <!-- Incluye sonido (with_sound) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="volume-2" class="h-3.5 w-3.5"></i> Incluye sonido
+                                    ${requiredBadge(meliAttrs.with_sound_required)}
+                                </label>
+                                <select id="attr_with_sound" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Si" ${meliAttrs.with_sound === 'Si' ? 'selected' : ''}>Si</option>
+                                    <option value="No" ${meliAttrs.with_sound === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.with_brakes_required, `
+                            <!-- Con frenos (with_brakes) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="circle-slash" class="h-3.5 w-3.5"></i> Con frenos
+                                    ${requiredBadge(meliAttrs.with_brakes_required)}
+                                </label>
+                                <select id="attr_with_brakes" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Si" ${meliAttrs.with_brakes === 'Si' ? 'selected' : ''}>Si</option>
+                                    <option value="No" ${meliAttrs.with_brakes === 'No' ? 'selected' : ''}>No</option>
+                                </select>
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.roller_skates_size_required, `
+                            <!-- Talle de patines (roller_skates_size) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="footprints" class="h-3.5 w-3.5"></i> Talle de patines
+                                    ${requiredBadge(meliAttrs.roller_skates_size_required)}
+                                </label>
+                                <input type="text" id="attr_roller_skates_size" value="${meliAttrs.roller_skates_size || ''}" maxlength="1" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: S, M, L">
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.roller_skates_type_required, `
+                            <!-- Tipo de patines (roller_skates_type) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="arrow-right-left" class="h-3.5 w-3.5"></i> Tipo de patines
+                                    ${requiredBadge(meliAttrs.roller_skates_type_required)}
+                                </label>
+                                <select id="attr_roller_skates_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="4 ruedas" ${meliAttrs.roller_skates_type === '4 ruedas' ? 'selected' : ''}>4 ruedas</option>
+                                    <option value="En línea" ${meliAttrs.roller_skates_type === 'En línea' ? 'selected' : ''}>En línea</option>
+                                </select>
+                            </div>
+                            `)}
+
+                            ${showIfRequired(meliAttrs.age_group_required, `
+                            <!-- Grupo de edad (age_group) -->
+                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <i data-lucide="users-2" class="h-3.5 w-3.5"></i> Grupo de edad
+                                    ${requiredBadge(meliAttrs.age_group_required)}
+                                </label>
+                                <select id="attr_age_group" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Niños" ${meliAttrs.age_group === 'Niños' ? 'selected' : ''}>Niños</option>
+                                    <option value="Adultos" ${meliAttrs.age_group === 'Adultos' ? 'selected' : ''}>Adultos</option>
+                                    <option value="Bebés" ${meliAttrs.age_group === 'Bebés' ? 'selected' : ''}>Bebés</option>
+                                </select>
+                            </div>
+                            `)}
                         </div>
 
                         ${hasNotMappedAttributes(meliAttrs.not_mapped_attributes) ? `
@@ -3018,6 +3186,16 @@ document.addEventListener('DOMContentLoaded', function () {
             finish: getValOrNull('attr_finish'),
             lip_liner_type: getValOrNull('attr_lip_liner_type'),
             board_game_name: getValOrNull('attr_board_game_name'),
+            part_number: getValOrNull('attr_part_number'),
+            vehicle_type: getValOrNull('attr_vehicle_type'),
+            voleyball_ground_type: getValOrNull('attr_voleyball_ground_type'),
+            scale: getValOrNull('attr_scale'),
+            includes_assembly_manual: getValOrNull('attr_includes_assembly_manual'),
+            with_sound: getValOrNull('attr_with_sound'),
+            roller_skates_size: getValOrNull('attr_roller_skates_size'),
+            roller_skates_type: getValOrNull('attr_roller_skates_type'),
+            with_brakes: getValOrNull('attr_with_brakes'),
+            age_group: getValOrNull('attr_age_group'),
             listing_type_id: getValOrNull('edit_listing_type_id'),
             free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
             mode_shipping: getValOrNull('edit_mode_shipping')
@@ -3068,6 +3246,16 @@ document.addEventListener('DOMContentLoaded', function () {
             finish: 'attr_finish',
             lip_liner_type: 'attr_lip_liner_type',
             board_game_name: 'attr_board_game_name',
+            part_number: 'attr_part_number',
+            vehicle_type: 'attr_vehicle_type',
+            voleyball_ground_type: 'attr_voleyball_ground_type',
+            scale: 'attr_scale',
+            includes_assembly_manual: 'attr_includes_assembly_manual',
+            with_sound: 'attr_with_sound',
+            roller_skates_size: 'attr_roller_skates_size',
+            roller_skates_type: 'attr_roller_skates_type',
+            with_brakes: 'attr_with_brakes',
+            age_group: 'attr_age_group',
             listing_type_id: 'edit_listing_type_id',
             free_shipping: 'edit_free_shipping',
             mode_shipping: 'edit_mode_shipping'

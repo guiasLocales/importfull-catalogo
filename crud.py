@@ -416,7 +416,17 @@ MAP_ATTRIBUTES = {
     "MAKEUP_BRUSHES_NUMBER": "makeup_brushes_number",
     "FINISH": "finish",
     "LIP_LINER_TYPE": "lip_liner_type",
-    "BOARD_GAME_NAME": "board_game_name"
+    "BOARD_GAME_NAME": "board_game_name",
+    "PART_NUMBER": "part_number",
+    "VEHICLE_TYPE": "vehicle_type",
+    "VOLEYBALL_GROUND_TYPE": "voleyball_ground_type",
+    "SCALE": "scale",
+    "INCLUDES_ASSEMBLY_MANUAL": "includes_assembly_manual",
+    "WITH_SOUND": "with_sound",
+    "ROLLER_SKATES_SIZE": "roller_skates_size",
+    "ROLLER_SKATES_TYPE": "roller_skates_type",
+    "WITH_BRAKES": "with_brakes",
+    "AGE_GROUP": "age_group"
 }
 
 def get_meli_attributes(db: Session, item_id: int):
@@ -537,6 +547,76 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
         if val not in allowed_duty:
             val = "0"
         updates['import_duty'] = val
+
+    # Sanitize vehicle_type
+    if 'vehicle_type' in updates:
+        val = updates['vehicle_type']
+        if val and val != "Auto/Camioneta":
+            updates['vehicle_type'] = "Auto/Camioneta"
+
+    # Sanitize includes_assembly_manual
+    if 'includes_assembly_manual' in updates:
+        val = updates['includes_assembly_manual']
+        if val:
+            val = val.strip().capitalize()
+            if val not in ["Si", "No"]:
+                val = None
+        updates['includes_assembly_manual'] = val
+
+    # Sanitize with_sound
+    if 'with_sound' in updates:
+        val = updates['with_sound']
+        if val:
+            val = val.strip().capitalize()
+            if val not in ["Si", "No"]:
+                val = None
+        updates['with_sound'] = val
+
+    # Sanitize with_brakes
+    if 'with_brakes' in updates:
+        val = updates['with_brakes']
+        if val:
+            val = val.strip().capitalize()
+            if val not in ["Si", "No"]:
+                val = None
+        updates['with_brakes'] = val
+
+    # Sanitize roller_skates_size (limit to 1 character max to avoid mysql overflow)
+    if 'roller_skates_size' in updates:
+        val = updates['roller_skates_size']
+        if val:
+            val = str(val).strip()
+            if len(val) > 1:
+                val = val[0]  # Take first character (e.g. S, M, L)
+        updates['roller_skates_size'] = val
+
+    # Sanitize roller_skates_type
+    if 'roller_skates_type' in updates:
+        val = updates['roller_skates_type']
+        if val:
+            val_norm = str(val).lower().replace("í", "i").strip()
+            if "en linea" in val_norm or "en línea" in val_norm:
+                val = "En línea"
+            elif "4 ruedas" in val_norm:
+                val = "4 ruedas"
+            else:
+                val = None
+        updates['roller_skates_type'] = val
+
+    # Sanitize age_group
+    if 'age_group' in updates:
+        val = updates['age_group']
+        if val:
+            val_norm = str(val).lower().replace("ñ", "n").replace("é", "e").strip()
+            if "nino" in val_norm:
+                val = "Niños"
+            elif "adulto" in val_norm:
+                val = "Adultos"
+            elif "bebe" in val_norm:
+                val = "Bebés"
+            else:
+                val = None
+        updates['age_group'] = val
 
     db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
     if not db_attr:

@@ -366,6 +366,26 @@ class MercadoLibreAttributeSchema(BaseModel):
     lip_liner_type_required: Optional[int] = None
     board_game_name: Optional[str] = None
     board_game_name_required: Optional[int] = None
+    part_number: Optional[str] = None
+    part_number_required: Optional[int] = None
+    vehicle_type: Optional[str] = None
+    vehicle_type_required: Optional[int] = None
+    voleyball_ground_type: Optional[str] = None
+    voleyball_ground_type_required: Optional[int] = None
+    scale: Optional[str] = None
+    scale_required: Optional[int] = None
+    includes_assembly_manual: Optional[str] = None
+    includes_assembly_manual_required: Optional[int] = None
+    with_sound: Optional[str] = None
+    with_sound_required: Optional[int] = None
+    roller_skates_size: Optional[str] = None
+    roller_skates_size_required: Optional[int] = None
+    roller_skates_type: Optional[str] = None
+    roller_skates_type_required: Optional[int] = None
+    with_brakes: Optional[str] = None
+    with_brakes_required: Optional[int] = None
+    age_group: Optional[str] = None
+    age_group_required: Optional[int] = None
 
     class Config:
         from_attributes = True
