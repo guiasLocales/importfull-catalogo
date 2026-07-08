@@ -72,6 +72,7 @@
             renderTiendaNubeTable();
             updateTNPagination();
             updateTNSummary();
+            if (typeof window.scrollToTop === 'function') window.scrollToTop();
         } catch (error) {
             console.error('TN Load Error:', error);
             showAlert('Error de Carga', 'No se pudieron cargar los productos de Tienda Nube.', 'error');
