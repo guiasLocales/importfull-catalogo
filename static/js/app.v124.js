@@ -1658,7 +1658,16 @@ document.addEventListener('DOMContentLoaded', function () {
                                             <i data-lucide="${hasIssues ? 'alert-triangle' : 'check-circle'}" class="h-5 w-5"></i>
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="font-bold text-sm">${hasIssues ? 'Revisión Requerida' : 'Sin Revisiones Pendientes'}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-sm">${hasIssues ? 'Revisión Requerida' : 'Sin Revisiones Pendientes'}</span>
+                                                ${hasIssues ? `
+                                                <button onclick="event.stopPropagation(); window.shareProductErrorToWhatsapp()" 
+                                                        class="p-1 text-[#25D366] hover:text-[#20BA56] active:scale-95 transition-all cursor-pointer rounded-full hover:bg-orange-200/30 flex items-center justify-center" 
+                                                        title="Compartir por WhatsApp">
+                                                    <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.747 1.451 5.436.002 9.85-4.411 9.854-9.845.002-2.634-1.02-5.109-2.877-6.97C16.456 1.978 13.99 .953 11.352.953 5.914.953 1.5 5.367 1.496 10.802c-.001 1.622.424 3.21 1.232 4.624l-.135.253-1.01 3.687 3.774-1.026.243.143zM17.06 14.8c-.27-.135-1.597-.788-1.846-.879-.25-.09-.43-.135-.61.135-.18.27-.697.879-.855 1.059-.158.18-.315.203-.585.068-1.52-.759-2.528-1.336-3.535-3.072-.267-.46-.076-.708.1-.875.158-.15.315-.36.473-.54.157-.18.21-.305.315-.51.105-.206.052-.385-.026-.52-.079-.135-.61-1.62-.855-2.205-.236-.575-.48-.49-.61-.497-.13-.007-.29-.007-.45-.007-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2.01 0 1.19.87 2.34.99 2.51.12.17 1.71 2.61 4.14 3.66.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.59-.65 1.81-1.28.23-.63.23-1.17.16-1.28-.07-.1-.26-.185-.53-.32z"/></svg>
+                                                </button>
+                                                ` : ''}
+                                            </div>
                                             <span class="text-xs ${subtextClass}">${hasIssues ? 'Ver detalles de validación' : 'No hay problemas detectados'}</span>
                                         </div>
                                     </div>
@@ -1672,11 +1681,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-orange-100 dark:border-orange-900/35 text-gray-700 dark:text-gray-300 shadow-sm text-xs leading-relaxed font-mono">
                                             ${product.reason}
                                         </div>
-                                        <button onclick="window.shareProductErrorToWhatsapp()" 
-                                                class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366] hover:bg-[#20BA56] active:bg-[#1E9F4A] text-white rounded-lg text-xs font-bold shadow-sm transition-all cursor-pointer select-none">
-                                            <svg class="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.747 1.451 5.436.002 9.85-4.411 9.854-9.845.002-2.634-1.02-5.109-2.877-6.97C16.456 1.978 13.99 .953 11.352.953 5.914.953 1.5 5.367 1.496 10.802c-.001 1.622.424 3.21 1.232 4.624l-.135.253-1.01 3.687 3.774-1.026.243.143zM17.06 14.8c-.27-.135-1.597-.788-1.846-.879-.25-.09-.43-.135-.61.135-.18.27-.697.879-.855 1.059-.158.18-.315.203-.585.068-1.52-.759-2.528-1.336-3.535-3.072-.267-.46-.076-.708.1-.875.158-.15.315-.36.473-.54.157-.18.21-.305.315-.51.105-.206.052-.385-.026-.52-.079-.135-.61-1.62-.855-2.205-.236-.575-.48-.49-.61-.497-.13-.007-.29-.007-.45-.007-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2.01 0 1.19.87 2.34.99 2.51.12.17 1.71 2.61 4.14 3.66.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.59-.65 1.81-1.28.23-.63.23-1.17.16-1.28-.07-.1-.26-.185-.53-.32z"/></svg>
-                                            Compartir por WhatsApp
-                                        </button>
                                     </div>` : ''}
                                     ${product.remedy ? `
                                     <div>
