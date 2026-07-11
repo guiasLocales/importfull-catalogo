@@ -107,7 +107,7 @@
                         </div>
                         <div class="max-w-[200px]">
                             <p class="text-sm font-semibold text-gray-900 dark:text-white truncate" title="${product.product_name}">${product.product_name}</p>
-                            <p class="text-[10px] text-gray-500 uppercase font-bold">${product.category || 'Sin Categoría'}</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-bold">${product.product_type_path || 'Sin Categoría'}</p>
                         </div>
                     </div>
                 </td>
