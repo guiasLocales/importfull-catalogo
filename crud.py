@@ -613,7 +613,7 @@ def get_meli_attributes(db: Session, item_id: int):
         price = 0.0
         if product:
             price = float(product.price_mercadolibre or product.price or 0.0)
-            if not attrs.category_id and product.product_type_id:
+            if not attrs.category_id and product.product_type_id and str(product.product_type_id).startswith("MLA"):
                 attrs.category_id = product.product_type_id
                 
         # Calculate fees based on product price
