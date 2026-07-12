@@ -382,324 +382,219 @@ def get_tn_product_status(db: Session, attribute_id: int):
 import uuid
 from models import MercadoLibreAttribute
 
-MAP_ATTRIBUTES = {
-    "INPUT_CONNECTOR": "input_connector",
-    "OUTPUT_CONNECTOR": "output_connectors",
-    "PRODUCT_TYPE": "product_type",
-    "VOLUME_CAPACITY": "volume_capacity",
-    "UNITS_PER_PACK": "units_per_pack",
-    "INK_COLOR": "ink_color",
-    "POT_TYPE": "pot_type",
-    "SURVEILLANCE_CAMERA_TYPE": "surveillance_camera_type",
-    "CAMERA_LOCATIONS": "camera_locations",
-    "CABLE_AND_ADAPTER_TYPE": "cable_and_adapter_type",
-    "DATA_STORAGE_CAPACITY": "data_storage_capacity",
-    "USB_PORT_VERSION": "usb_port_version",
-    "CAPACITY": "capacity",
-    "POWER_SUPPLY_TYPE": "power_supply_type",
-    "GRADING": "grading",
-    "WITH_USB": "with_usb",
-    "SIZE": "size",
-    "COLOR": "color",
-    "GENDER": "gender",
-    "NAME": "name",
-    "IRON_TYPE": "iron_type",
-    "THERMAL_CONTAINER_TYPE": "thermal_container_type",
-    "IS_FACTORY_KIT": "is_factory_kit",
-    "PIECES_NUMBER": "pieces_number",
-    "MATERIAL": "material",
-    "DRINKING_GLASS_PRODUCT_TYPE": "drinking_glass_product_type",
-    "MAKEUP_FORMAT": "makeup_format",
-    "EYELINER_TYPE": "eyeliner_type",
-    "BACKPACK_TYPE": "backpack_type",
-    "FAUCET_CONTROL_TYPE": "faucet_control_type",
-    "MAKEUP_BRUSHES_NUMBER": "makeup_brushes_number",
-    "FINISH": "finish",
-    "LIP_LINER_TYPE": "lip_liner_type",
-    "BOARD_GAME_NAME": "board_game_name",
-    "PART_NUMBER": "part_number",
-    "VEHICLE_TYPE": "vehicle_type",
-    "VOLEYBALL_GROUND_TYPE": "voleyball_ground_type",
-    "SCALE": "scale",
-    "INCLUDES_ASSEMBLY_MANUAL": "includes_assembly_manual",
-    "WITH_SOUND": "with_sound",
-    "ROLLER_SKATES_SIZE": "roller_skates_size",
-    "ROLLER_SKATES_TYPE": "roller_skates_type",
-    "WITH_BRAKES": "with_brakes",
-    "AGE_GROUP": "age_group"
-}
-
 def get_meli_attributes(db: Session, item_id: int):
     import json
+    from models import Product, SellingCalculation
+    
     attrs = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
-    if attrs:
-        # Auto-heal required fields from allowed_options and not_mapped_attributes
-        required_ids = set()
-        if attrs.allowed_options:
-            try:
-                allowed = json.loads(attrs.allowed_options) if isinstance(attrs.allowed_options, str) else attrs.allowed_options
-                req_attrs = allowed.get("settings", {}).get("required_attributes", {})
-                for attr_id in req_attrs.keys():
-                    required_ids.add(attr_id.upper())
-            except Exception as e:
-                print(f"Error parsing allowed_options: {e}")
+    
+    if not attrs:
+        # Create it dynamically if it doesn't exist
+        attrs = MercadoLibreAttribute(
+            id=str(uuid.uuid4()),
+            item_id=item_id,
+            category_id=""
+        )
+        db.add(attrs)
+        db.flush()
+        
+    # Check if settings is empty or null, if so initialize default settings JSON
+    if not attrs.settings:
+        # Fetch product price for listing calculations
+        product = db.query(Product).filter(Product.id == item_id).first()
+        price = 0.0
+        if product:
+            price = float(product.price_mercadolibre or product.price or 0.0)
+            if not attrs.category_id and product.product_type_id:
+                attrs.category_id = product.product_type_id
                 
-        if attrs.not_mapped_attributes:
-            try:
-                not_mapped = json.loads(attrs.not_mapped_attributes) if isinstance(attrs.not_mapped_attributes, str) else attrs.not_mapped_attributes
-                if isinstance(not_mapped, list):
-                    for item in not_mapped:
-                        attr_id = item.get("id")
-                        tags = item.get("tags", {})
-                        if attr_id and (tags.get("required") is True or tags.get("catalog_required") is True):
-                            required_ids.add(attr_id.upper())
-            except Exception as e:
-                print(f"Error parsing not_mapped_attributes: {e}")
-                
-        updated = False
-        for attr_id in required_ids:
-            col_base = MAP_ATTRIBUTES.get(attr_id)
-            if col_base:
-                col_req = f"{col_base}_required"
-                if hasattr(attrs, col_req):
-                    if getattr(attrs, col_req) != 1:
-                        setattr(attrs, col_req, 1)
-                        updated = True
-                        
-        if updated:
-            try:
-                db.commit()
-                db.refresh(attrs)
-            except Exception as e:
-                db.rollback()
-                print(f"Error auto-healing required attributes: {e}")
-                
+        # Calculate fees based on product price
+        sale_fee_gold_special = round(price * 0.1465, 2)
+        sale_fee_gold_pro = round(price * 0.2695, 2)
+        
+        # Build dynamic settings structure
+        default_settings = [
+            {
+                "attributes": [
+                    {
+                        "id": "pot_type",
+                        "name": "Tipo de olla",
+                        "condition": "Free Input",
+                        "value_type": "string",
+                        "value_examples": ["Vaporeras", "Cacerola", "Olla a presion"],
+                        "user_input_value": "",
+                        "value_max_lenght": 255
+                    },
+                    {
+                        "id": "units_per_pack",
+                        "name": "Unidades por pack",
+                        "condition": "Free Input",
+                        "value_type": "number",
+                        "value_examples": "",
+                        "user_input_value": "1",
+                        "value_max_lenght": 18
+                    },
+                    {
+                        "id": "value_added_tax",
+                        "name": "IVA",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"],
+                        "user_input_value": "21 %",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "import_duty",
+                        "name": "Impuesto interno",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
+                        "user_input_value": "0 %",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "volume_capacity",
+                        "name": "Capacidad en volumen",
+                        "condition": "Free Input",
+                        "value_type": "number_unit",
+                        "value_examples": "",
+                        "user_input_value": "1 mL",
+                        "value_max_lenght": 255
+                    }
+                ]
+            },
+            {
+                "shipping": [
+                    {
+                        "id": "mode",
+                        "name": "Metodo de Envio",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": [["custom", "me1", "me2", "not_specified"]],
+                        "user_input_value": "me2",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "local_pick_up",
+                        "name": "Buscar en Local",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": [["True", "False"]],
+                        "user_input_value": "True",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "free_shipping",
+                        "name": "Envio Gratis",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": [["True", "False"]],
+                        "user_input_value": "False",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "logistic_type",
+                        "name": "Tipo de Logistica",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]],
+                        "user_input_value": "drop_off",
+                        "value_max_lenght": ""
+                    }
+                ]
+            },
+            {
+                "sale_terms": [
+                    {
+                        "id": "warranty_type",
+                        "name": "Tipo de garantia",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": ["Garantia del vendedor", "Garantia de fabrica", "Sin garantia"],
+                        "user_input_value": "Garantia del vendedor",
+                        "value_max_lenght": ""
+                    },
+                    {
+                        "id": "warranty_time",
+                        "name": "Tiempo de garantia",
+                        "condition": "Free Input",
+                        "value_type": "number_unit",
+                        "value_examples": "",
+                        "user_input_value": "30 dias",
+                        "value_max_lenght": 255
+                    }
+                ]
+            },
+            {
+                "listing": [
+                    {
+                        "id": "listing_type",
+                        "name": "Campana de Cuotas",
+                        "condition": "Restricted Input",
+                        "value_type": "list",
+                        "value_examples": [[
+                            {
+                                "id": "gold_pro",
+                                "name": "Premium",
+                                "sale_fee_amount": sale_fee_gold_pro,
+                                "sale_fee_details": {
+                                    "fixed_fee": 0,
+                                    "gross_amount": sale_fee_gold_pro,
+                                    "percentage_fee": 26.95,
+                                    "meli_percentage_fee": 14.65,
+                                    "financing_add_on_fee": 12.3
+                                },
+                                "listing_fee_amount": 0,
+                                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+                            },
+                            {
+                                "id": "gold_special",
+                                "name": "Clasica",
+                                "sale_fee_amount": sale_fee_gold_special,
+                                "sale_fee_details": {
+                                    "fixed_fee": 0,
+                                    "gross_amount": sale_fee_gold_special,
+                                    "percentage_fee": 14.65,
+                                    "meli_percentage_fee": 14.65,
+                                    "financing_add_on_fee": 0
+                                },
+                                "listing_fee_amount": 0,
+                                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+                            }
+                        ]],
+                        "user_input_value": "gold_special",
+                        "value_max_lenght": ""
+                    }
+                ]
+            }
+        ]
+        
+        attrs.settings = default_settings
+        db.commit()
+        db.refresh(attrs)
+        
     return attrs
 
-def find_best_value_match(selected_str, allowed_values):
-    if not selected_str or not allowed_values:
-        return None, None
-        
-    selected_norm = selected_str.lower().replace(" ", "").replace("-", "")
-    
-    # Try exact normalized match first
-    for val in allowed_values:
-        val_name = val.get("name", "")
-        if val_name.lower().replace(" ", "").replace("-", "") == selected_norm:
-            return val.get("id"), val_name
-            
-    # Try partial/contains match
-    for val in allowed_values:
-        val_name = val.get("name", "")
-        if selected_norm in val_name.lower().replace(" ", "").replace("-", "") or val_name.lower().replace(" ", "").replace("-", "") in selected_norm:
-            return val.get("id"), val_name
-            
-    return None, selected_str
-
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
-    # Sanitize warranty_type to avoid check constraint violations in DB (allow only exact values or NULL)
-    if 'warranty_type' in updates:
-        w_val = updates['warranty_type']
-        if w_val and w_val not in ["Garantía del vendedor", "Garantía de fábrica", "Garantia del vendedor", "Garantia de fabrica"]:
-            updates['warranty_type'] = None
-
-    # Sanitize value_added_tax (mapping ML IDs to percentages)
-    if 'value_added_tax' in updates:
-        val = str(updates['value_added_tax']) if updates['value_added_tax'] is not None else None
-        vat_mapping = {
-            "48405909": "21",
-            "48405908": "10.5",
-            "48405907": "0",
-            "55043032": "0",
-            "48405910": "27"
-        }
-        if val in vat_mapping:
-            val = vat_mapping[val]
-        # Validate against check constraint, fallback to default '21' if invalid/unknown
-        if val not in ["21", "10.5", "0", "27"]:
-            val = "21"
-        updates['value_added_tax'] = val
-
-    # Sanitize import_duty (mapping ML IDs to percentages)
-    if 'import_duty' in updates:
-        val = str(updates['import_duty']) if updates['import_duty'] is not None else None
-        duty_mapping = {
-            "49553239": "0",
-            "49553240": "5",
-            "49553241": "10",
-            "49553242": "15",
-            "49553243": "20",
-            "49553244": "25",
-            "49553245": "30",
-            "49553246": "35",
-            "49553247": "40",
-            "49553248": "45",
-            "49553249": "0",
-            "49553250": "0",
-            "49553251": "0",
-            "49553252": "0",
-            "49553253": "70"
-        }
-        if val in duty_mapping:
-            val = duty_mapping[val]
-        # Validate against check constraint, fallback to default '0' if invalid/unknown
-        allowed_duty = ["0", "1", "2.5", "4", "5", "8", "9.5", "10", "14", "15", "18", "19", "20", "23", "25", "26", "70"]
-        if val not in allowed_duty:
-            val = "0"
-        updates['import_duty'] = val
-
-    # Sanitize vehicle_type
-    if 'vehicle_type' in updates:
-        val = updates['vehicle_type']
-        if val and val != "Auto/Camioneta":
-            updates['vehicle_type'] = "Auto/Camioneta"
-
-    # Sanitize includes_assembly_manual
-    if 'includes_assembly_manual' in updates:
-        val = updates['includes_assembly_manual']
-        if val:
-            val = val.strip().capitalize()
-            if val not in ["Si", "No"]:
-                val = None
-        updates['includes_assembly_manual'] = val
-
-    # Sanitize with_sound
-    if 'with_sound' in updates:
-        val = updates['with_sound']
-        if val:
-            val = val.strip().capitalize()
-            if val not in ["Si", "No"]:
-                val = None
-        updates['with_sound'] = val
-
-    # Sanitize with_brakes
-    if 'with_brakes' in updates:
-        val = updates['with_brakes']
-        if val:
-            val = val.strip().capitalize()
-            if val not in ["Si", "No"]:
-                val = None
-        updates['with_brakes'] = val
-
-    # Sanitize roller_skates_size (limit to 1 character max to avoid mysql overflow)
-    if 'roller_skates_size' in updates:
-        val = updates['roller_skates_size']
-        if val:
-            val = str(val).strip()
-            if len(val) > 1:
-                val = val[0]  # Take first character (e.g. S, M, L)
-        updates['roller_skates_size'] = val
-
-    # Sanitize roller_skates_type
-    if 'roller_skates_type' in updates:
-        val = updates['roller_skates_type']
-        if val:
-            val_norm = str(val).lower().replace("í", "i").strip()
-            if "en linea" in val_norm or "en línea" in val_norm:
-                val = "En línea"
-            elif "4 ruedas" in val_norm:
-                val = "4 ruedas"
-            else:
-                val = None
-        updates['roller_skates_type'] = val
-
-    # Sanitize age_group
-    if 'age_group' in updates:
-        val = updates['age_group']
-        if val:
-            val_norm = str(val).lower().replace("ñ", "n").replace("é", "e").strip()
-            if "nino" in val_norm:
-                val = "Niños"
-            elif "adulto" in val_norm:
-                val = "Adultos"
-            elif "bebe" in val_norm:
-                val = "Bebés"
-            else:
-                val = None
-        updates['age_group'] = val
-
     db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
+    
     if not db_attr:
         db_attr = MercadoLibreAttribute(
             id=str(uuid.uuid4()),
             item_id=item_id,
-            currency_id="ARS",
-            buying_mode="buy_it_now",
-            condition_type="new",
-            local_pick_up=1,
-            logistic_type="drop_off"
+            category_id=""
         )
         db.add(db_attr)
         db.flush()
-    
-    # --- AUTO-HEALING & VALUE NORMALIZATION FOR NOT_MAPPED_ATTRIBUTES ---
-    import json
-    REV_MAP_ATTRIBUTES = {v: k for k, v in MAP_ATTRIBUTES.items()}
-    
-    not_mapped = []
-    if db_attr.not_mapped_attributes:
-        try:
-            not_mapped = json.loads(db_attr.not_mapped_attributes) if isinstance(db_attr.not_mapped_attributes, str) else db_attr.not_mapped_attributes
-            if not isinstance(not_mapped, list):
-                not_mapped = []
-        except Exception as e:
-            print(f"Error loading not_mapped_attributes in update: {e}")
-
-    updated_not_mapped = False
-    
-    for key, value in list(updates.items()):
-        if key in REV_MAP_ATTRIBUTES:
-            attr_id = REV_MAP_ATTRIBUTES[key]
-            
-            # Find in not_mapped
-            attr_dict = None
-            for item in not_mapped:
-                if item.get("id") == attr_id:
-                    attr_dict = item
-                    break
-                    
-            if attr_dict:
-                if not value:
-                    if "value_id" in attr_dict: del attr_dict["value_id"]
-                    if "value_name" in attr_dict: del attr_dict["value_name"]
-                    updated_not_mapped = True
-                else:
-                    selected_parts = [s.strip() for s in str(value).split(",") if s.strip()]
-                    allowed_vals = attr_dict.get("values", [])
-                    if not isinstance(allowed_vals, list):
-                        allowed_vals = []
-                        
-                    matched_ids = []
-                    matched_names = []
-                    for part in selected_parts:
-                        val_id, val_name = find_best_value_match(part, allowed_vals)
-                        if val_id:
-                            matched_ids.append(val_id)
-                        matched_names.append(val_name)
-                        
-                    normalized_str = ", ".join(matched_names)
-                    updates[key] = normalized_str # Update the database column in updates dict
-                    
-                    if len(matched_ids) == 1:
-                        attr_dict["value_id"] = matched_ids[0]
-                        attr_dict["value_name"] = matched_names[0]
-                    elif len(matched_ids) > 1:
-                        attr_dict["value_id"] = None
-                        attr_dict["value_name"] = normalized_str
-                    else:
-                        attr_dict["value_id"] = None
-                        attr_dict["value_name"] = normalized_str
-                    updated_not_mapped = True
-
-    if updated_not_mapped:
-        db_attr.not_mapped_attributes = not_mapped
-        from sqlalchemy.orm.attributes import flag_modified
-        flag_modified(db_attr, "not_mapped_attributes")
         
-    for key, value in updates.items():
-        if hasattr(db_attr, key) and key != 'id' and key != 'item_id':
-            setattr(db_attr, key, value)
-    
+    # Update category_id if provided
+    if "category_id" in updates:
+        db_attr.category_id = updates["category_id"]
+        
+    # Update settings JSON if provided
+    if "settings" in updates:
+        db_attr.settings = updates["settings"]
+        
     db.commit()
     db.refresh(db_attr)
     return db_attr

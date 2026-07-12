@@ -121,7 +121,8 @@ def run_migrations():
             ("eyeliner_type", "VARCHAR(255)"),
             ("eyeliner_type_required", "INT DEFAULT 0"),
             ("backpack_type", "VARCHAR(255)"),
-            ("backpack_type_required", "INT DEFAULT 0")
+            ("backpack_type_required", "INT DEFAULT 0"),
+            ("settings", "JSON")
         ]
         
         for col_name, col_type in new_cols_definitions:

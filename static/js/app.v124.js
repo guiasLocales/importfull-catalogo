@@ -1103,126 +1103,28 @@ document.addEventListener('DOMContentLoaded', function () {
             let meliAttrs = null;
             if (resMeliAttrs && resMeliAttrs.ok) {
                 meliAttrs = await resMeliAttrs.json();
+                if (meliAttrs && typeof meliAttrs.settings === 'string') {
+                    try { meliAttrs.settings = JSON.parse(meliAttrs.settings); } catch(e) {}
+                }
             } else {
                 // Check if there is a local mock
                 const mock = localStorage.getItem(`mock_meli_attrs_${productId}`);
                 if (mock) {
                     try {
                         meliAttrs = JSON.parse(mock);
+                        if (meliAttrs && typeof meliAttrs.settings === 'string') {
+                            try { meliAttrs.settings = JSON.parse(meliAttrs.settings); } catch(e) {}
+                        }
                     } catch(e) {}
                 }
             }
 
             if (!meliAttrs) {
                 meliAttrs = {
-                    currency_id: 'ARS',
-                    buying_mode: 'buy_it_now',
-                    condition_type: 'new',
+                    id: null,
+                    item_id: productId,
                     category_id: '',
-                    local_pick_up: true,
-                    logistic_type: 'drop_off',
-                    warranty_type: 'Garantía del vendedor',
-                    warranty_time: '30 días',
-                    volume_capacity: null,
-                    volume_capacity_required: false,
-                    units_per_pack: 1,
-                    units_per_pack_required: false,
-                    value_added_tax: '48405909',
-                    value_added_tax_required: false,
-                    import_duty: '49553239',
-                    import_duty_required: false,
-                    empty_gtin_reason: '17055160',
-                    empty_gtin_reason_required: false,
-                    not_mapped_attributes: null,
-                    allowed_options: null,
-                    category_options: null,
-                    ink_color: '',
-                    ink_color_required: false,
-                    pot_type: '',
-                    pot_type_required: false,
-                    product_type: '',
-                    product_type_required: false,
-                    output_connectors: '',
-                    output_connectors_required: false,
-                    surveillance_camera_type: '',
-                    surveillance_camera_type_required: false,
-                    camera_locations: '',
-                    camera_locations_required: false,
-                    cable_and_adapter_type: '',
-                    cable_and_adapter_type_required: false,
-                    data_storage_capacity: '',
-                    data_storage_capacity_required: false,
-                    usb_port_version: '',
-                    usb_port_version_required: false,
-                    capacity: '',
-                    capacity_required: false,
-                    power_supply_type: '',
-                    power_supply_type_required: false,
-                    grading: '',
-                    grading_required: false,
-                    with_usb: '',
-                    with_usb_required: false,
-                    size: '',
-                    size_required: false,
-                    color: '',
-                    color_required: false,
-                    gender: '',
-                    gender_required: false,
-                    name: '',
-                    name_required: false,
-                    iron_type: '',
-                    iron_type_required: false,
-                    input_connector: '',
-                    input_connector_required: false,
-                    thermal_container_type: '',
-                    thermal_container_type_required: false,
-                    is_factory_kit: '',
-                    is_factory_kit_required: false,
-                    pieces_number: null,
-                    pieces_number_required: false,
-                    material: '',
-                    material_required: false,
-                    drinking_glass_product_type: '',
-                    drinking_glass_product_type_required: false,
-                    makeup_format: '',
-                    makeup_format_required: false,
-                    eyeliner_type: '',
-                    eyeliner_type_required: false,
-                    backpack_type: '',
-                    backpack_type_required: false,
-                    faucet_control_type: '',
-                    faucet_control_type_required: false,
-                    makeup_brushes_number: null,
-                    makeup_brushes_number_required: false,
-                    finish: '',
-                    finish_required: false,
-                    lip_liner_type: '',
-                    lip_liner_type_required: false,
-                    board_game_name: '',
-                    board_game_name_required: false,
-                    part_number: '',
-                    part_number_required: false,
-                    vehicle_type: '',
-                    vehicle_type_required: false,
-                    voleyball_ground_type: '',
-                    voleyball_ground_type_required: false,
-                    scale: '',
-                    scale_required: false,
-                    includes_assembly_manual: '',
-                    includes_assembly_manual_required: false,
-                    with_sound: '',
-                    with_sound_required: false,
-                    roller_skates_size: '',
-                    roller_skates_size_required: false,
-                    roller_skates_type: '',
-                    roller_skates_type_required: false,
-                    with_brakes: '',
-                    with_brakes_required: false,
-                    age_group: '',
-                    age_group_required: false,
-                    listing_type_id: product.listing_type_id || 'gold_special',
-                    free_shipping: product.free_shipping !== undefined ? product.free_shipping : 0,
-                    mode_shipping: product.mode_shipping || 'me1'
+                    settings: []
                 };
             }
 
@@ -1771,924 +1673,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <!-- Attributes Tab Content -->
                     <div id="detailTab-attributes" class="hidden space-y-6 px-6 md:px-8 pb-8 flex-1 overflow-y-auto custom-scrollbar">
-                        
-                        <!-- Configuración de Publicación (Migrated) -->
-                        <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 border border-blue-100 dark:border-blue-800/40 rounded-xl shadow-sm">
-                            <label class="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                 <i data-lucide="settings" class="h-3.5 w-3.5"></i> Configuración de Publicación
-                            </label>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <!-- Listing Type -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Publicación</label>
-                                    <select id="edit_listing_type_id" onchange="triggerAutoSave(${product.id})"
-                                            class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
-                                        <option value="gold_special" ${meliAttrs.listing_type_id === 'gold_special' ? 'selected' : ''}>Clásica</option>
-                                        <option value="gold_pro" ${meliAttrs.listing_type_id === 'gold_pro' ? 'selected' : ''}>Premium (Pro)</option>
-                                    </select>
-                                </div>
-                                <!-- Shipping Mode -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Logística</label>
-                                    <select id="edit_mode_shipping" onchange="triggerAutoSave(${product.id})"
-                                            class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
-                                        <option value="me2" ${meliAttrs.mode_shipping === 'me2' ? 'selected' : ''}>Mercado Envíos</option>
-                                        <option value="me1" ${meliAttrs.mode_shipping === 'me1' ? 'selected' : ''}>Propia / Otros</option>
-                                    </select>
-                                </div>
-                                <!-- Free Shipping -->
-                                <div>
-                                    <label class="block text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold mb-1.5 tracking-tight">Promoción</label>
-                                    <label class="flex items-center gap-2 cursor-pointer px-3 w-full h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm hover:border-blue-300 transition-all">
-                                        <input type="checkbox" id="edit_free_shipping" ${meliAttrs.free_shipping === 1 ? 'checked' : ''} onchange="triggerAutoSave(${product.id})"
-                                               class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-655 dark:bg-gray-600">
-                                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Envío Gratis</span>
-                                    </label>
-                                </div>
-                            </div>
+                        <div class="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="sliders" class="h-4 w-4"></i> Atributos MercadoLibre
+                            </span>
+                            <div id="meli-auto-save-status"></div>
                         </div>
-
-                        <!-- Grid de Atributos del Modelo Nuevo -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Moneda (Deshabilitado) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="dollar-sign" class="h-3.5 w-3.5"></i> Moneda
-                                </label>
-                                <input type="text" id="attr_currency_id" value="${meliAttrs.currency_id || 'ARS'}" disabled
-                                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed shadow-inner">
-                            </div>
-
-                            <!-- Categoría de MercadoLibre -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex flex-col gap-2 relative">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
-                                </label>
-                                ${categoryOptions && Array.isArray(categoryOptions) && categoryOptions.length > 0 ? `
-                                    <div class="relative">
-                                        <select id="attr_category_options_select" onchange="window.onCategoryOptionChange(this, ${product.id})"
-                                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                            <option value="">-- Seleccionar Categoría --</option>
-                                            ${categoryOptions.map(opt => `
-                                                <option value="${opt.category_id}" ${meliAttrs.category_id === opt.category_id ? 'selected' : ''}>
-                                                    ${opt.domain_name || opt.category_name || opt.category_id} (${opt.category_name || opt.domain_id})
-                                                </option>
-                                            `).join('')}
-                                        </select>
-                                        <div id="category_options_loading" class="hidden absolute right-10 top-1/2 -translate-y-1/2">
-                                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                                        </div>
-                                    </div>
-                                    <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" readonly
-                                           class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
-                                           placeholder="ID de Categoría (Seleccionado arriba)">
-                                ` : `
-                                    <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                           placeholder="Ej: MLA1234">
-                                `}
-                            </div>
-
-                            <!-- Método de Compra -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="shopping-cart" class="h-3.5 w-3.5"></i> Método de Compra
-                                </label>
-                                <select id="attr_buying_mode" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="buy_it_now" ${meliAttrs.buying_mode === 'buy_it_now' ? 'selected' : ''}>Comprar ahora (buy_it_now)</option>
-                                    <option value="classified" ${meliAttrs.buying_mode === 'classified' ? 'selected' : ''}>Clasificado (classified)</option>
-                                </select>
-                            </div>
-
-                            <!-- Condición -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="star" class="h-3.5 w-3.5"></i> Condición
-                                </label>
-                                <select id="attr_condition_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="new" ${meliAttrs.condition_type === 'new' ? 'selected' : ''}>Nuevo</option>
-                                    <option value="used" ${meliAttrs.condition_type === 'used' ? 'selected' : ''}>Usado</option>
-                                    <option value="reconditioned" ${meliAttrs.condition_type === 'reconditioned' ? 'selected' : ''}>Reacondicionado</option>
-                                </select>
-                            </div>
-
-                            <!-- Logística Meli -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="truck" class="h-3.5 w-3.5"></i> Canal Logístico
-                                </label>
-                                <select id="attr_logistic_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="drop_off" ${meliAttrs.logistic_type === 'drop_off' ? 'selected' : ''}>drop_off (Correo tradicional)</option>
-                                    <option value="fulfillment" ${meliAttrs.logistic_type === 'fulfillment' ? 'selected' : ''}>fulfillment (Red Full)</option>
-                                    <option value="cross_docking" ${meliAttrs.logistic_type === 'cross_docking' ? 'selected' : ''}>cross_docking (Colecta / Despacho)</option>
-                                    <option value="self_service" ${meliAttrs.logistic_type === 'self_service' ? 'selected' : ''}>self_service (Envíos Flex)</option>
-                                    <option value="custom" ${meliAttrs.logistic_type === 'custom' ? 'selected' : ''}>custom (Logística propia)</option>
-                                </select>
-                            </div>
-
-                            <!-- Retiro en Local -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex items-center">
-                                <label class="flex items-center gap-3 cursor-pointer w-full mt-5 px-3 py-2 bg-white dark:bg-gray-750 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:border-blue-300 transition-all">
-                                    <input type="checkbox" id="attr_local_pick_up" ${meliAttrs.local_pick_up ? 'checked' : ''} onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                           class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-600">
-                                    <span class="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
-                                        <i data-lucide="map-pin" class="h-4 w-4 text-gray-500 dark:text-gray-400"></i> Retiro en Local (local_pick_up)
-                                    </span>
-                                </label>
-                            </div>
-
-                            ${showIfRequired(meliAttrs.value_added_tax_required, `
-                            <!-- IVA -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="percent" class="h-3.5 w-3.5"></i> IVA
-                                    ${requiredBadge(meliAttrs.value_added_tax_required)}
-                                </label>
-                                <select id="attr_value_added_tax" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="21" ${String(meliAttrs.value_added_tax) === '21' ? 'selected' : ''}>21 % (48405909)</option>
-                                    <option value="10.5" ${String(meliAttrs.value_added_tax) === '10.5' ? 'selected' : ''}>10.5 % (48405908)</option>
-                                    <option value="0" ${String(meliAttrs.value_added_tax) === '0' ? 'selected' : ''}>0 % (48405907)</option>
-                                    <option value="0" ${String(meliAttrs.value_added_tax) === 'Exento' ? 'selected' : ''}>Exento (55043032)</option>
-                                    <option value="27" ${String(meliAttrs.value_added_tax) === '27' ? 'selected' : ''}>27 % (48405910)</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.import_duty_required, `
-                            <!-- Impuesto Interno -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="shield-alert" class="h-3.5 w-3.5"></i> Impuesto Interno
-                                    ${requiredBadge(meliAttrs.import_duty_required)}
-                                </label>
-                                <select id="attr_import_duty" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="0" ${String(meliAttrs.import_duty) === '0' ? 'selected' : ''}>0 % (49553239)</option>
-                                    <option value="5" ${String(meliAttrs.import_duty) === '5' ? 'selected' : ''}>5 % (49553240)</option>
-                                    <option value="10" ${String(meliAttrs.import_duty) === '10' ? 'selected' : ''}>10 % (49553241)</option>
-                                    <option value="15" ${String(meliAttrs.import_duty) === '15' ? 'selected' : ''}>15 % (49553242)</option>
-                                    <option value="20" ${String(meliAttrs.import_duty) === '20' ? 'selected' : ''}>20 % (49553243)</option>
-                                    <option value="25" ${String(meliAttrs.import_duty) === '25' ? 'selected' : ''}>25 % (49553244)</option>
-                                    <option value="30" ${String(meliAttrs.import_duty) === '30' ? 'selected' : ''}>30 % (49553245)</option>
-                                    <option value="35" ${String(meliAttrs.import_duty) === '35' ? 'selected' : ''}>35 % (49553246)</option>
-                                    <option value="40" ${String(meliAttrs.import_duty) === '40' ? 'selected' : ''}>40 % (49553247)</option>
-                                    <option value="45" ${String(meliAttrs.import_duty) === '45' ? 'selected' : ''}>45 % (49553248)</option>
-                                    <option value="0" ${String(meliAttrs.import_duty) === '50' ? 'selected' : ''}>50 % (49553249)</option>
-                                    <option value="0" ${String(meliAttrs.import_duty) === '55' ? 'selected' : ''}>55 % (49553250)</option>
-                                    <option value="0" ${String(meliAttrs.import_duty) === '60' ? 'selected' : ''}>60 % (49553251)</option>
-                                    <option value="0" ${String(meliAttrs.import_duty) === '65' ? 'selected' : ''}>65 % (49553252)</option>
-                                    <option value="70" ${String(meliAttrs.import_duty) === '70' ? 'selected' : ''}>70 % (49553253)</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            <!-- Tipo de Garantía -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tipo de Garantía
-                                </label>
-                                <select id="attr_warranty_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="Garantía del vendedor" ${(!meliAttrs.warranty_type || meliAttrs.warranty_type !== 'Garantía de fábrica') ? 'selected' : ''}>Garantía del vendedor</option>
-                                    <option value="Garantía de fábrica" ${meliAttrs.warranty_type === 'Garantía de fábrica' ? 'selected' : ''}>Garantía de fábrica</option>
-                                </select>
-                            </div>
-
-                            <!-- Tiempo de Garantía -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i> Tiempo de Garantía
-                                </label>
-                                <input type="text" id="attr_warranty_time" value="${meliAttrs.warranty_time || '30 días'}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 30 días">
-                            </div>
-
-                            ${showIfRequired(meliAttrs.volume_capacity_required, `
-                            <!-- Capacidad en volumen -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Capacidad Volumen (Ml)
-                                    ${requiredBadge(meliAttrs.volume_capacity_required)}
-                                </label>
-                                <input type="number" id="attr_volume_capacity" value="${meliAttrs.volume_capacity !== null ? meliAttrs.volume_capacity : ''}"
-                                       oninput="window.validateVolumeCapacity(this); window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
-                                       placeholder="En mililitros. Ej: 500">
-                                <span id="volume_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">La capacidad no debe exceder 1,000,000 Ml (1000L).</span>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.units_per_pack_required, `
-                            <!-- Unidades por pack -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="package" class="h-3.5 w-3.5"></i> Unidades por Pack
-                                    ${requiredBadge(meliAttrs.units_per_pack_required)}
-                                </label>
-                                <input type="number" id="attr_units_per_pack" value="${meliAttrs.units_per_pack !== null ? meliAttrs.units_per_pack : 1}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
-                                       placeholder="Ej: 1">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.ink_color_required, `
-                            <!-- Color de Tinta -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="droplet" class="h-3.5 w-3.5"></i> Color de Tinta
-                                    ${requiredBadge(meliAttrs.ink_color_required)}
-                                </label>
-                                <input type="text" id="attr_ink_color" value="${meliAttrs.ink_color || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: azul, negro, rojo">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.pot_type_required, `
-                            <!-- Tipo de Olla -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Tipo de Olla
-                                    ${requiredBadge(meliAttrs.pot_type_required)}
-                                </label>
-                                <input type="text" id="attr_pot_type" value="${meliAttrs.pot_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: cacerola, flanero">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.product_type_required, `
-                            <!-- Tipo de Producto -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Tipo de Producto
-                                    ${requiredBadge(meliAttrs.product_type_required)}
-                                </label>
-                                ${(() => {
-                                    let ptOptions = null;
-                                    if (allowedOptions) {
-                                        if (allowedOptions.product_type) {
-                                            ptOptions = allowedOptions.product_type;
-                                        } else if (allowedOptions.settings && allowedOptions.settings.required_attributes) {
-                                            const reqAttrs = allowedOptions.settings.required_attributes;
-                                            const prodTypeAttr = reqAttrs.PRODUCT_TYPE || reqAttrs.product_type;
-                                            if (prodTypeAttr && prodTypeAttr.values) {
-                                                ptOptions = prodTypeAttr.values;
-                                            }
-                                        }
-                                    }
-                                    if (typeof ptOptions === 'string') {
-                                        try { ptOptions = JSON.parse(ptOptions); } catch(e) {}
-                                    }
-                                    if (ptOptions && Array.isArray(ptOptions) && ptOptions.length > 0) {
-                                        return `
-                                            <select id="attr_product_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                                <option value="">Seleccionar...</option>
-                                                ${ptOptions.map(opt => {
-                                                    const val = typeof opt === 'object' ? (opt.name || opt.id || '') : opt;
-                                                    return `<option value="${val}" ${meliAttrs.product_type === val ? 'selected' : ''}>${val}</option>`;
-                                                }).join('')}
-                                            </select>
-                                        `;
-                                    } else {
-                                        return `
-                                            <input type="text" id="attr_product_type" value="${meliAttrs.product_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                                   placeholder="Ej: Tipo de producto">
-                                        `;
-                                    }
-                                })()}
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.output_connectors_required, `
-                            <!-- Puertas de Salida -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Puertas de Salida
-                                    ${requiredBadge(meliAttrs.output_connectors_required)}
-                                </label>
-                                <input type="text" id="attr_output_connectors" value="${meliAttrs.output_connectors || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400 mb-2"
-                                       placeholder="Ej: XLR, USB-C (se pueden combinar)">
-                                <div class="flex flex-wrap gap-1.5 mt-1">
-                                    ${(() => {
-                                        const connectorsList = ["Jack 2.5 mm", "Jack 3.5 mm", "Jack 6.3 mm", "Micro-USB", "Mini-USB", "Mini-XLR", "USB-C", "XLR"];
-                                        const currentConnectors = meliAttrs.output_connectors ? meliAttrs.output_connectors.split(',').map(s => s.trim()) : [];
-                                        return connectorsList.map(opt => {
-                                            const active = currentConnectors.includes(opt);
-                                            return `<span onclick="window.toggleConnector(this, '${opt}', ${product.id})" 
-                                                          class="cursor-pointer px-2 py-0.5 text-[11px] font-medium border rounded-md transition-all select-none hover:scale-105 active:scale-95 ${active ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}">
-                                                        ${opt}
-                                                    </span>`;
-                                        }).join('');
-                                    })()}
-                                </div>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.input_connector_required, `
-                            <!-- Puertas de Entrada -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Puertas de Entrada
-                                    ${requiredBadge(meliAttrs.input_connector_required)}
-                                </label>
-                                <input type="text" id="attr_input_connector" value="${meliAttrs.input_connector || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400 mb-2"
-                                       placeholder="Ej: XLR, USB-C (se pueden combinar)">
-                                <div class="flex flex-wrap gap-1.5 mt-1">
-                                    ${(() => {
-                                        const connectorsList = ["Jack 2.5 mm", "Jack 3.5 mm", "Jack 6.3 mm", "Micro-USB", "Mini-USB", "Mini-XLR", "USB-C", "XLR"];
-                                        const currentConnectors = meliAttrs.input_connector ? meliAttrs.input_connector.split(',').map(s => s.trim()) : [];
-                                        return connectorsList.map(opt => {
-                                            const active = currentConnectors.includes(opt);
-                                            return `<span onclick="window.toggleConnector(this, '${opt}', ${product.id}, 'attr_input_connector')" 
-                                                          class="cursor-pointer px-2 py-0.5 text-[11px] font-medium border rounded-md transition-all select-none hover:scale-105 active:scale-95 ${active ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}">
-                                                        ${opt}
-                                                    </span>`;
-                                        }).join('');
-                                    })()}
-                                </div>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.surveillance_camera_type_required, `
-                            <!-- Tipo de Cámara de Seguridad -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="camera" class="h-3.5 w-3.5"></i> Tipo de Cámara
-                                    ${requiredBadge(meliAttrs.surveillance_camera_type_required)}
-                                </label>
-                                <input type="text" id="attr_surveillance_camera_type" value="${meliAttrs.surveillance_camera_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Domo, IP, Infrarroja">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.camera_locations_required, `
-                            <!-- Disposición de la Cámara de Seguridad -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Disposición de la Cámara
-                                    ${requiredBadge(meliAttrs.camera_locations_required)}
-                                </label>
-                                <select id="attr_camera_locations" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Interior" ${meliAttrs.camera_locations === 'Interior' ? 'selected' : ''}>Interior</option>
-                                    <option value="Exterior" ${meliAttrs.camera_locations === 'Exterior' ? 'selected' : ''}>Exterior</option>
-                                    <option value="Interior/Exterior" ${meliAttrs.camera_locations === 'Interior/Exterior' ? 'selected' : ''}>Interior/Exterior</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.cable_and_adapter_type_required, `
-                            <!-- Cable y Tipo de Adaptador -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="plug" class="h-3.5 w-3.5"></i> Cable / Tipo de Adaptador
-                                    ${requiredBadge(meliAttrs.cable_and_adapter_type_required)}
-                                </label>
-                                <input type="text" id="attr_cable_and_adapter_type" value="${meliAttrs.cable_and_adapter_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: RCA, VGA, XLR, HDMI, DisplayPort, USB-C">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.data_storage_capacity_required, `
-                            <!-- Capacidad de Almacenamiento Digital -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i> Almacenamiento Digital
-                                    ${requiredBadge(meliAttrs.data_storage_capacity_required)}
-                                </label>
-                                <input type="text" id="attr_data_storage_capacity" value="${meliAttrs.data_storage_capacity || ''}" maxlength="25"
-                                       oninput="window.validateCapacity(this, 'data_storage_capacity_warning'); window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 25 GB, 5 TB">
-                                <span id="data_storage_capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.usb_port_version_required, `
-                            <!-- Tipo de Puerto USB -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="usb" class="h-3.5 w-3.5"></i> Tipo de Puerto USB
-                                    ${requiredBadge(meliAttrs.usb_port_version_required)}
-                                </label>
-                                <input type="text" id="attr_usb_port_version" value="${meliAttrs.usb_port_version || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 3.1, 3.1 Gen 1, 3.1 Gen 2">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.capacity_required, `
-                            <!-- Capacidad de Almacenamiento Digital #2 -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="hard-drive" class="h-3.5 w-3.5"></i> Capacidad (#2)
-                                    ${requiredBadge(meliAttrs.capacity_required)}
-                                </label>
-                                <input type="text" id="attr_capacity" value="${meliAttrs.capacity || ''}" maxlength="25"
-                                       oninput="window.validateCapacity(this, 'capacity_warning'); window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 25 GB, 5 TB">
-                                <span id="capacity_warning" class="hidden text-[10px] text-red-500 dark:text-red-400 font-bold mt-1 block">Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB).</span>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.power_supply_type_required, `
-                            <!-- Tipo de Alimentación -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="zap" class="h-3.5 w-3.5"></i> Tipo de Alimentación
-                                    ${requiredBadge(meliAttrs.power_supply_type_required)}
-                                </label>
-                                <input type="text" id="attr_power_supply_type" value="${meliAttrs.power_supply_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Bateria, Corriente domestica, Energia solar">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.grading_required, `
-                            <!-- Clasificación -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="award" class="h-3.5 w-3.5"></i> Clasificación
-                                    ${requiredBadge(meliAttrs.grading_required)}
-                                </label>
-                                <select id="attr_grading" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Excelente" ${meliAttrs.grading === 'Excelente' ? 'selected' : ''}>Excelente</option>
-                                    <option value="Bueno" ${meliAttrs.grading === 'Bueno' ? 'selected' : ''}>Bueno</option>
-                                    <option value="Aceptable" ${meliAttrs.grading === 'Aceptable' ? 'selected' : ''}>Aceptable</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.with_usb_required, `
-                            <!-- Posee USB -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="usb" class="h-3.5 w-3.5"></i> Posee USB
-                                    ${requiredBadge(meliAttrs.with_usb_required)}
-                                </label>
-                                <select id="attr_with_usb" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Si" ${meliAttrs.with_usb === 'Si' ? 'selected' : ''}>Si</option>
-                                    <option value="No" ${meliAttrs.with_usb === 'No' ? 'selected' : ''}>No</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.size_required, `
-                            <!-- Tamaño -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="ruler" class="h-3.5 w-3.5"></i> Tamaño
-                                    ${requiredBadge(meliAttrs.size_required)}
-                                </label>
-                                <input type="text" id="attr_size" value="${meliAttrs.size || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: L, 42, 38">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.color_required, `
-                            <!-- Color -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="palette" class="h-3.5 w-3.5"></i> Color
-                                    ${requiredBadge(meliAttrs.color_required)}
-                                </label>
-                                <input type="text" id="attr_color" value="${meliAttrs.color || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Rojo, Azul, Verde">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.gender_required, `
-                            <!-- Género -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="users" class="h-3.5 w-3.5"></i> Género
-                                    ${requiredBadge(meliAttrs.gender_required)}
-                                </label>
-                                <select id="attr_gender" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Mujer" ${meliAttrs.gender === 'Mujer' ? 'selected' : ''}>Mujer</option>
-                                    <option value="Hombre" ${meliAttrs.gender === 'Hombre' ? 'selected' : ''}>Hombre</option>
-                                    <option value="Niñas" ${meliAttrs.gender === 'Niñas' ? 'selected' : ''}>Niñas</option>
-                                    <option value="Niños" ${meliAttrs.gender === 'Niños' ? 'selected' : ''}>Niños</option>
-                                    <option value="Sin género infantil" ${meliAttrs.gender === 'Sin género infantil' ? 'selected' : ''}>Sin género infantil</option>
-                                    <option value="Sin género" ${meliAttrs.gender === 'Sin género' ? 'selected' : ''}>Sin género</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.name_required, `
-                            <!-- Nombre (name) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="file-text" class="h-3.5 w-3.5"></i> Nombre
-                                    ${requiredBadge(meliAttrs.name_required)}
-                                </label>
-                                <input type="text" id="attr_name" value="${meliAttrs.name || product.product_name || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Nombre para MercadoLibre (255 caracteres)">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.iron_type_required, `
-                            <!-- Tipo de Plancha (iron_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Tipo de Plancha
-                                    ${requiredBadge(meliAttrs.iron_type_required)}
-                                </label>
-                                <input type="text" id="attr_iron_type" value="${meliAttrs.iron_type || ''}" maxlength="100" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Seca, Vapor (100 caracteres)">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.empty_gtin_reason_required, `
-                            <!-- Motivo GTIN Vacío -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 sm:col-span-2">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="barcode" class="h-3.5 w-3.5"></i> Motivo GTIN Vacío
-                                    ${requiredBadge(meliAttrs.empty_gtin_reason_required)}
-                                </label>
-                                <select id="attr_empty_gtin_reason" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="17055160" ${meliAttrs.empty_gtin_reason === '17055160' ? 'selected' : ''}>El producto no tiene código registrado (17055160)</option>
-                                    <option value="17055158" ${meliAttrs.empty_gtin_reason === '17055158' ? 'selected' : ''}>Pieza artesanal (17055158)</option>
-                                    <option value="17055159" ${meliAttrs.empty_gtin_reason === '17055159' ? 'selected' : ''}>Kit o pack (17055159)</option>
-                                    <option value="17055161" ${meliAttrs.empty_gtin_reason === '17055161' ? 'selected' : ''}>Otra razón (17055161)</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.thermal_container_type_required, `
-                            <!-- Tipo de Recipiente (thermal_container_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="box" class="h-3.5 w-3.5"></i> Tipo de Recipiente
-                                    ${requiredBadge(meliAttrs.thermal_container_type_required)}
-                                </label>
-                                <select id="attr_thermal_container_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Taza" ${meliAttrs.thermal_container_type === 'Taza' ? 'selected' : ''}>Taza</option>
-                                    <option value="Vaso" ${meliAttrs.thermal_container_type === 'Vaso' ? 'selected' : ''}>Vaso</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.is_factory_kit_required, `
-                            <!-- Es Kit de Fábrica (is_factory_kit) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5" title="Si el kit viene armado de Fábrica elige Si, si el kit fue armado por ti elige No">
-                                    <i data-lucide="help-circle" class="h-3.5 w-3.5 text-blue-500"></i> Es Kit de Fábrica
-                                    ${requiredBadge(meliAttrs.is_factory_kit_required)}
-                                </label>
-                                <select id="attr_is_factory_kit" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Si" ${meliAttrs.is_factory_kit === 'Si' ? 'selected' : ''}>Si</option>
-                                    <option value="No" ${meliAttrs.is_factory_kit === 'No' ? 'selected' : ''}>No</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.pieces_number_required, `
-                            <!-- Cantidad de Piezas (pieces_number) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="layers" class="h-3.5 w-3.5"></i> Cantidad de Piezas
-                                    ${requiredBadge(meliAttrs.pieces_number_required)}
-                                </label>
-                                <input type="number" id="attr_pieces_number" value="${meliAttrs.pieces_number !== null && meliAttrs.pieces_number !== undefined ? meliAttrs.pieces_number : ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm"
-                                       placeholder="Ej: 12">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.material_required, `
-                            <!-- Material (material) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="info" class="h-3.5 w-3.5"></i> Material
-                                    ${requiredBadge(meliAttrs.material_required)}
-                                </label>
-                                <input type="text" id="attr_material" value="${meliAttrs.material || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Hierro, Teflon, Aluminio">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.drinking_glass_product_type_required, `
-                            <!-- Tipo de Producto Vasos (drinking_glass_product_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Tipo de Producto (Vasos)
-                                    ${requiredBadge(meliAttrs.drinking_glass_product_type_required)}
-                                </label>
-                                <select id="attr_drinking_glass_product_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Taza" ${meliAttrs.drinking_glass_product_type === 'Taza' ? 'selected' : ''}>Taza</option>
-                                    <option value="Vaso" ${meliAttrs.drinking_glass_product_type === 'Vaso' ? 'selected' : ''}>Vaso</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.makeup_format_required, `
-                            <!-- Formato de Maquillaje (makeup_format) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Formato de Maquillaje
-                                    ${requiredBadge(meliAttrs.makeup_format_required)}
-                                </label>
-                                <input type="text" id="attr_makeup_format" value="${meliAttrs.makeup_format || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Liquido, Barra, Polvo">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.eyeliner_type_required, `
-                            <!-- Formato de Delineador (eyeliner_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="edit" class="h-3.5 w-3.5"></i> Formato de Delineador
-                                    ${requiredBadge(meliAttrs.eyeliner_type_required)}
-                                </label>
-                                <select id="attr_eyeliner_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Retractil" ${meliAttrs.eyeliner_type === 'Retractil' ? 'selected' : ''}>Retractil</option>
-                                    <option value="Lapiz" ${meliAttrs.eyeliner_type === 'Lapiz' ? 'selected' : ''}>Lapiz</option>
-                                    <option value="Gel" ${meliAttrs.eyeliner_type === 'Gel' ? 'selected' : ''}>Gel</option>
-                                    <option value="Crema" ${meliAttrs.eyeliner_type === 'Crema' ? 'selected' : ''}>Crema</option>
-                                    <option value="Liquido" ${meliAttrs.eyeliner_type === 'Liquido' ? 'selected' : ''}>Liquido</option>
-                                    <option value="Marcador" ${meliAttrs.eyeliner_type === 'Marcador' ? 'selected' : ''}>Marcador</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.backpack_type_required, `
-                            <!-- Tipo de Mochila (backpack_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="package" class="h-3.5 w-3.5"></i> Tipo de Mochila
-                                    ${requiredBadge(meliAttrs.backpack_type_required)}
-                                </label>
-                                <select id="attr_backpack_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Escolar" ${meliAttrs.backpack_type === 'Escolar' ? 'selected' : ''}>Escolar</option>
-                                    <option value="Viaje" ${meliAttrs.backpack_type === 'Viaje' ? 'selected' : ''}>Viaje</option>
-                                    <option value="Urbana" ${meliAttrs.backpack_type === 'Urbana' ? 'selected' : ''}>Urbana</option>
-                                    <option value="Deportiva" ${meliAttrs.backpack_type === 'Deportiva' ? 'selected' : ''}>Deportiva</option>
-                                    <option value="Tactica" ${meliAttrs.backpack_type === 'Tactica' ? 'selected' : ''}>Tactica</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.faucet_control_type_required, `
-                            <!-- Tipo de Control de Griferia (faucet_control_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="settings" class="h-3.5 w-3.5"></i> Tipo de control de grifería
-                                    ${requiredBadge(meliAttrs.faucet_control_type_required)}
-                                </label>
-                                <input type="text" id="attr_faucet_control_type" value="${meliAttrs.faucet_control_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: monocomando, doble comando">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.makeup_brushes_number_required, `
-                            <!-- Cantidad de Brochas (makeup_brushes_number) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="hash" class="h-3.5 w-3.5"></i> Cantidad de brochas
-                                    ${requiredBadge(meliAttrs.makeup_brushes_number_required)}
-                                </label>
-                                <input type="number" id="attr_makeup_brushes_number" value="${meliAttrs.makeup_brushes_number !== null && meliAttrs.makeup_brushes_number !== undefined ? meliAttrs.makeup_brushes_number : ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 12">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.finish_required, `
-                            <!-- Acabado (finish) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Acabado
-                                    ${requiredBadge(meliAttrs.finish_required)}
-                                </label>
-                                <input type="text" id="attr_finish" value="${meliAttrs.finish || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: mate, cremoso, metalizado">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.lip_liner_type_required, `
-                            <!-- Tipo de Delineador (lip_liner_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="pen-tool" class="h-3.5 w-3.5"></i> Tipo de delineador
-                                    ${requiredBadge(meliAttrs.lip_liner_type_required)}
-                                </label>
-                                <input type="text" id="attr_lip_liner_type" value="${meliAttrs.lip_liner_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: gel, liquido, lapiz">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.board_game_name_required, `
-                            <!-- Nombre del Tablero de Juego (board_game_name) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="dices" class="h-3.5 w-3.5"></i> Nombre del tablero de juego
-                                    ${requiredBadge(meliAttrs.board_game_name_required)}
-                                </label>
-                                <input type="text" id="attr_board_game_name" value="${meliAttrs.board_game_name || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Ajedrez, Ludo, Damas">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.part_number_required, `
-                            <!-- Número de Pieza (part_number) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="binary" class="h-3.5 w-3.5"></i> Número de pieza
-                                    ${requiredBadge(meliAttrs.part_number_required)}
-                                </label>
-                                <input type="text" id="attr_part_number" value="${meliAttrs.part_number || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: PX-99281">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.vehicle_type_required, `
-                            <!-- Tipo de Vehículo (vehicle_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="car" class="h-3.5 w-3.5"></i> Tipo de vehículo
-                                    ${requiredBadge(meliAttrs.vehicle_type_required)}
-                                </label>
-                                <select id="attr_vehicle_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Auto/Camioneta" ${meliAttrs.vehicle_type === 'Auto/Camioneta' ? 'selected' : ''}>Auto/Camioneta</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.voleyball_ground_type_required, `
-                            <!-- Tipo de Superficie de Volleyball (voleyball_ground_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="layers" class="h-3.5 w-3.5"></i> Tipo de superficie (Vóley)
-                                    ${requiredBadge(meliAttrs.voleyball_ground_type_required)}
-                                </label>
-                                <input type="text" id="attr_voleyball_ground_type" value="${meliAttrs.voleyball_ground_type || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: Arena, Madera, Cemento">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.scale_required, `
-                            <!-- Escala (scale) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="maximize-2" class="h-3.5 w-3.5"></i> Escala
-                                    ${requiredBadge(meliAttrs.scale_required)}
-                                </label>
-                                <input type="text" id="attr_scale" value="${meliAttrs.scale || ''}" maxlength="255" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: 1:72, 1:35">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.includes_assembly_manual_required, `
-                            <!-- Incluye manual de ensamblado (includes_assembly_manual) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="book-open" class="h-3.5 w-3.5"></i> Manual de ensamblado
-                                    ${requiredBadge(meliAttrs.includes_assembly_manual_required)}
-                                </label>
-                                <select id="attr_includes_assembly_manual" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Si" ${meliAttrs.includes_assembly_manual === 'Si' ? 'selected' : ''}>Si</option>
-                                    <option value="No" ${meliAttrs.includes_assembly_manual === 'No' ? 'selected' : ''}>No</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.with_sound_required, `
-                            <!-- Incluye sonido (with_sound) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="volume-2" class="h-3.5 w-3.5"></i> Incluye sonido
-                                    ${requiredBadge(meliAttrs.with_sound_required)}
-                                </label>
-                                <select id="attr_with_sound" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Si" ${meliAttrs.with_sound === 'Si' ? 'selected' : ''}>Si</option>
-                                    <option value="No" ${meliAttrs.with_sound === 'No' ? 'selected' : ''}>No</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.with_brakes_required, `
-                            <!-- Con frenos (with_brakes) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="circle-slash" class="h-3.5 w-3.5"></i> Con frenos
-                                    ${requiredBadge(meliAttrs.with_brakes_required)}
-                                </label>
-                                <select id="attr_with_brakes" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Si" ${meliAttrs.with_brakes === 'Si' ? 'selected' : ''}>Si</option>
-                                    <option value="No" ${meliAttrs.with_brakes === 'No' ? 'selected' : ''}>No</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.roller_skates_size_required, `
-                            <!-- Talle de patines (roller_skates_size) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="footprints" class="h-3.5 w-3.5"></i> Talle de patines
-                                    ${requiredBadge(meliAttrs.roller_skates_size_required)}
-                                </label>
-                                <input type="text" id="attr_roller_skates_size" value="${meliAttrs.roller_skates_size || ''}" maxlength="1" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
-                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
-                                       placeholder="Ej: S, M, L">
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.roller_skates_type_required, `
-                            <!-- Tipo de patines (roller_skates_type) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="arrow-right-left" class="h-3.5 w-3.5"></i> Tipo de patines
-                                    ${requiredBadge(meliAttrs.roller_skates_type_required)}
-                                </label>
-                                <select id="attr_roller_skates_type" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="4 ruedas" ${meliAttrs.roller_skates_type === '4 ruedas' ? 'selected' : ''}>4 ruedas</option>
-                                    <option value="En línea" ${meliAttrs.roller_skates_type === 'En línea' ? 'selected' : ''}>En línea</option>
-                                </select>
-                            </div>
-                            `)}
-
-                            ${showIfRequired(meliAttrs.age_group_required, `
-                            <!-- Grupo de edad (age_group) -->
-                            <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                                    <i data-lucide="users-2" class="h-3.5 w-3.5"></i> Grupo de edad
-                                    ${requiredBadge(meliAttrs.age_group_required)}
-                                </label>
-                                <select id="attr_age_group" onchange="window.triggerMeliAttributesAutoSave(${product.id})"
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
-                                    <option value="">Seleccionar...</option>
-                                    <option value="Niños" ${meliAttrs.age_group === 'Niños' ? 'selected' : ''}>Niños</option>
-                                    <option value="Adultos" ${meliAttrs.age_group === 'Adultos' ? 'selected' : ''}>Adultos</option>
-                                    <option value="Bebés" ${meliAttrs.age_group === 'Bebés' ? 'selected' : ''}>Bebés</option>
-                                </select>
-                            </div>
-                            `)}
+                        <div id="dynamic-meli-settings-container" class="space-y-6">
+                            <!-- Rendered dynamically by renderMeliAttributes() -->
                         </div>
-
-                        ${hasNotMappedAttributes(meliAttrs.not_mapped_attributes) ? `
-                        <!-- Atributos No Mapeados -->
-                        <div class="bg-gray-50 dark:bg-gray-800/40 p-4 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm space-y-3">
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <i data-lucide="database" class="h-3.5 w-3.5"></i> Atributos No Mapeados (Meli)
-                            </label>
-                            ${formatNotMappedAttributes(meliAttrs.not_mapped_attributes)}
-                        </div>
-                        ` : ''}
-
                     </div>
 
                     <!-- Footer Actions -->
@@ -2756,6 +1749,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             openModal(``, html);
             lucide.createIcons();
+            renderMeliAttributes(meliAttrs.settings, product.id);
 
             // Remove any existing keyboard handler first (prevents stacking)
             if (window._productDetailKeyHandler) {
@@ -3129,7 +2123,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const debouncedMeliAttributesSave = (productId) => {
         if (window._meliAutoSaveTimer) clearTimeout(window._meliAutoSaveTimer);
 
-        const statusEl = document.getElementById('auto-save-status');
+        const statusEl = document.getElementById('meli-auto-save-status');
         if (statusEl) {
             statusEl.innerHTML = '<span class="text-gray-400 italic text-xs">Cambios pendientes...</span>';
         }
@@ -3153,224 +2147,29 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = true;
         }
 
-        const statusEl = document.getElementById('auto-save-status');
+        const statusEl = document.getElementById('meli-auto-save-status');
         if (isAutoSave && statusEl) {
             statusEl.innerHTML = '<span class="flex items-center gap-1.5 text-blue-600 animate-pulse text-xs font-medium"><div class="h-2 w-2 bg-blue-600 rounded-full"></div> Guardando...</span>';
         }
 
         try {
-            const getVal = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value : '';
-        };
+            if (!currentMeliAttrs) throw new Error('No hay atributos cargados para guardar');
 
-        const getValOrNull = (id) => {
-            const val = getVal(id).trim();
-            return val === '' ? null : val;
-        };
+            // Find category_id
+            let categoryId = currentMeliAttrs.category_id;
+            const categorySelect = document.getElementById('attr_category_options_select');
+            const categoryInput = document.getElementById('attr_category_id');
+            if (categorySelect && categorySelect.value) {
+                categoryId = categorySelect.value;
+            } else if (categoryInput) {
+                categoryId = categoryInput.value;
+            }
 
-        const fullPayload = {
-            currency_id: 'ARS',
-            buying_mode: getValOrNull('attr_buying_mode'),
-            condition_type: getValOrNull('attr_condition_type'),
-            category_id: getValOrNull('attr_category_id'),
-            local_pick_up: document.getElementById('attr_local_pick_up')?.checked ? 1 : 0,
-            logistic_type: getValOrNull('attr_logistic_type'),
-            warranty_type: getValOrNull('attr_warranty_type'),
-            warranty_time: getValOrNull('attr_warranty_time'),
-            volume_capacity: getVal('attr_volume_capacity') !== "" ? parseFloat(getVal('attr_volume_capacity')) : null,
-            units_per_pack: getVal('attr_units_per_pack') !== "" ? parseInt(getVal('attr_units_per_pack')) : 1,
-            value_added_tax: getValOrNull('attr_value_added_tax'),
-            import_duty: getValOrNull('attr_import_duty'),
-            empty_gtin_reason: getValOrNull('attr_empty_gtin_reason'),
-            ink_color: getValOrNull('attr_ink_color'),
-            pot_type: getValOrNull('attr_pot_type'),
-            product_type: getValOrNull('attr_product_type'),
-            output_connectors: getValOrNull('attr_output_connectors'),
-            surveillance_camera_type: getValOrNull('attr_surveillance_camera_type'),
-            camera_locations: getValOrNull('attr_camera_locations'),
-            cable_and_adapter_type: getValOrNull('attr_cable_and_adapter_type'),
-            data_storage_capacity: getValOrNull('attr_data_storage_capacity'),
-            usb_port_version: getValOrNull('attr_usb_port_version'),
-            capacity: getValOrNull('attr_capacity'),
-            power_supply_type: getValOrNull('attr_power_supply_type'),
-            grading: getValOrNull('attr_grading'),
-            with_usb: getValOrNull('attr_with_usb'),
-            size: getValOrNull('attr_size'),
-            color: getValOrNull('attr_color'),
-            gender: getValOrNull('attr_gender'),
-            name: getValOrNull('attr_name'),
-            iron_type: getValOrNull('attr_iron_type'),
-            input_connector: getValOrNull('attr_input_connector'),
-            thermal_container_type: getValOrNull('attr_thermal_container_type'),
-            is_factory_kit: getValOrNull('attr_is_factory_kit'),
-            pieces_number: getVal('attr_pieces_number') !== "" ? parseInt(getVal('attr_pieces_number')) : null,
-            material: getValOrNull('attr_material'),
-            drinking_glass_product_type: getValOrNull('attr_drinking_glass_product_type'),
-            makeup_format: getValOrNull('attr_makeup_format'),
-            eyeliner_type: getValOrNull('attr_eyeliner_type'),
-            backpack_type: getValOrNull('attr_backpack_type'),
-            faucet_control_type: getValOrNull('attr_faucet_control_type'),
-            makeup_brushes_number: getVal('attr_makeup_brushes_number') !== "" ? parseInt(getVal('attr_makeup_brushes_number')) : null,
-            finish: getValOrNull('attr_finish'),
-            lip_liner_type: getValOrNull('attr_lip_liner_type'),
-            board_game_name: getValOrNull('attr_board_game_name'),
-            part_number: getValOrNull('attr_part_number'),
-            vehicle_type: getValOrNull('attr_vehicle_type'),
-            voleyball_ground_type: getValOrNull('attr_voleyball_ground_type'),
-            scale: getValOrNull('attr_scale'),
-            includes_assembly_manual: getValOrNull('attr_includes_assembly_manual'),
-            with_sound: getValOrNull('attr_with_sound'),
-            roller_skates_size: getValOrNull('attr_roller_skates_size'),
-            roller_skates_type: getValOrNull('attr_roller_skates_type'),
-            with_brakes: getValOrNull('attr_with_brakes'),
-            age_group: getValOrNull('attr_age_group'),
-            listing_type_id: getValOrNull('edit_listing_type_id'),
-            free_shipping: document.getElementById('edit_free_shipping')?.checked ? 1 : 0,
-            mode_shipping: getValOrNull('edit_mode_shipping')
-        };
+            const payload = {
+                category_id: categoryId || null,
+                settings: currentMeliAttrs.settings
+            };
 
-        const elementMapping = {
-            buying_mode: 'attr_buying_mode',
-            condition_type: 'attr_condition_type',
-            category_id: 'attr_category_id',
-            local_pick_up: 'attr_local_pick_up',
-            logistic_type: 'attr_logistic_type',
-            warranty_type: 'attr_warranty_type',
-            warranty_time: 'attr_warranty_time',
-            volume_capacity: 'attr_volume_capacity',
-            units_per_pack: 'attr_units_per_pack',
-            value_added_tax: 'attr_value_added_tax',
-            import_duty: 'attr_import_duty',
-            empty_gtin_reason: 'attr_empty_gtin_reason',
-            ink_color: 'attr_ink_color',
-            pot_type: 'attr_pot_type',
-            product_type: 'attr_product_type',
-            output_connectors: 'attr_output_connectors',
-            surveillance_camera_type: 'attr_surveillance_camera_type',
-            camera_locations: 'attr_camera_locations',
-            cable_and_adapter_type: 'attr_cable_and_adapter_type',
-            data_storage_capacity: 'attr_data_storage_capacity',
-            usb_port_version: 'attr_usb_port_version',
-            capacity: 'attr_capacity',
-            power_supply_type: 'attr_power_supply_type',
-            grading: 'attr_grading',
-            with_usb: 'attr_with_usb',
-            size: 'attr_size',
-            color: 'attr_color',
-            gender: 'attr_gender',
-            name: 'attr_name',
-            iron_type: 'attr_iron_type',
-            input_connector: 'attr_input_connector',
-            thermal_container_type: 'attr_thermal_container_type',
-            is_factory_kit: 'attr_is_factory_kit',
-            pieces_number: 'attr_pieces_number',
-            material: 'attr_material',
-            drinking_glass_product_type: 'attr_drinking_glass_product_type',
-            makeup_format: 'attr_makeup_format',
-            eyeliner_type: 'attr_eyeliner_type',
-            backpack_type: 'attr_backpack_type',
-            faucet_control_type: 'attr_faucet_control_type',
-            makeup_brushes_number: 'attr_makeup_brushes_number',
-            finish: 'attr_finish',
-            lip_liner_type: 'attr_lip_liner_type',
-            board_game_name: 'attr_board_game_name',
-            part_number: 'attr_part_number',
-            vehicle_type: 'attr_vehicle_type',
-            voleyball_ground_type: 'attr_voleyball_ground_type',
-            scale: 'attr_scale',
-            includes_assembly_manual: 'attr_includes_assembly_manual',
-            with_sound: 'attr_with_sound',
-            roller_skates_size: 'attr_roller_skates_size',
-            roller_skates_type: 'attr_roller_skates_type',
-            with_brakes: 'attr_with_brakes',
-            age_group: 'attr_age_group',
-            listing_type_id: 'edit_listing_type_id',
-            free_shipping: 'edit_free_shipping',
-            mode_shipping: 'edit_mode_shipping'
-        };
-
-        const payload = {};
-        for (const key in fullPayload) {
-            const domId = elementMapping[key];
-            if (domId && !document.getElementById(domId)) {
-                // The input field is not rendered in the DOM, so it was not modified
-                continue;
-            }
-            const newVal = fullPayload[key];
-            const oldVal = currentMeliAttrs ? currentMeliAttrs[key] : undefined;
-            
-            // Normalize comparison for null/undefined/empty string
-            const isNewFalsy = (newVal === null || newVal === undefined || newVal === "");
-            const isOldFalsy = (oldVal === null || oldVal === undefined || oldVal === "");
-            
-            if (isNewFalsy && isOldFalsy) {
-                continue;
-            }
-            
-            // Loose comparison to handle numbers vs strings
-            if (String(newVal) !== String(oldVal)) {
-                payload[key] = newVal;
-            }
-        }
-
-        if (Object.keys(payload).length === 0) {
-            if (isAutoSave) {
-                if (statusEl) {
-                    statusEl.innerHTML = '<span class="text-green-600 flex items-center gap-1 text-xs font-bold"><i data-lucide="check" class="h-3 w-3"></i> Guardado</span>';
-                    if (window.lucide) lucide.createIcons();
-                    setTimeout(() => {
-                        if (statusEl && statusEl.innerText.includes('Guardado')) {
-                            statusEl.innerHTML = '';
-                        }
-                    }, 2000);
-                }
-                return true;
-            }
-            if (btn) {
-                btn.innerHTML = originalHTML;
-                if (window.lucide) lucide.createIcons();
-                btn.disabled = false;
-            }
-            return true;
-        }
-
-        // Frontend validation for volume_capacity
-        if (fullPayload.volume_capacity !== null && fullPayload.volume_capacity > 1000000) {
-            if (!isAutoSave) {
-                showAlert('Validación', 'La capacidad no debe exceder 1,000,000 Ml (1000L).', 'error');
-            }
-            if (btn) {
-                btn.innerHTML = originalHTML;
-                if (window.lucide) lucide.createIcons();
-                btn.disabled = false;
-            }
-            if (isAutoSave && statusEl) {
-                statusEl.innerHTML = '<span class="text-red-600 text-xs font-medium">Error de validación</span>';
-            }
-            return false;
-        }
-
-        // Validate capacity fields
-        const isDataStorageValid = window.validateCapacity(document.getElementById('attr_data_storage_capacity'), 'data_storage_capacity_warning');
-        const isCapacityValid = window.validateCapacity(document.getElementById('attr_capacity'), 'capacity_warning');
-        if (!isDataStorageValid || !isCapacityValid) {
-            if (!isAutoSave) {
-                showAlert('Validación', 'Por favor, especifica un número y unidad válidos (Ej: 25 GB, 5 TB) en los campos de capacidad.', 'error');
-            }
-            if (btn) {
-                btn.innerHTML = originalHTML;
-                if (window.lucide) lucide.createIcons();
-                btn.disabled = false;
-            }
-            if (isAutoSave && statusEl) {
-                statusEl.innerHTML = '<span class="text-red-600 text-xs font-medium">Error de validación</span>';
-            }
-            return false;
-        }
-
-        // try removed
-        
             const response = await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -3382,41 +2181,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Fallback to local mock save for offline testing
                     localStorage.setItem(`mock_meli_attrs_${productId}`, JSON.stringify(payload));
                     if (!isAutoSave) {
-                        showAlert('Guardado Local (Prueba)', 'El endpoint no fue encontrado (404). Se guardaron los datos localmente en tu navegador.', 'success');
+                        showAlert('Guardado Local (Prueba)', 'El endpoint no fue encontrado (404). Se guardaron los datos localmente.', 'success');
                     } else if (statusEl) {
                         statusEl.innerHTML = '<span class="text-green-600 flex items-center gap-1 text-xs font-bold"><i data-lucide="check" class="h-3 w-3"></i> Guardado Local</span>';
                         if (window.lucide) lucide.createIcons();
-                    }
-                    
-                    // Also trigger product patch for the three migrated fields in the product table just in case backend expects it there
-                    try {
-                        await authFetch(`/api/products/${productId}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                listing_type_id: payload.listing_type_id,
-                                free_shipping: payload.free_shipping,
-                                mode_shipping: payload.mode_shipping
-                            })
-                        });
-                    } catch(e) {}
-
-                    // Update local currentMeliAttrs
-                    if (currentMeliAttrs) {
-                        for (const key in payload) {
-                            currentMeliAttrs[key] = payload[key];
-                        }
-                    }
-
-                    // Refresh detail modal
-                    if (!isAutoSave && currentDetailIndex !== -1) {
-                         const currentProduct = state.products[currentDetailIndex];
-                         if (currentProduct) refreshProductDetail(currentProduct.id);
                     }
                     return true;
                 }
                 const errData = await response.json().catch(() => ({}));
                 throw new Error(errData.detail || 'Error al guardar los atributos');
+            }
+
+            const savedAttrs = await response.json();
+            currentMeliAttrs = savedAttrs;
+            if (typeof currentMeliAttrs.settings === 'string') {
+                try { currentMeliAttrs.settings = JSON.parse(currentMeliAttrs.settings); } catch(e) {}
             }
 
             if (!isAutoSave) {
@@ -3430,19 +2209,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }, 2000);
             }
-
-            // Update local currentMeliAttrs
-            if (currentMeliAttrs) {
-                for (const key in payload) {
-                    currentMeliAttrs[key] = payload[key];
-                }
-            }
             
-            // Refresh detail modal
-            if (!isAutoSave && currentDetailIndex !== -1) {
-                 const currentProduct = state.products[currentDetailIndex];
-                 if (currentProduct) refreshProductDetail(currentProduct.id);
-            }
             return true;
         } catch (error) {
             console.error('Error saving attributes:', error);
@@ -3459,6 +2226,205 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.disabled = false;
             }
         }
+    };
+
+    function renderMeliAttributes(settings, productId) {
+        const container = document.getElementById('dynamic-meli-settings-container');
+        if (!container) return;
+
+        if (!settings || !Array.isArray(settings) || settings.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500 italic">No hay atributos configurados.</p>';
+            return;
+        }
+
+        let html = '';
+
+        // Iterate over sections: each item in settings represents a section
+        settings.forEach(sectionObj => {
+            for (const sectionName in sectionObj) {
+                const elements = sectionObj[sectionName];
+                if (!Array.isArray(elements) || elements.length === 0) continue;
+
+                let displaySectionName = '';
+                let sectionIcon = 'settings';
+                if (sectionName === 'attributes') {
+                    displaySectionName = 'Atributos del Producto';
+                    sectionIcon = 'sliders';
+                } else if (sectionName === 'shipping') {
+                    displaySectionName = 'Envío y Entrega';
+                    sectionIcon = 'truck';
+                } else if (sectionName === 'sale_terms') {
+                    displaySectionName = 'Condiciones de Venta';
+                    sectionIcon = 'shield';
+                } else if (sectionName === 'listing') {
+                    displaySectionName = 'Tipo de Publicación';
+                    sectionIcon = 'award';
+                } else {
+                    displaySectionName = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+                }
+
+                html += `
+                <div class="bg-gray-50/50 dark:bg-gray-900/10 p-5 border border-gray-150 dark:border-gray-800/40 rounded-xl shadow-sm space-y-4">
+                    <h3 class="text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2 border-b border-gray-250 dark:border-gray-850 pb-2">
+                        <i data-lucide="${sectionIcon}" class="h-4 w-4"></i> ${displaySectionName}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                `;
+
+                elements.forEach(element => {
+                    const inputId = `attr_${element.id}`;
+                    const label = element.name;
+                    const val = element.user_input_value || '';
+                    const examples = element.value_examples || [];
+                    const maxLen = element.value_max_lenght || 255;
+                    const valType = element.value_type || 'string';
+                    const condition = element.condition || 'Free Input';
+
+                    let fieldHtml = '';
+
+                    if (condition === 'Restricted Input' || valType === 'list') {
+                        let optionsList = [];
+                        if (Array.isArray(examples)) {
+                            if (examples.length > 0 && Array.isArray(examples[0])) {
+                                optionsList = examples[0];
+                            } else {
+                                optionsList = examples;
+                            }
+                        }
+
+                        fieldHtml += `
+                        <select id="${inputId}" onchange="window.onDynamicAttrChange('${element.id}', this.value, ${productId})"
+                                class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white shadow-sm transition-all hover:border-blue-300">
+                            <option value="">-- Seleccionar --</option>
+                        `;
+
+                        optionsList.forEach(opt => {
+                            if (opt && typeof opt === 'object') {
+                                const optId = opt.id;
+                                const optName = opt.name || optId;
+                                const selected = String(optId) === String(val) ? 'selected' : '';
+                                fieldHtml += `<option value="${optId}" ${selected}>${optName}</option>`;
+                            } else {
+                                const selected = String(opt) === String(val) ? 'selected' : '';
+                                fieldHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
+                            }
+                        });
+
+                        fieldHtml += `</select>`;
+
+                        if (element.id === 'listing_type') {
+                            fieldHtml += `<div id="listing-fee-preview" class="mt-2 text-xs text-blue-600 font-medium"></div>`;
+                        }
+
+                    } else {
+                        if (valType === 'boolean') {
+                            const checked = (val === 'True' || val === true || val === 1 || val === 'true') ? 'checked' : '';
+                            fieldHtml += `
+                            <label class="flex items-center gap-2.5 cursor-pointer px-3 h-10 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm hover:border-blue-300 transition-all">
+                                <input type="checkbox" id="${inputId}" ${checked} onchange="window.onDynamicAttrChange('${element.id}', this.checked ? 'True' : 'False', ${productId})"
+                                       class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-600">
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Habilitado</span>
+                            </label>
+                            `;
+                        } else if (valType === 'number' || valType === 'number_unit') {
+                            fieldHtml += `
+                            <input type="text" id="${inputId}" value="${val}" oninput="window.onDynamicAttrChange('${element.id}', this.value, ${productId})"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                   placeholder="Ej: 30 dias, 1 mL, etc.">
+                            `;
+                        } else {
+                            fieldHtml += `
+                            <input type="text" id="${inputId}" value="${val}" maxlength="${maxLen}" oninput="window.onDynamicAttrChange('${element.id}', this.value, ${productId})"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                   placeholder="Ingresar ${label.toLowerCase()}...">
+                            `;
+                        }
+                    }
+
+                    html += `
+                    <div class="bg-white dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50">
+                        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                            ${label}
+                        </label>
+                        ${fieldHtml}
+                    </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                </div>
+                `;
+            }
+        });
+
+        container.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+
+        const listingSelect = document.getElementById('attr_listing_type');
+        if (listingSelect) {
+            updateListingFeePreview(listingSelect.value, settings);
+        }
+    }
+
+    function updateListingFeePreview(selectedListingId, settings) {
+        const previewEl = document.getElementById('listing-fee-preview');
+        if (!previewEl || !settings) return;
+
+        let elements = [];
+        settings.forEach(sectionObj => {
+            if (sectionObj.listing) elements = sectionObj.listing;
+        });
+
+        const listingEl = elements.find(e => e.id === 'listing_type');
+        if (!listingEl) return;
+
+        const examples = listingEl.value_examples || [];
+        let optionsList = [];
+        if (Array.isArray(examples)) {
+            if (examples.length > 0 && Array.isArray(examples[0])) {
+                optionsList = examples[0];
+            } else {
+                optionsList = examples;
+            }
+        }
+
+        const selectedOption = optionsList.find(opt => opt && typeof opt === 'object' && String(opt.id) === String(selectedListingId));
+        if (selectedOption && selectedOption.sale_fee_amount !== undefined) {
+            const fee = Number(selectedOption.sale_fee_amount);
+            const feeDetails = selectedOption.sale_fee_details || {};
+            const pct = feeDetails.percentage_fee || 0;
+            
+            previewEl.innerHTML = `
+                <div class="mt-1 p-2 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/20 rounded-md">
+                    Comisión Estimada: <span class="font-black">$ ${fee.toLocaleString('es-AR')}</span> (${pct}%)
+                </div>
+            `;
+        } else {
+            previewEl.innerHTML = '';
+        }
+    }
+
+    window.onDynamicAttrChange = function(attrId, value, productId) {
+        if (currentMeliAttrs && Array.isArray(currentMeliAttrs.settings)) {
+            currentMeliAttrs.settings.forEach(sectionObj => {
+                for (const sectionName in sectionObj) {
+                    const elements = sectionObj[sectionName];
+                    if (Array.isArray(elements)) {
+                        const el = elements.find(e => e.id === attrId);
+                        if (el) {
+                            el.user_input_value = value;
+                        }
+                    }
+                }
+            });
+            
+            if (attrId === 'listing_type') {
+                updateListingFeePreview(value, currentMeliAttrs.settings);
+            }
+        }
+        
+        window.triggerMeliAttributesAutoSave(productId);
     };
 
     window.openProductDetail = openProductDetail;
@@ -3507,6 +2473,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     } catch (e) {}
                     throw new Error(errorMsg);
                 }
+            } else {
+                const updatedMeliAttrs = await saveRes.json();
+                currentMeliAttrs = updatedMeliAttrs;
+                if (currentMeliAttrs && typeof currentMeliAttrs.settings === 'string') {
+                    try { currentMeliAttrs.settings = JSON.parse(currentMeliAttrs.settings); } catch(e) {}
+                }
+                renderMeliAttributes(currentMeliAttrs.settings, productId);
             }
 
             // 2. Disparar evento de pre-publish sin data (webhook simplificado)

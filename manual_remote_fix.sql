@@ -18,3 +18,6 @@ CREATE TABLE IF NOT EXISTS inventory_users (
 -- Using INSERT IGNORE to avoid errors if the user already exists
 INSERT IGNORE INTO inventory_users (username, hashed_password, role) 
 VALUES ('admin', '$2b$12$Zp.wXkO6k1w.XyO1wXkO6k1w.XyO1wXkO6k1w.XyO1wXkO6', 'admin');
+
+-- 3. Add settings JSON column to mercadolibre.attributes
+ALTER TABLE mercadolibre.attributes ADD COLUMN settings JSON;
