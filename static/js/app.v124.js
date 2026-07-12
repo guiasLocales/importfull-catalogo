@@ -1679,6 +1679,37 @@ document.addEventListener('DOMContentLoaded', function () {
                             </span>
                             <div id="meli-auto-save-status"></div>
                         </div>
+
+                        <!-- Categoría de MercadoLibre -->
+                        <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex flex-col gap-2 relative">
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
+                            </label>
+                            ${categoryOptions && Array.isArray(categoryOptions) && categoryOptions.length > 0 ? `
+                                <div class="relative">
+                                    <select id="attr_category_options_select" onchange="window.onCategoryOptionChange(this, ${product.id})"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm">
+                                        <option value="">-- Seleccionar Categoría --</option>
+                                        ${categoryOptions.map(opt => `
+                                            <option value="${opt.category_id}" ${meliAttrs.category_id === opt.category_id ? 'selected' : ''}>
+                                                ${opt.domain_name || opt.category_name || opt.category_id} (${opt.category_name || opt.domain_id})
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                    <div id="category_options_loading" class="hidden absolute right-10 top-1/2 -translate-y-1/2">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    </div>
+                                </div>
+                                <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" readonly
+                                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
+                                       placeholder="ID de Categoría (Seleccionado arriba)">
+                            ` : `
+                                <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
+                                       placeholder="Ej: MLA1234">
+                            `}
+                        </div>
+
                         <div id="dynamic-meli-settings-container" class="space-y-6">
                             <!-- Rendered dynamically by renderMeliAttributes() -->
                         </div>
