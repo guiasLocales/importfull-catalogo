@@ -1682,9 +1682,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         <!-- Categoría de MercadoLibre -->
                         <div class="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-150 dark:border-gray-700/50 flex flex-col gap-2 relative">
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
-                            </label>
+                            <div class="flex justify-between items-center">
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
+                                </label>
+                                <button id="btn-meli-pre-publish" onclick="window.triggerPrePublishMatch(${product.id}, this)"
+                                        class="px-2.5 py-1 text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-650 dark:text-purple-400 rounded-md border border-purple-100 dark:border-purple-800/30 hover:bg-purple-100 dark:hover:bg-purple-800/25 transition-all flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Obtener Atributos / IA
+                                </button>
+                            </div>
                             ${categoryOptions && Array.isArray(categoryOptions) && categoryOptions.length > 0 ? `
                                 <div class="relative">
                                     <select id="attr_category_options_select" onchange="window.onCategoryOptionChange(this, ${product.id})"
@@ -2538,6 +2544,96 @@ document.addEventListener('DOMContentLoaded', function () {
         } finally {
             if (loader) loader.classList.add('hidden');
             selectEl.disabled = false;
+        }
+    };
+
+    window.triggerPrePublishMatch = async function(productId, btnEl) {
+        const btn = btnEl || document.getElementById('btn-meli-pre-publish');
+        const originalHTML = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-purple-650"></i> Cargando...';
+            btn.disabled = true;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            const categorySelect = document.getElementById('attr_category_options_select');
+            const categoryInput = document.getElementById('attr_category_id');
+            const categoryId = (categorySelect && categorySelect.value) || (categoryInput && categoryInput.value) || '';
+
+            // Guardar ID de categoría primero
+            if (categoryId) {
+                await authFetch(`/api/products/${productId}/mercadolibre-attributes`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        category_id: categoryId,
+                        settings: currentMeliAttrs ? currentMeliAttrs.settings : null
+                    })
+                });
+            }
+
+            // Disparar pre-publish
+            const response = await authFetch(`/api/products/${productId}/pre-publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                let errorMsg = 'Error al ejecutar Pre-Publish';
+                try {
+                    const errData = JSON.parse(text);
+                    if (errData.detail) errorMsg = errData.detail;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
+
+            showAlert('Sincronización Iniciada', 'Buscando especificaciones de MercadoLibre... Espere un momento.', 'success');
+            
+            // Wait 2.5 seconds and reload product details dynamically to fetch the updated settings
+            setTimeout(async () => {
+                try {
+                    const res = await authFetch(`/api/products/${productId}/mercadolibre-attributes`);
+                    if (res.ok) {
+                        const updatedMeliAttrs = await res.json();
+                        currentMeliAttrs = updatedMeliAttrs;
+                        if (currentMeliAttrs && typeof currentMeliAttrs.settings === 'string') {
+                            try { currentMeliAttrs.settings = JSON.parse(currentMeliAttrs.settings); } catch(e) {}
+                        }
+                        
+                        const categorySelectNew = document.getElementById('attr_category_options_select');
+                        const categoryInputNew = document.getElementById('attr_category_id');
+                        if (categorySelectNew && updatedMeliAttrs.category_id) {
+                            categorySelectNew.value = updatedMeliAttrs.category_id;
+                        }
+                        if (categoryInputNew) {
+                            categoryInputNew.value = updatedMeliAttrs.category_id || '';
+                        }
+                        
+                        renderMeliAttributes(currentMeliAttrs.settings, productId);
+                        showAlert('Especificaciones Cargadas', 'Atributos actualizados para la categoría especificada.', 'success');
+                    }
+                } catch(e) {
+                    console.error("Error refreshing after pre-publish:", e);
+                } finally {
+                    if (btn) {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+            }, 2500);
+
+        } catch (error) {
+            console.error('Error in pre-publish trigger:', error);
+            showAlert('Error', error.message, 'error');
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
         }
     };
 
