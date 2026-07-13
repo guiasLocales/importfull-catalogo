@@ -715,8 +715,15 @@ def get_meli_attributes(db: Session, item_id: int):
                 
         return existing_settings
 
-    if not attrs.category_id:
-        # If no category_id is set, do not show any attributes at all!
+    # Parse existing settings
+    existing_settings = attrs.settings
+    if existing_settings and isinstance(existing_settings, str):
+        try:
+            existing_settings = json.loads(existing_settings)
+        except Exception:
+            existing_settings = None
+
+    if not existing_settings:
         product = db.query(Product).filter(Product.id == item_id).first()
         price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
         sale_fee_gold_special = round(price * 0.1465, 2)
@@ -739,196 +746,47 @@ def get_meli_attributes(db: Session, item_id: int):
                 "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
             }
         ]
-        db.expunge(attrs)
-        attrs.settings = [
-            {"attributes": []},
-            {"shipping": [
-                {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": ["custom", "me1", "me2", "not_specified"], "user_input_value": "me2", "value_max_lenght": ""},
-                {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "True", "value_max_lenght": ""},
-                {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "False", "value_max_lenght": ""},
-                {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"], "user_input_value": "drop_off", "value_max_lenght": ""}
-            ]},
-            {"sale_terms": [
-                {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
-                {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
-            ]},
-            {"listing": [
-                {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
-                {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
-            ]}
-        ]
-    elif selected_option:
-        # Re-generate settings dynamically from selected_option (preserving user inputs) in memory
-        # Expunge from database session first to prevent SQLAlchemy from auto-committing the merge
-        db.expunge(attrs)
-        attrs.settings = merge_settings_with_selected_option(selected_option, attrs.settings)
-    elif not attrs.settings:
-        # Build default settings
-        product = db.query(Product).filter(Product.id == item_id).first()
-        price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
-        sale_fee_gold_special = round(price * 0.1465, 2)
-        sale_fee_gold_pro = round(price * 0.2695, 2)
-        
         default_settings = [
             {
                 "attributes": [
-                    {
-                        "id": "CONDITION_TYPE",
-                        "name": "Condición",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": ["new", "used", "reconditioned"],
-                        "user_input_value": "new",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "VALUE_ADDED_TAX",
-                        "name": "IVA",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"],
-                        "user_input_value": "21 %",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "IMPORT_DUTY",
-                        "name": "Impuesto interno",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
-                        "user_input_value": "0 %",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "UNITS_PER_PACK",
-                        "name": "Unidades por pack",
-                        "condition": "Free Input",
-                        "value_type": "number",
-                        "value_examples": "",
-                        "user_input_value": "1",
-                        "value_max_lenght": 18
-                    }
+                    {"id": "CONDITION_TYPE", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
+                    {"id": "VALUE_ADDED_TAX", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
+                    {"id": "IMPORT_DUTY", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
+                    {"id": "UNITS_PER_PACK", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
                 ]
             },
             {
                 "shipping": [
-                    {
-                        "id": "MODE",
-                        "name": "Metodo de Envio",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": [["custom", "me1", "me2", "not_specified"]],
-                        "user_input_value": "me2",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "LOCAL_PICK_UP",
-                        "name": "Buscar en Local",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": [["True", "False"]],
-                        "user_input_value": "True",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "FREE_SHIPPING",
-                        "name": "Envio Gratis",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": [["True", "False"]],
-                        "user_input_value": "False",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "LOGISTIC_TYPE",
-                        "name": "Tipo de Logistica",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]],
-                        "user_input_value": "drop_off",
-                        "value_max_lenght": ""
-                    }
+                    {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
+                    {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
+                    {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
+                    {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
                 ]
             },
             {
                 "sale_terms": [
-                    {
-                        "id": "WARRANTY_TYPE",
-                        "name": "Tipo de garantia",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": ["Garantia del vendedor", "Garantia de fabrica", "Sin garantia"],
-                        "user_input_value": "Garantia del vendedor",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "WARRANTY_TIME",
-                        "name": "Tiempo de garantia",
-                        "condition": "Free Input",
-                        "value_type": "number_unit",
-                        "value_examples": "",
-                        "user_input_value": "30 dias",
-                        "value_max_lenght": 255
-                    }
+                    {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
+                    {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
                 ]
             },
             {
                 "listing": [
-                    {
-                        "id": "BUYING_MODE",
-                        "name": "Método de Compra",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": ["buy_it_now", "classified"],
-                        "user_input_value": "buy_it_now",
-                        "value_max_lenght": ""
-                    },
-                    {
-                        "id": "LISTING_TYPE",
-                        "name": "Campana de Cuotas",
-                        "condition": "Restricted Input",
-                        "value_type": "list",
-                        "value_examples": [[
-                            {
-                                "id": "gold_pro",
-                                "name": "Premium",
-                                "sale_fee_amount": sale_fee_gold_pro,
-                                "sale_fee_details": {
-                                    "fixed_fee": 0,
-                                    "gross_amount": sale_fee_gold_pro,
-                                    "percentage_fee": 26.95,
-                                    "meli_percentage_fee": 14.65,
-                                    "financing_add_on_fee": 12.3
-                                },
-                                "listing_fee_amount": 0,
-                                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-                            },
-                            {
-                                "id": "gold_special",
-                                "name": "Clasica",
-                                "sale_fee_amount": sale_fee_gold_special,
-                                "sale_fee_details": {
-                                    "fixed_fee": 0,
-                                    "gross_amount": sale_fee_gold_special,
-                                    "percentage_fee": 14.65,
-                                    "meli_percentage_fee": 14.65,
-                                    "financing_add_on_fee": 0
-                                },
-                                "listing_fee_amount": 0,
-                                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-                            }
-                        ]],
-                        "user_input_value": "gold_special",
-                        "value_max_lenght": ""
-                    }
+                    {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
+                    {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
                 ]
             }
         ]
-        
         attrs.settings = default_settings
         db.commit()
         db.refresh(attrs)
-        
+        existing_settings = default_settings
+
+    db.expunge(attrs)
+    if selected_option:
+        attrs.settings = merge_settings_with_selected_option(selected_option, existing_settings)
+    else:
+        attrs.settings = existing_settings
+
     return attrs
 
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
