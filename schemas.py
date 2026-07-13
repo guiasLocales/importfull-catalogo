@@ -281,8 +281,6 @@ class MercadoLibreAttributeSchema(BaseModel):
     category_id: Optional[str] = None
     settings: Optional[Any] = None
     category_options: Optional[Any] = None
-    allowed_options: Optional[Any] = None
-    not_mapped_attributes: Optional[Any] = None
     updated_at: Optional[datetime] = None
 
     class Config:

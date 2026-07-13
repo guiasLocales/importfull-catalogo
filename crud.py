@@ -398,19 +398,24 @@ def get_meli_attributes(db: Session, item_id: int):
         db.add(attrs)
         db.flush()
 
-    # Parse allowed_options if present
-    allowed = None
-    if attrs.allowed_options:
+    # Parse category_options if present
+    category_options = None
+    if attrs.category_options:
         try:
-            allowed = json.loads(attrs.allowed_options) if isinstance(attrs.allowed_options, str) else attrs.allowed_options
+            category_options = json.loads(attrs.category_options) if isinstance(attrs.category_options, str) else attrs.category_options
         except Exception as e:
-            print(f"Error parsing allowed_options: {e}")
+            print(f"Error parsing category_options: {e}")
 
-    # Helper to build dynamic settings from allowed_options schema
-    def build_settings_from_allowed(allowed_data, existing_settings=None):
-        settings_data = allowed_data.get("settings", {})
-        
-        # Build index of existing values to preserve them
+    # Find selected category option in category_options candidates list
+    selected_option = None
+    if category_options and isinstance(category_options, list) and attrs.category_id:
+        for opt in category_options:
+            if opt and isinstance(opt, dict) and str(opt.get("category_id")) == str(attrs.category_id):
+                selected_option = opt
+                break
+
+    # Helper to build dynamic settings from selected category option
+    def build_settings_from_selected_option(selected_opt, existing_settings=None):
         values_by_id = {}
         if existing_settings:
             if isinstance(existing_settings, str):
@@ -425,8 +430,7 @@ def get_meli_attributes(db: Session, item_id: int):
                                     if isinstance(item, dict) and "id" in item:
                                         values_by_id[item["id"]] = item.get("user_input_value")
 
-        # 1. Attributes
-        req_attrs = settings_data.get("required_attributes", {})
+        # 1. Core Attributes (always present for all products)
         attributes_list = [
             {
                 "id": "condition_type",
@@ -436,33 +440,90 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_examples": ["new", "used", "reconditioned"],
                 "user_input_value": values_by_id.get("condition_type", "new"),
                 "value_max_lenght": ""
+            },
+            {
+                "id": "value_added_tax",
+                "name": "IVA",
+                "condition": "Restricted Input",
+                "value_type": "list",
+                "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"],
+                "user_input_value": values_by_id.get("value_added_tax", "21 %"),
+                "value_max_lenght": ""
+            },
+            {
+                "id": "import_duty",
+                "name": "Impuesto interno",
+                "condition": "Restricted Input",
+                "value_type": "list",
+                "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
+                "user_input_value": values_by_id.get("import_duty", "0 %"),
+                "value_max_lenght": ""
+            },
+            {
+                "id": "units_per_pack",
+                "name": "Unidades por pack",
+                "condition": "Free Input",
+                "value_type": "number",
+                "value_examples": "",
+                "user_input_value": values_by_id.get("units_per_pack", "1"),
+                "value_max_lenght": 18
             }
         ]
-        for attr_id, attr_info in req_attrs.items():
-            val_type = attr_info.get("value_type", "string")
-            vals = attr_info.get("values", "")
-            cond = "Restricted Input" if val_type == "list" or isinstance(vals, list) else "Free Input"
-            
-            attributes_list.append({
-                "id": attr_id.lower(),
-                "name": attr_info.get("name", attr_id),
-                "condition": cond,
-                "value_type": val_type,
-                "value_examples": vals if isinstance(vals, list) else [vals] if vals else "",
-                "user_input_value": values_by_id.get(attr_id.lower(), ""),
-                "value_max_lenght": 255
-            })
+
+        # Add category-specific attributes from selected option
+        core_ids = {"condition_type", "value_added_tax", "import_duty", "units_per_pack"}
+        cat_attrs = selected_opt.get("attributes", [])
+        if isinstance(cat_attrs, list):
+            for attr in cat_attrs:
+                if not isinstance(attr, dict):
+                    continue
+                attr_id_raw = attr.get("id")
+                if not attr_id_raw:
+                    continue
+                attr_id = attr_id_raw.lower()
+                if attr_id in core_ids:
+                    continue
+                
+                name = attr.get("name", attr_id_raw)
+                val_id = attr.get("value_id")
+                val_name = attr.get("value_name", "")
+                vals_list = attr.get("values", [])
+                
+                cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
+                val_type = "list" if (vals_list or val_id) else "string"
+                
+                default_val = values_by_id.get(attr_id)
+                if default_val is None:
+                    # Fallback to AI matched value
+                    default_val = val_id if val_id else val_name if val_name else ""
+                
+                # Normalize examples
+                examples = []
+                if isinstance(vals_list, list):
+                    examples = vals_list
+                elif vals_list:
+                    examples = [vals_list]
+                elif val_name:
+                    examples = [val_name]
+                
+                attributes_list.append({
+                    "id": attr_id,
+                    "name": name,
+                    "condition": cond,
+                    "value_type": val_type,
+                    "value_examples": examples,
+                    "user_input_value": default_val,
+                    "value_max_lenght": 255
+                })
 
         # 2. Shipping
-        ship_data = settings_data.get("shipping", {})
-        modos = ship_data.get("modos", ["custom", "me1", "me2", "not_specified"])
         shipping_list = [
             {
                 "id": "mode",
                 "name": "Metodo de Envio",
                 "condition": "Restricted Input",
                 "value_type": "list",
-                "value_examples": [modos],
+                "value_examples": ["custom", "me1", "me2", "not_specified"],
                 "user_input_value": values_by_id.get("mode", "me2"),
                 "value_max_lenght": ""
             },
@@ -471,7 +532,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "name": "Buscar en Local",
                 "condition": "Restricted Input",
                 "value_type": "list",
-                "value_examples": [["True", "False"]],
+                "value_examples": ["True", "False"],
                 "user_input_value": values_by_id.get("local_pick_up", "True"),
                 "value_max_lenght": ""
             },
@@ -480,7 +541,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "name": "Envio Gratis",
                 "condition": "Restricted Input",
                 "value_type": "list",
-                "value_examples": [["True", "False"]],
+                "value_examples": ["True", "False"],
                 "user_input_value": values_by_id.get("free_shipping", "False"),
                 "value_max_lenght": ""
             },
@@ -489,22 +550,20 @@ def get_meli_attributes(db: Session, item_id: int):
                 "name": "Tipo de Logistica",
                 "condition": "Restricted Input",
                 "value_type": "list",
-                "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]],
+                "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"],
                 "user_input_value": values_by_id.get("logistic_type", "drop_off"),
                 "value_max_lenght": ""
             }
         ]
 
         # 3. Sale Terms
-        warr_data = settings_data.get("warranty", {})
-        warr_types = warr_data.get("WARRANTY_TYPE", ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"])
         sale_terms_list = [
             {
                 "id": "warranty_type",
                 "name": "Tipo de garantia",
                 "condition": "Restricted Input",
                 "value_type": "list",
-                "value_examples": warr_types,
+                "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"],
                 "user_input_value": values_by_id.get("warranty_type", "Garantía del vendedor"),
                 "value_max_lenght": ""
             },
@@ -519,60 +578,42 @@ def get_meli_attributes(db: Session, item_id: int):
             }
         ]
 
-        # 4. Listing
-        listing_opts = settings_data.get("listing_options", [])
-        formatted_options = []
-        for opt in listing_opts:
-            opt_id = opt.get("id")
-            opt_name = opt.get("nombre", opt_id)
-            fee = opt.get("comision_fija", 0.0)
-            pct_str = opt.get("porcentaje_comision") or "0%"
-            pct = 0.0
-            try:
-                pct = float(pct_str.replace("%", ""))
-            except Exception:
-                if opt_id == "gold_pro":
-                    pct = 26.95
-                elif opt_id == "gold_special":
-                    pct = 14.65
-            
-            # Recalculate if zero
-            if not fee and pct:
-                product = db.query(Product).filter(Product.id == item_id).first()
-                if product:
-                    prod_price = float(product.price_mercadolibre or product.price or 0.0)
-                    fee = round(prod_price * (pct / 100.0), 2)
-
-            formatted_options.append({
-                "id": opt_id,
-                "name": opt_name,
-                "sale_fee_amount": fee,
+        # 4. Listing (calculate dynamically)
+        product = db.query(Product).filter(Product.id == item_id).first()
+        price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
+        sale_fee_gold_special = round(price * 0.1465, 2)
+        sale_fee_gold_pro = round(price * 0.2695, 2)
+        
+        formatted_options = [
+            {
+                "id": "gold_pro",
+                "name": "Premium",
+                "sale_fee_amount": sale_fee_gold_pro,
                 "sale_fee_details": {
                     "fixed_fee": 0,
-                    "gross_amount": fee,
-                    "percentage_fee": pct,
-                    "meli_percentage_fee": pct if opt_id == "gold_special" else 14.65,
-                    "financing_add_on_fee": 0.0 if opt_id == "gold_special" else (pct - 14.65)
+                    "gross_amount": sale_fee_gold_pro,
+                    "percentage_fee": 26.95,
+                    "meli_percentage_fee": 14.65,
+                    "financing_add_on_fee": 12.3
                 },
                 "listing_fee_amount": 0,
                 "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-            })
-
-        if not formatted_options:
-            formatted_options = [
-                {
-                    "id": "gold_pro",
-                    "name": "Premium",
-                    "sale_fee_amount": 0.0,
-                    "sale_fee_details": {"fixed_fee": 0, "gross_amount": 0, "percentage_fee": 26.95, "meli_percentage_fee": 14.65, "financing_add_on_fee": 12.3}
+            },
+            {
+                "id": "gold_special",
+                "name": "Clasica",
+                "sale_fee_amount": sale_fee_gold_special,
+                "sale_fee_details": {
+                    "fixed_fee": 0,
+                    "gross_amount": sale_fee_gold_special,
+                    "percentage_fee": 14.65,
+                    "meli_percentage_fee": 14.65,
+                    "financing_add_on_fee": 0
                 },
-                {
-                    "id": "gold_special",
-                    "name": "Clasica",
-                    "sale_fee_amount": 0.0,
-                    "sale_fee_details": {"fixed_fee": 0, "gross_amount": 0, "percentage_fee": 14.65, "meli_percentage_fee": 14.65, "financing_add_on_fee": 0}
-                }
-            ]
+                "listing_fee_amount": 0,
+                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+            }
+        ]
 
         listing_list = [
             {
@@ -602,25 +643,18 @@ def get_meli_attributes(db: Session, item_id: int):
             {"listing": listing_list}
         ]
 
-    # Rebuild settings from allowed_options schema if present
-    if allowed:
-        attrs.settings = build_settings_from_allowed(allowed, attrs.settings)
+    if selected_option:
+        # Re-generate settings dynamically from selected_option (preserving user inputs)
+        attrs.settings = build_settings_from_selected_option(selected_option, attrs.settings)
         db.commit()
         db.refresh(attrs)
     elif not attrs.settings:
-        # Fetch product price for listing calculations
+        # Build default settings
         product = db.query(Product).filter(Product.id == item_id).first()
-        price = 0.0
-        if product:
-            price = float(product.price_mercadolibre or product.price or 0.0)
-            if not attrs.category_id and product.product_type_id and str(product.product_type_id).startswith("MLA"):
-                attrs.category_id = product.product_type_id
-                
-        # Calculate fees based on product price
+        price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
         sale_fee_gold_special = round(price * 0.1465, 2)
         sale_fee_gold_pro = round(price * 0.2695, 2)
         
-        # Build dynamic settings structure
         default_settings = [
             {
                 "attributes": [
@@ -632,24 +666,6 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_examples": ["new", "used", "reconditioned"],
                         "user_input_value": "new",
                         "value_max_lenght": ""
-                    },
-                    {
-                        "id": "pot_type",
-                        "name": "Tipo de olla",
-                        "condition": "Free Input",
-                        "value_type": "string",
-                        "value_examples": ["Vaporeras", "Cacerola", "Olla a presion"],
-                        "user_input_value": "",
-                        "value_max_lenght": 255
-                    },
-                    {
-                        "id": "units_per_pack",
-                        "name": "Unidades por pack",
-                        "condition": "Free Input",
-                        "value_type": "number",
-                        "value_examples": "",
-                        "user_input_value": "1",
-                        "value_max_lenght": 18
                     },
                     {
                         "id": "value_added_tax",
@@ -668,6 +684,24 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
                         "user_input_value": "0 %",
                         "value_max_lenght": ""
+                    },
+                    {
+                        "id": "units_per_pack",
+                        "name": "Unidades por pack",
+                        "condition": "Free Input",
+                        "value_type": "number",
+                        "value_examples": "",
+                        "user_input_value": "1",
+                        "value_max_lenght": 18
+                    },
+                    {
+                        "id": "pot_type",
+                        "name": "Tipo de olla",
+                        "condition": "Free Input",
+                        "value_type": "string",
+                        "value_examples": ["Vaporeras", "Cacerola", "Olla a presion"],
+                        "user_input_value": "",
+                        "value_max_lenght": 255
                     },
                     {
                         "id": "volume_capacity",
