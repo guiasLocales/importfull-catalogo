@@ -644,10 +644,10 @@ def get_meli_attributes(db: Session, item_id: int):
         ]
 
     if selected_option:
-        # Re-generate settings dynamically from selected_option (preserving user inputs)
+        # Re-generate settings dynamically from selected_option (preserving user inputs) in memory
+        # Expunge from database session first to prevent SQLAlchemy from auto-committing the merge
+        db.expunge(attrs)
         attrs.settings = build_settings_from_selected_option(selected_option, attrs.settings)
-        db.commit()
-        db.refresh(attrs)
     elif not attrs.settings:
         # Build default settings
         product = db.query(Product).filter(Product.id == item_id).first()
