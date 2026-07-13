@@ -912,15 +912,28 @@ document.addEventListener('DOMContentLoaded', function () {
             const priceTNEl = document.getElementById('edit_price_tienda_nube');
             if (priceTNEl && priceTNEl.value !== "") updates.price_tienda_nube = parseFloat(priceTNEl.value);
 
-            // MercadoLibre Business Fields
-            const listingEl = document.getElementById('edit_listing_type_id');
-            if (listingEl) updates.listing_type_id = listingEl.value;
-            
-            const modeEl = document.getElementById('edit_mode_shipping');
-            if (modeEl) updates.mode_shipping = modeEl.value;
-            
-            const freeEl = document.getElementById('edit_free_shipping');
-            if (freeEl) updates.free_shipping = freeEl.checked ? 1 : 0;
+            // MercadoLibre Business Fields — read from currentMeliAttrs.settings (dynamic attrs), not DOM
+            // since the old static form elements (edit_listing_type_id, etc.) no longer exist.
+            if (currentMeliAttrs && Array.isArray(currentMeliAttrs.settings)) {
+                const getSettingVal = (sectionName, fieldId) => {
+                    for (const sec of currentMeliAttrs.settings) {
+                        const items = sec[sectionName];
+                        if (Array.isArray(items)) {
+                            const found = items.find(e => String(e.id).toUpperCase() === fieldId.toUpperCase());
+                            if (found) return found.user_input_value;
+                        }
+                    }
+                    return null;
+                };
+                const listingVal = getSettingVal('listing', 'LISTING_TYPE');
+                if (listingVal !== null && listingVal !== undefined) updates.listing_type_id = listingVal;
+
+                const modeVal = getSettingVal('shipping', 'MODE');
+                if (modeVal !== null && modeVal !== undefined) updates.mode_shipping = modeVal;
+
+                const freeVal = getSettingVal('shipping', 'FREE_SHIPPING');
+                if (freeVal !== null && freeVal !== undefined) updates.free_shipping = (freeVal === 'True' || freeVal === true || freeVal === 1) ? 1 : 0;
+            }
 
             // Compose dimentions from separate fields
             const dH = document.getElementById('dim_h');
