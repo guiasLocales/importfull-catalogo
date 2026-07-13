@@ -433,45 +433,45 @@ def get_meli_attributes(db: Session, item_id: int):
         # 1. Core Attributes (always present for all products)
         attributes_list = [
             {
-                "id": "condition_type",
+                "id": "CONDITION_TYPE",
                 "name": "Condición",
                 "condition": "Restricted Input",
                 "value_type": "list",
                 "value_examples": ["new", "used", "reconditioned"],
-                "user_input_value": values_by_id.get("condition_type", "new"),
+                "user_input_value": values_by_id.get("condition_type") or values_by_id.get("condition") or "new",
                 "value_max_lenght": ""
             },
             {
-                "id": "value_added_tax",
+                "id": "VALUE_ADDED_TAX",
                 "name": "IVA",
                 "condition": "Restricted Input",
                 "value_type": "list",
                 "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"],
-                "user_input_value": values_by_id.get("value_added_tax", "21 %"),
+                "user_input_value": values_by_id.get("value_added_tax") or "21 %",
                 "value_max_lenght": ""
             },
             {
-                "id": "import_duty",
+                "id": "IMPORT_DUTY",
                 "name": "Impuesto interno",
                 "condition": "Restricted Input",
                 "value_type": "list",
                 "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
-                "user_input_value": values_by_id.get("import_duty", "0 %"),
+                "user_input_value": values_by_id.get("import_duty") or "0 %",
                 "value_max_lenght": ""
             },
             {
-                "id": "units_per_pack",
+                "id": "UNITS_PER_PACK",
                 "name": "Unidades por pack",
                 "condition": "Free Input",
                 "value_type": "number",
                 "value_examples": "",
-                "user_input_value": values_by_id.get("units_per_pack", "1"),
+                "user_input_value": values_by_id.get("units_per_pack") or "1",
                 "value_max_lenght": 18
             }
         ]
 
         # Add category-specific attributes from selected option
-        core_ids = {"condition_type", "value_added_tax", "import_duty", "units_per_pack"}
+        core_ids = {"condition_type", "condition", "value_added_tax", "import_duty", "units_per_pack"}
         cat_attrs = selected_opt.get("attributes", [])
         if isinstance(cat_attrs, list):
             for attr in cat_attrs:
@@ -480,8 +480,8 @@ def get_meli_attributes(db: Session, item_id: int):
                 attr_id_raw = attr.get("id")
                 if not attr_id_raw:
                     continue
-                attr_id = attr_id_raw.lower()
-                if attr_id in core_ids:
+                attr_id_lower = attr_id_raw.lower()
+                if attr_id_lower in core_ids:
                     continue
                 
                 name = attr.get("name", attr_id_raw)
@@ -492,7 +492,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
                 val_type = "list" if (vals_list or val_id) else "string"
                 
-                default_val = values_by_id.get(attr_id)
+                default_val = values_by_id.get(attr_id_lower)
                 if default_val is None:
                     # Fallback to AI matched value
                     default_val = val_id if val_id else val_name if val_name else ""
@@ -507,7 +507,7 @@ def get_meli_attributes(db: Session, item_id: int):
                     examples = [val_name]
                 
                 attributes_list.append({
-                    "id": attr_id,
+                    "id": attr_id_raw,  # Preserve raw ID casing!
                     "name": name,
                     "condition": cond,
                     "value_type": val_type,
@@ -519,7 +519,7 @@ def get_meli_attributes(db: Session, item_id: int):
         # 2. Shipping
         shipping_list = [
             {
-                "id": "mode",
+                "id": "MODE",
                 "name": "Metodo de Envio",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -528,7 +528,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_max_lenght": ""
             },
             {
-                "id": "local_pick_up",
+                "id": "LOCAL_PICK_UP",
                 "name": "Buscar en Local",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -537,7 +537,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_max_lenght": ""
             },
             {
-                "id": "free_shipping",
+                "id": "FREE_SHIPPING",
                 "name": "Envio Gratis",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -546,7 +546,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_max_lenght": ""
             },
             {
-                "id": "logistic_type",
+                "id": "LOGISTIC_TYPE",
                 "name": "Tipo de Logistica",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -559,7 +559,7 @@ def get_meli_attributes(db: Session, item_id: int):
         # 3. Sale Terms
         sale_terms_list = [
             {
-                "id": "warranty_type",
+                "id": "WARRANTY_TYPE",
                 "name": "Tipo de garantia",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -568,7 +568,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_max_lenght": ""
             },
             {
-                "id": "warranty_time",
+                "id": "WARRANTY_TIME",
                 "name": "Tiempo de garantia",
                 "condition": "Free Input",
                 "value_type": "number_unit",
@@ -617,7 +617,7 @@ def get_meli_attributes(db: Session, item_id: int):
 
         listing_list = [
             {
-                "id": "buying_mode",
+                "id": "BUYING_MODE",
                 "name": "Método de Compra",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -626,7 +626,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 "value_max_lenght": ""
             },
             {
-                "id": "listing_type",
+                "id": "LISTING_TYPE",
                 "name": "Campana de Cuotas",
                 "condition": "Restricted Input",
                 "value_type": "list",
@@ -671,18 +671,18 @@ def get_meli_attributes(db: Session, item_id: int):
         attrs.settings = [
             {"attributes": []},
             {"shipping": [
-                {"id": "mode", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": ["custom", "me1", "me2", "not_specified"], "user_input_value": "me2", "value_max_lenght": ""},
-                {"id": "local_pick_up", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "True", "value_max_lenght": ""},
-                {"id": "free_shipping", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "False", "value_max_lenght": ""},
-                {"id": "logistic_type", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"], "user_input_value": "drop_off", "value_max_lenght": ""}
+                {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": ["custom", "me1", "me2", "not_specified"], "user_input_value": "me2", "value_max_lenght": ""},
+                {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "True", "value_max_lenght": ""},
+                {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "False", "value_max_lenght": ""},
+                {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"], "user_input_value": "drop_off", "value_max_lenght": ""}
             ]},
             {"sale_terms": [
-                {"id": "warranty_type", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
-                {"id": "warranty_time", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
+                {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
+                {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
             ]},
             {"listing": [
-                {"id": "buying_mode", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
-                {"id": "listing_type", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
+                {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
+                {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
             ]}
         ]
     elif selected_option:
@@ -701,7 +701,7 @@ def get_meli_attributes(db: Session, item_id: int):
             {
                 "attributes": [
                     {
-                        "id": "condition_type",
+                        "id": "CONDITION_TYPE",
                         "name": "Condición",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -710,7 +710,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "value_added_tax",
+                        "id": "VALUE_ADDED_TAX",
                         "name": "IVA",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -719,7 +719,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "import_duty",
+                        "id": "IMPORT_DUTY",
                         "name": "Impuesto interno",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -728,7 +728,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "units_per_pack",
+                        "id": "UNITS_PER_PACK",
                         "name": "Unidades por pack",
                         "condition": "Free Input",
                         "value_type": "number",
@@ -741,7 +741,7 @@ def get_meli_attributes(db: Session, item_id: int):
             {
                 "shipping": [
                     {
-                        "id": "mode",
+                        "id": "MODE",
                         "name": "Metodo de Envio",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -750,7 +750,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "local_pick_up",
+                        "id": "LOCAL_PICK_UP",
                         "name": "Buscar en Local",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -759,7 +759,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "free_shipping",
+                        "id": "FREE_SHIPPING",
                         "name": "Envio Gratis",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -768,7 +768,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "logistic_type",
+                        "id": "LOGISTIC_TYPE",
                         "name": "Tipo de Logistica",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -781,7 +781,7 @@ def get_meli_attributes(db: Session, item_id: int):
             {
                 "sale_terms": [
                     {
-                        "id": "warranty_type",
+                        "id": "WARRANTY_TYPE",
                         "name": "Tipo de garantia",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -790,7 +790,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "warranty_time",
+                        "id": "WARRANTY_TIME",
                         "name": "Tiempo de garantia",
                         "condition": "Free Input",
                         "value_type": "number_unit",
@@ -803,7 +803,7 @@ def get_meli_attributes(db: Session, item_id: int):
             {
                 "listing": [
                     {
-                        "id": "buying_mode",
+                        "id": "BUYING_MODE",
                         "name": "Método de Compra",
                         "condition": "Restricted Input",
                         "value_type": "list",
@@ -812,7 +812,7 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_max_lenght": ""
                     },
                     {
-                        "id": "listing_type",
+                        "id": "LISTING_TYPE",
                         "name": "Campana de Cuotas",
                         "condition": "Restricted Input",
                         "value_type": "list",

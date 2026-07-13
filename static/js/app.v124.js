@@ -2448,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (const sectionName in sectionObj) {
                     const elements = sectionObj[sectionName];
                     if (Array.isArray(elements)) {
-                        const el = elements.find(e => e.id === attrId);
+                        const el = elements.find(e => String(e.id).toLowerCase() === String(attrId).toLowerCase());
                         if (el) {
                             el.user_input_value = value;
                         }
@@ -2456,7 +2456,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            if (attrId === 'listing_type') {
+            if (String(attrId).toLowerCase() === 'listing_type') {
                 updateListingFeePreview(value, currentMeliAttrs.settings);
             }
         }
