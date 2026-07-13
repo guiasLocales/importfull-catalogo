@@ -643,7 +643,49 @@ def get_meli_attributes(db: Session, item_id: int):
             {"listing": listing_list}
         ]
 
-    if selected_option:
+    if not attrs.category_id:
+        # If no category_id is set, do not show any attributes at all!
+        product = db.query(Product).filter(Product.id == item_id).first()
+        price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
+        sale_fee_gold_special = round(price * 0.1465, 2)
+        sale_fee_gold_pro = round(price * 0.2695, 2)
+        formatted_options = [
+            {
+                "id": "gold_pro",
+                "name": "Premium",
+                "sale_fee_amount": sale_fee_gold_pro,
+                "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_pro, "percentage_fee": 26.95, "meli_percentage_fee": 14.65, "financing_add_on_fee": 12.3},
+                "listing_fee_amount": 0,
+                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+            },
+            {
+                "id": "gold_special",
+                "name": "Clasica",
+                "sale_fee_amount": sale_fee_gold_special,
+                "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_special, "percentage_fee": 14.65, "meli_percentage_fee": 14.65, "financing_add_on_fee": 0},
+                "listing_fee_amount": 0,
+                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+            }
+        ]
+        db.expunge(attrs)
+        attrs.settings = [
+            {"attributes": []},
+            {"shipping": [
+                {"id": "mode", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": ["custom", "me1", "me2", "not_specified"], "user_input_value": "me2", "value_max_lenght": ""},
+                {"id": "local_pick_up", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "True", "value_max_lenght": ""},
+                {"id": "free_shipping", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": ["True", "False"], "user_input_value": "False", "value_max_lenght": ""},
+                {"id": "logistic_type", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"], "user_input_value": "drop_off", "value_max_lenght": ""}
+            ]},
+            {"sale_terms": [
+                {"id": "warranty_type", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
+                {"id": "warranty_time", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
+            ]},
+            {"listing": [
+                {"id": "buying_mode", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
+                {"id": "listing_type", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
+            ]}
+        ]
+    elif selected_option:
         # Re-generate settings dynamically from selected_option (preserving user inputs) in memory
         # Expunge from database session first to prevent SQLAlchemy from auto-committing the merge
         db.expunge(attrs)
@@ -693,24 +735,6 @@ def get_meli_attributes(db: Session, item_id: int):
                         "value_examples": "",
                         "user_input_value": "1",
                         "value_max_lenght": 18
-                    },
-                    {
-                        "id": "pot_type",
-                        "name": "Tipo de olla",
-                        "condition": "Free Input",
-                        "value_type": "string",
-                        "value_examples": ["Vaporeras", "Cacerola", "Olla a presion"],
-                        "user_input_value": "",
-                        "value_max_lenght": 255
-                    },
-                    {
-                        "id": "volume_capacity",
-                        "name": "Capacidad en volumen",
-                        "condition": "Free Input",
-                        "value_type": "number_unit",
-                        "value_examples": "",
-                        "user_input_value": "1 mL",
-                        "value_max_lenght": 255
                     }
                 ]
             },
