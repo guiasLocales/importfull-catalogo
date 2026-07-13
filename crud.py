@@ -405,328 +405,7 @@ def get_meli_attributes(db: Session, item_id: int):
         db.add(attrs)
         db.flush()
 
-    # Parse category_options if present
-    category_options = None
-    if attrs.category_options:
-        try:
-            category_options = json.loads(attrs.category_options) if isinstance(attrs.category_options, str) else attrs.category_options
-        except Exception as e:
-            print(f"Error parsing category_options: {e}")
-
-    # Find selected category option in category_options candidates list
-    selected_option = None
-    if category_options and isinstance(category_options, list) and attrs.category_id:
-        for opt in category_options:
-            if opt and isinstance(opt, dict) and str(opt.get("category_id")) == str(attrs.category_id):
-                selected_option = opt
-                break
-
-    # Helper to build dynamic settings from selected category option
-    def build_settings_from_selected_option(selected_opt, existing_settings=None):
-        values_by_id = {}
-        if existing_settings:
-            if isinstance(existing_settings, str):
-                try: existing_settings = json.loads(existing_settings)
-                except Exception: existing_settings = None
-            if isinstance(existing_settings, list):
-                for section in existing_settings:
-                    if isinstance(section, dict):
-                        for sec_name, items in section.items():
-                            if isinstance(items, list):
-                                for item in items:
-                                    if isinstance(item, dict) and "id" in item:
-                                        values_by_id[str(item["id"]).lower()] = item.get("user_input_value")
-
-        # 1. Core Attributes (always present for all products)
-        attributes_list = [
-            {
-                "id": "CONDITION_TYPE",
-                "name": "Condición",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["new", "used", "reconditioned"],
-                "user_input_value": values_by_id.get("condition_type") or values_by_id.get("condition") or "new",
-                "value_max_lenght": ""
-            },
-            {
-                "id": "VALUE_ADDED_TAX",
-                "name": "IVA",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"],
-                "user_input_value": values_by_id.get("value_added_tax") or "21 %",
-                "value_max_lenght": ""
-            },
-            {
-                "id": "IMPORT_DUTY",
-                "name": "Impuesto interno",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"],
-                "user_input_value": values_by_id.get("import_duty") or "0 %",
-                "value_max_lenght": ""
-            },
-            {
-                "id": "UNITS_PER_PACK",
-                "name": "Unidades por pack",
-                "condition": "Free Input",
-                "value_type": "number",
-                "value_examples": "",
-                "user_input_value": values_by_id.get("units_per_pack") or "1",
-                "value_max_lenght": 18
-            }
-        ]
-
-        # Add category-specific attributes from selected option
-        core_ids = {"condition_type", "condition", "value_added_tax", "import_duty", "units_per_pack"}
-        cat_attrs = selected_opt.get("attributes", [])
-        if isinstance(cat_attrs, list):
-            for attr in cat_attrs:
-                if not isinstance(attr, dict):
-                    continue
-                attr_id_raw = attr.get("id")
-                if not attr_id_raw:
-                    continue
-                attr_id_lower = attr_id_raw.lower()
-                if attr_id_lower in core_ids:
-                    continue
-                
-                name = attr.get("name", attr_id_raw)
-                val_id = attr.get("value_id")
-                val_name = attr.get("value_name", "")
-                vals_list = attr.get("values")
-                
-                cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
-                val_type = "list" if (vals_list or val_id) else "string"
-                
-                default_val = values_by_id.get(attr_id_lower)
-                if default_val is None:
-                    # Fallback to AI matched value
-                    default_val = val_id if val_id else val_name if val_name else ""
-                
-                # Normalize examples
-                examples = []
-                if vals_list:
-                    if isinstance(vals_list, list):
-                        examples = vals_list
-                    else:
-                        examples = [vals_list]
-                elif val_id and val_name:
-                    examples = [{"id": str(val_id), "name": val_name}]
-                elif val_name:
-                    examples = [val_name]
-                elif val_id:
-                    examples = [str(val_id)]
-                
-                attributes_list.append({
-                    "id": attr_id_raw,  # Preserve raw ID casing!
-                    "name": name,
-                    "condition": cond,
-                    "value_type": val_type,
-                    "value_examples": examples,
-                    "user_input_value": default_val,
-                    "value_max_lenght": 255
-                })
-
-        # 2. Shipping
-        shipping_list = [
-            {
-                "id": "MODE",
-                "name": "Metodo de Envio",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["custom", "me1", "me2", "not_specified"],
-                "user_input_value": values_by_id.get("mode", "me2"),
-                "value_max_lenght": ""
-            },
-            {
-                "id": "LOCAL_PICK_UP",
-                "name": "Buscar en Local",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["True", "False"],
-                "user_input_value": values_by_id.get("local_pick_up", "True"),
-                "value_max_lenght": ""
-            },
-            {
-                "id": "FREE_SHIPPING",
-                "name": "Envio Gratis",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["True", "False"],
-                "user_input_value": values_by_id.get("free_shipping", "False"),
-                "value_max_lenght": ""
-            },
-            {
-                "id": "LOGISTIC_TYPE",
-                "name": "Tipo de Logistica",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["fulfillment", "cross_docking", "self_service", "drop_off", "custom"],
-                "user_input_value": values_by_id.get("logistic_type", "drop_off"),
-                "value_max_lenght": ""
-            }
-        ]
-
-        # 3. Sale Terms
-        sale_terms_list = [
-            {
-                "id": "WARRANTY_TYPE",
-                "name": "Tipo de garantia",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"],
-                "user_input_value": values_by_id.get("warranty_type", "Garantía del vendedor"),
-                "value_max_lenght": ""
-            },
-            {
-                "id": "WARRANTY_TIME",
-                "name": "Tiempo de garantia",
-                "condition": "Free Input",
-                "value_type": "number_unit",
-                "value_examples": "",
-                "user_input_value": values_by_id.get("warranty_time", "30 dias"),
-                "value_max_lenght": 255
-            }
-        ]
-
-        # 4. Listing (calculate dynamically)
-        product = db.query(Product).filter(Product.id == item_id).first()
-        price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
-        sale_fee_gold_special = round(price * 0.1465, 2)
-        sale_fee_gold_pro = round(price * 0.2695, 2)
-        
-        formatted_options = [
-            {
-                "id": "gold_pro",
-                "name": "Premium",
-                "sale_fee_amount": sale_fee_gold_pro,
-                "sale_fee_details": {
-                    "fixed_fee": 0,
-                    "gross_amount": sale_fee_gold_pro,
-                    "percentage_fee": 26.95,
-                    "meli_percentage_fee": 14.65,
-                    "financing_add_on_fee": 12.3
-                },
-                "listing_fee_amount": 0,
-                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-            },
-            {
-                "id": "gold_special",
-                "name": "Clasica",
-                "sale_fee_amount": sale_fee_gold_special,
-                "sale_fee_details": {
-                    "fixed_fee": 0,
-                    "gross_amount": sale_fee_gold_special,
-                    "percentage_fee": 14.65,
-                    "meli_percentage_fee": 14.65,
-                    "financing_add_on_fee": 0
-                },
-                "listing_fee_amount": 0,
-                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-            }
-        ]
-
-        listing_list = [
-            {
-                "id": "BUYING_MODE",
-                "name": "Método de Compra",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": ["buy_it_now", "classified"],
-                "user_input_value": values_by_id.get("buying_mode", "buy_it_now"),
-                "value_max_lenght": ""
-            },
-            {
-                "id": "LISTING_TYPE",
-                "name": "Campana de Cuotas",
-                "condition": "Restricted Input",
-                "value_type": "list",
-                "value_examples": [formatted_options],
-                "user_input_value": values_by_id.get("listing_type", "gold_special"),
-                "value_max_lenght": ""
-            }
-        ]
-
-        return [
-            {"attributes": attributes_list},
-            {"shipping": shipping_list},
-            {"sale_terms": sale_terms_list},
-            {"listing": listing_list}
-        ]
-
-    def merge_settings_with_selected_option(selected_opt, existing_settings):
-        if existing_settings and isinstance(existing_settings, str):
-            try: existing_settings = json.loads(existing_settings)
-            except Exception: existing_settings = None
-            
-        if not existing_settings or not isinstance(existing_settings, list):
-            return build_settings_from_selected_option(selected_opt)
-            
-        sections_by_name = {}
-        for section in existing_settings:
-            if isinstance(section, dict):
-                for sec_name, items in section.items():
-                    if isinstance(items, list):
-                        sections_by_name[sec_name] = items
-                        
-        if "attributes" not in sections_by_name:
-            sections_by_name["attributes"] = []
-            existing_settings.append({"attributes": sections_by_name["attributes"]})
-            
-        existing_ids = {str(item.get("id")).lower() for item in sections_by_name["attributes"] if isinstance(item, dict) and "id" in item}
-        core_ids = {"condition_type", "condition", "value_added_tax", "import_duty", "units_per_pack"}
-        
-        cat_attrs = selected_opt.get("attributes", [])
-        if isinstance(cat_attrs, list):
-            for attr in cat_attrs:
-                if not isinstance(attr, dict):
-                    continue
-                attr_id_raw = attr.get("id")
-                if not attr_id_raw:
-                    continue
-                attr_id_lower = attr_id_raw.lower()
-                if attr_id_lower in core_ids or attr_id_lower in existing_ids:
-                    continue
-                    
-                name = attr.get("name", attr_id_raw)
-                val_id = attr.get("value_id")
-                val_name = attr.get("value_name", "")
-                vals_list = attr.get("values")
-                
-                cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
-                val_type = "list" if (vals_list or val_id) else "string"
-                
-                default_val = val_id if val_id else val_name if val_name else ""
-                
-                # Normalize examples
-                examples = []
-                if vals_list:
-                    if isinstance(vals_list, list):
-                        examples = vals_list
-                    else:
-                        examples = [vals_list]
-                elif val_id and val_name:
-                    examples = [{"id": str(val_id), "name": val_name}]
-                elif val_name:
-                    examples = [val_name]
-                elif val_id:
-                    examples = [str(val_id)]
-                    
-                sections_by_name["attributes"].append({
-                    "id": attr_id_raw,
-                    "name": name,
-                    "condition": cond,
-                    "value_type": val_type,
-                    "value_examples": examples,
-                    "user_input_value": default_val,
-                    "value_max_lenght": 255
-                })
-                existing_ids.add(attr_id_lower)
-                
-        return existing_settings
-
-    # Parse existing settings
+    # Parse settings from DB
     existing_settings = attrs.settings
     if existing_settings and isinstance(existing_settings, str):
         try:
@@ -734,6 +413,7 @@ def get_meli_attributes(db: Session, item_id: int):
         except Exception:
             existing_settings = None
 
+    # Only initialize defaults if settings is completely empty (new product)
     if not existing_settings:
         product = db.query(Product).filter(Product.id == item_id).first()
         price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
@@ -741,66 +421,49 @@ def get_meli_attributes(db: Session, item_id: int):
         sale_fee_gold_pro = round(price * 0.2695, 2)
         formatted_options = [
             {
-                "id": "gold_pro",
-                "name": "Premium",
-                "sale_fee_amount": sale_fee_gold_pro,
+                "id": "gold_pro", "name": "Premium", "sale_fee_amount": sale_fee_gold_pro,
                 "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_pro, "percentage_fee": 26.95, "meli_percentage_fee": 14.65, "financing_add_on_fee": 12.3},
-                "listing_fee_amount": 0,
-                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+                "listing_fee_amount": 0, "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
             },
             {
-                "id": "gold_special",
-                "name": "Clasica",
-                "sale_fee_amount": sale_fee_gold_special,
+                "id": "gold_special", "name": "Clasica", "sale_fee_amount": sale_fee_gold_special,
                 "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_special, "percentage_fee": 14.65, "meli_percentage_fee": 14.65, "financing_add_on_fee": 0},
-                "listing_fee_amount": 0,
-                "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
+                "listing_fee_amount": 0, "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
             }
         ]
-        default_settings = [
-            {
-                "attributes": [
-                    {"id": "CONDITION_TYPE", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
-                    {"id": "VALUE_ADDED_TAX", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
-                    {"id": "IMPORT_DUTY", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
-                    {"id": "UNITS_PER_PACK", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
-                ]
-            },
-            {
-                "shipping": [
-                    {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
-                    {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
-                    {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
-                    {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
-                ]
-            },
-            {
-                "sale_terms": [
-                    {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
-                    {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
-                ]
-            },
-            {
-                "listing": [
-                    {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
-                    {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
-                ]
-            }
+        existing_settings = [
+            {"attributes": [
+                {"id": "CONDITION_TYPE", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
+                {"id": "VALUE_ADDED_TAX", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
+                {"id": "IMPORT_DUTY", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
+                {"id": "UNITS_PER_PACK", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
+            ]},
+            {"shipping": [
+                {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
+                {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
+                {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
+                {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
+            ]},
+            {"sale_terms": [
+                {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
+                {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
+            ]},
+            {"listing": [
+                {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
+                {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
+            ]}
         ]
-        attrs.settings = default_settings
+        attrs.settings = existing_settings
         db.commit()
         db.refresh(attrs)
-        existing_settings = default_settings
 
+    # Return the attrs with settings from DB, no merging or rebuilding
     db.expunge(attrs)
-    if selected_option:
-        attrs.settings = merge_settings_with_selected_option(selected_option, existing_settings)
-    else:
-        attrs.settings = existing_settings
-
+    attrs.settings = existing_settings
     return attrs
 
 def update_meli_attributes(db: Session, item_id: int, updates: dict):
+
     db_attr = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
     
     if not db_attr:
