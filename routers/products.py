@@ -345,7 +345,7 @@ def trigger_pre_publish(
         print(f"DEBUG: Sending AI pre-publish webhook for item {product_id} (field: {request.field})")
         with httpx.Client(timeout=30.0) as client:
             response = client.post(WEBHOOK_URL, json=data)
-            if response.status_code in (200, 202):
+            if 200 <= response.status_code < 300:
                 return {
                     "status": "success", 
                     "message": "Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.",
