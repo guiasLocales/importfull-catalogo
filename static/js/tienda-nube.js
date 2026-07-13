@@ -163,9 +163,14 @@
     window.openTiendaNubeDetail = async function(productId) {
         setTNLoading(true);
         try {
-            const response = await authFetch(`/api/products/${productId}`);
-            if (!response.ok) throw new Error('Error al cargar detalle');
-            const product = await response.json();
+            const [resProduct, resFiles] = await Promise.all([
+                authFetch(`/api/products/${productId}`),
+                authFetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] }))
+            ]);
+
+            if (!resProduct.ok) throw new Error('Error al cargar detalle');
+            const product = await resProduct.json();
+            const files = resFiles.ok ? await resFiles.json() : [];
 
             // Fetch TN specific attributes and status if they exist
             let attributes = {};
@@ -187,13 +192,37 @@
                         <i data-lucide="x" class="h-5 w-5 text-gray-600"></i>
                     </button>
 
-                    <!-- Left: Product Image -->
+                    <!-- Left: Product Image & Carousel -->
                     <div class="w-full md:w-5/12 bg-gray-50 flex flex-col p-6 border-r border-gray-100 items-center justify-center overflow-y-auto custom-scrollbar">
-                        <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-center">
-                            <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}" 
-                                 class="max-h-[300px] md:max-h-[400px] object-contain rounded-lg"
-                                 onerror="this.src='https://via.placeholder.com/400?text=Error+Carga'">
+                        <div class="w-full max-w-sm flex items-center justify-center relative min-h-[200px] md:min-h-[300px] bg-white rounded-2xl shadow-sm border border-gray-100 p-4 overflow-hidden">
+                            <img id="main-product-image" 
+                                 src="${product.product_image_b_format_url || (files && files.length > 0 ? (files[0].thumbnailLink || files[0].webContentLink) : 'https://via.placeholder.com/400?text=Sin+Imagen')}" 
+                                 class="max-h-[300px] md:max-h-[400px] object-contain rounded-lg transition-opacity duration-300"
+                                 referrerpolicy="no-referrer"
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/400?text=Error+Carga';">
                         </div>
+                        
+                        ${files && files.length > 0 ? `
+                        <div class="w-full max-w-sm overflow-x-auto custom-scrollbar pt-2 mt-2">
+                            <div class="flex gap-2">
+                                 <!-- Main Original Image Thumbnail -->
+                                 ${product.product_image_b_format_url ? `
+                                 <button onclick="document.getElementById('main-product-image').src='${product.product_image_b_format_url}'" 
+                                         class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 focus:border-blue-500 transition-all bg-white shadow-sm">
+                                    <img src="${product.product_image_b_format_url}" class="w-full h-full object-cover">
+                                 </button>
+                                 ` : ''}
+
+                                ${files.map(file => `
+                                    <button onclick="document.getElementById('main-product-image').src='${file.largeImageLink || file.thumbnailLink}'" 
+                                            class="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 focus:border-blue-500 transition-all relative group bg-white shadow-sm">
+                                        <img src="${file.thumbnailLink}" alt="${file.name}" class="w-full h-full object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOTA5MDkwIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0yMSAxNXV2NGEyIDIgMCAwIDEtMiAySDVhMiAyIDAgMCAxLTItMnYtNG0xNC0ybC0tNHYxMm00LQhMNyA5Ii8+PC9zdmc+';">
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
                         <div class="mt-4 w-full max-w-sm">
                             <button onclick="syncMeliPicturesToTN(${product.id}, this)" class="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 border border-blue-200 shadow-sm">
                                 <i data-lucide="image-plus" class="h-4 w-4"></i> Sincronizar Imágenes (ML ➔ TN)
@@ -203,6 +232,9 @@
                             <h3 class="text-xl font-bold text-gray-900">${product.product_name}</h3>
                             <p class="text-sm text-gray-500">SKU: ${product.product_code}</p>
                             <div class="mt-4 flex flex-wrap justify-center gap-2">
+                                <span class="px-3 py-1 bg-purple-50 text-purple-700 text-[10px] font-bold uppercase rounded-full border border-purple-100 flex items-center gap-1">
+                                    <i data-lucide="folder" class="h-3 w-3"></i> ${product.product_type_path || 'SIN CATEGORÍA'}
+                                </span>
                                 <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase rounded-full border border-blue-100 flex items-center gap-1">
                                     <i data-lucide="tag" class="h-3 w-3"></i> Tienda Nube
                                 </span>
