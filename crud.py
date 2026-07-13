@@ -494,7 +494,7 @@ def get_meli_attributes(db: Session, item_id: int):
                 name = attr.get("name", attr_id_raw)
                 val_id = attr.get("value_id")
                 val_name = attr.get("value_name", "")
-                vals_list = attr.get("values", [])
+                vals_list = attr.get("values")
                 
                 cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
                 val_type = "list" if (vals_list or val_id) else "string"
@@ -506,12 +506,17 @@ def get_meli_attributes(db: Session, item_id: int):
                 
                 # Normalize examples
                 examples = []
-                if isinstance(vals_list, list):
-                    examples = vals_list
-                elif vals_list:
-                    examples = [vals_list]
+                if vals_list:
+                    if isinstance(vals_list, list):
+                        examples = vals_list
+                    else:
+                        examples = [vals_list]
+                elif val_id and val_name:
+                    examples = [{"id": str(val_id), "name": val_name}]
                 elif val_name:
                     examples = [val_name]
+                elif val_id:
+                    examples = [str(val_id)]
                 
                 attributes_list.append({
                     "id": attr_id_raw,  # Preserve raw ID casing!
@@ -687,20 +692,26 @@ def get_meli_attributes(db: Session, item_id: int):
                 name = attr.get("name", attr_id_raw)
                 val_id = attr.get("value_id")
                 val_name = attr.get("value_name", "")
-                vals_list = attr.get("values", [])
+                vals_list = attr.get("values")
                 
                 cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
                 val_type = "list" if (vals_list or val_id) else "string"
                 
                 default_val = val_id if val_id else val_name if val_name else ""
                 
+                # Normalize examples
                 examples = []
-                if isinstance(vals_list, list):
-                    examples = vals_list
-                elif vals_list:
-                    examples = [vals_list]
+                if vals_list:
+                    if isinstance(vals_list, list):
+                        examples = vals_list
+                    else:
+                        examples = [vals_list]
+                elif val_id and val_name:
+                    examples = [{"id": str(val_id), "name": val_name}]
                 elif val_name:
                     examples = [val_name]
+                elif val_id:
+                    examples = [str(val_id)]
                     
                 sections_by_name["attributes"].append({
                     "id": attr_id_raw,
