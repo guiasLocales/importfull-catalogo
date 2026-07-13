@@ -1390,7 +1390,7 @@
                 </div>
 
                 <!-- Tienda Nube View -->
-                <div id="tiendaNubeView" class="hidden h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
+                <div id="tiendaNubeViewLegacy" class="hidden h-full flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
 
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-6 flex-none">
@@ -1424,18 +1424,18 @@
                     <!-- Filters -->
                     <div class="flex flex-wrap items-center gap-3 mb-4 flex-none">
                         <div class="relative w-full sm:max-w-xs">
-                            <input type="text" id="tnSearchInput" placeholder="Buscar en Tienda Nube..."
+                            <input type="text" id="tnSearchInputLegacy" placeholder="Buscar en Tienda Nube..."
                                 class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent transition-shadow shadow-sm text-sm"
                                 style="--tw-ring-color:#1B2160" onfocus="this.style.boxShadow='0 0 0 2px #1B2160'" onblur="this.style.boxShadow=''">
                             <i data-lucide="search" class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"></i>
                         </div>
-                        <select id="tnStatusFilter"
+                        <select id="tnStatusFilterLegacy"
                             class="pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm bg-white shadow-sm cursor-pointer">
                             <option value="">Todos los estados</option>
                             <option value="published">Publicados</option>
                             <option value="unpublished">Sin publicar</option>
                         </select>
-                        <select id="tnCategoryFilter"
+                        <select id="tnCategoryFilterLegacy"
                             class="pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm bg-white shadow-sm cursor-pointer">
                             <option value="">Todas las categorías</option>
                         </select>

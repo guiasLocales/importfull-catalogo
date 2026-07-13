@@ -41,6 +41,10 @@
         setTNLoading(true);
 
         try {
+            // Load categories if they haven't been loaded yet (e.g. if page loaded while unauthorized)
+            if (tnElements.categoryFilter && tnElements.categoryFilter.options.length <= 1) {
+                await loadTNCategories();
+            }
             const skip = (tnState.page - 1) * tnState.limit;
             const params = new URLSearchParams({
                 skip: skip,
