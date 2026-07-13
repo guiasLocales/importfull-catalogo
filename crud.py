@@ -650,6 +650,71 @@ def get_meli_attributes(db: Session, item_id: int):
             {"listing": listing_list}
         ]
 
+    def merge_settings_with_selected_option(selected_opt, existing_settings):
+        if existing_settings and isinstance(existing_settings, str):
+            try: existing_settings = json.loads(existing_settings)
+            except Exception: existing_settings = None
+            
+        if not existing_settings or not isinstance(existing_settings, list):
+            return build_settings_from_selected_option(selected_opt)
+            
+        sections_by_name = {}
+        for section in existing_settings:
+            if isinstance(section, dict):
+                for sec_name, items in section.items():
+                    if isinstance(items, list):
+                        sections_by_name[sec_name] = items
+                        
+        if "attributes" not in sections_by_name:
+            sections_by_name["attributes"] = []
+            existing_settings.append({"attributes": sections_by_name["attributes"]})
+            
+        existing_ids = {str(item.get("id")).lower() for item in sections_by_name["attributes"] if isinstance(item, dict) and "id" in item}
+        core_ids = {"condition_type", "condition", "value_added_tax", "import_duty", "units_per_pack"}
+        
+        cat_attrs = selected_opt.get("attributes", [])
+        if isinstance(cat_attrs, list):
+            for attr in cat_attrs:
+                if not isinstance(attr, dict):
+                    continue
+                attr_id_raw = attr.get("id")
+                if not attr_id_raw:
+                    continue
+                attr_id_lower = attr_id_raw.lower()
+                if attr_id_lower in core_ids or attr_id_lower in existing_ids:
+                    continue
+                    
+                name = attr.get("name", attr_id_raw)
+                val_id = attr.get("value_id")
+                val_name = attr.get("value_name", "")
+                vals_list = attr.get("values", [])
+                
+                cond = "Restricted Input" if (vals_list or val_id) else "Free Input"
+                val_type = "list" if (vals_list or val_id) else "string"
+                
+                default_val = val_id if val_id else val_name if val_name else ""
+                
+                examples = []
+                if isinstance(vals_list, list):
+                    examples = vals_list
+                elif vals_list:
+                    examples = [vals_list]
+                elif val_name:
+                    examples = [val_name]
+                    
+                sections_by_name["attributes"].append({
+                    "id": attr_id_raw,
+                    "name": name,
+                    "condition": cond,
+                    "value_type": val_type,
+                    "value_examples": examples,
+                    "user_input_value": default_val,
+                    "value_max_lenght": 255
+                })
+                existing_ids.add(attr_id_lower)
+                
+        return existing_settings
+
     if not attrs.category_id:
         # If no category_id is set, do not show any attributes at all!
         product = db.query(Product).filter(Product.id == item_id).first()
@@ -696,7 +761,7 @@ def get_meli_attributes(db: Session, item_id: int):
         # Re-generate settings dynamically from selected_option (preserving user inputs) in memory
         # Expunge from database session first to prevent SQLAlchemy from auto-committing the merge
         db.expunge(attrs)
-        attrs.settings = build_settings_from_selected_option(selected_option, attrs.settings)
+        attrs.settings = merge_settings_with_selected_option(selected_option, attrs.settings)
     elif not attrs.settings:
         # Build default settings
         product = db.query(Product).filter(Product.id == item_id).first()
