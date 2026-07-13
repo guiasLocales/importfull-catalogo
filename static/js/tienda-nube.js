@@ -110,7 +110,14 @@
                             <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" class="h-full w-full object-cover">
                         </div>
                         <div class="max-w-[200px]">
-                            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate" title="${product.product_name}">${product.product_name}</p>
+                            <div class="flex items-center gap-1.5">
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate" title="${product.product_name}">${product.product_name}</p>
+                                ${product.tienda_nube_url ? `
+                                <a href="${product.tienda_nube_url}" target="_blank" onclick="event.stopPropagation()" class="text-blue-500 hover:text-blue-700 p-0.5 rounded hover:bg-blue-50 transition-colors inline-flex items-center" title="Ver en Tienda Nube">
+                                    <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                                </a>
+                                ` : ''}
+                            </div>
                             <p class="text-[10px] text-gray-500 uppercase font-bold">${product.product_type_path || 'Sin Categoría'}</p>
                         </div>
                     </div>
@@ -243,6 +250,13 @@
                                     <i data-lucide="zap" class="h-3 w-3"></i> MercadoLibre
                                 </span>` : ''}
                             </div>
+                            ${product.tienda_nube_url || (statusInfo && statusInfo.url) ? `
+                            <div class="mt-5">
+                                <a href="${product.tienda_nube_url || statusInfo.url}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border shadow-sm transition-all" style="background:#E6FFFA;color:#2C7A7B;border-color:#B2F5EA">
+                                    <i data-lucide="external-link" class="h-4 w-4"></i> Ver en Tienda Nube
+                                </a>
+                            </div>
+                            ` : ''}
                         </div>
                     </div>
 

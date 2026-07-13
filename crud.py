@@ -3,19 +3,24 @@ from sqlalchemy import or_, distinct, asc, desc, func
 from models import Product, User, ScrappedCompetence, TiendaNubeProductStatus, TiendaNubeAttribute
 from schemas import UserCreate
 
-def _get_tn_status(db, product_id):
-    """Check real TN status by joining attributes -> product_status"""
+def _get_tn_status_and_url(db, product_id):
+    """Check real TN status and URL by joining attributes -> product_status"""
     tn_attr = db.query(TiendaNubeAttribute).filter(TiendaNubeAttribute.item_id == product_id).first()
     if tn_attr:
         tn_status = db.query(TiendaNubeProductStatus).filter(TiendaNubeProductStatus.attribute_id == tn_attr.id).first()
-        if tn_status and tn_status.product_id:
-            return "active"
-    return "unpublished"
+        if tn_status:
+            status = "active" if tn_status.product_id else "unpublished"
+            if tn_status.response and "fallo" in str(tn_status.response).lower():
+                status = "error"
+            return status, tn_status.url
+    return "unpublished", None
 
 def get_product(db: Session, product_id: int):
     p = db.query(Product).filter(Product.id == product_id).first()
     if p:
-        p.tienda_nube_status = _get_tn_status(db, p.id)
+        status, url = _get_tn_status_and_url(db, p.id)
+        p.tienda_nube_status = status
+        p.tienda_nube_url = url
     return p
 
 def get_products(db: Session, skip: int = 0, limit: int = 50, 
@@ -83,9 +88,11 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
                 query = query.order_by(asc(column))
         
     results = query.offset(skip).limit(limit).all()
-    # Populate real tienda_nube_status for each product
+    # Populate real tienda_nube_status and tienda_nube_url for each product
     for p in results:
-        p.tienda_nube_status = _get_tn_status(db, p.id)
+        status, url = _get_tn_status_and_url(db, p.id)
+        p.tienda_nube_status = status
+        p.tienda_nube_url = url
     return results
 
 def get_categories(db: Session):

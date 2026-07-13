@@ -32,6 +32,7 @@ class ProductBase(BaseModel):
 
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
+    tienda_nube_url: Optional[str] = None
     
 
 class ProductCreate(ProductBase):
@@ -51,6 +52,7 @@ class ProductUpdate(BaseModel):
 
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
+    tienda_nube_url: Optional[str] = None
 
 class ProductResponse(ProductBase):
     id: int
@@ -270,6 +272,7 @@ class TiendaNubeStatusResponse(BaseModel):
     product_id: Optional[int] = None
     variant_id: Optional[int] = None
     response: Optional[str] = None
+    url: Optional[str] = None
     updated_at: Optional[datetime] = None
 
     class Config:

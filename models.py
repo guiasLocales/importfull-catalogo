@@ -59,6 +59,7 @@ class TiendaNubeProductStatus(Base):
     variant_id = Column(Integer)
     response = Column(String(1000)) # AI processed API response
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    url = Column(Text)
 
 
 
