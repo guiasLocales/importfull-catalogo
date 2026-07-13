@@ -2319,7 +2319,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     let fieldHtml = '';
 
-                    if (condition === 'Restricted Input' || valType === 'list') {
+                    if (condition === 'Restricted Input' || valType === 'list' || (Array.isArray(examples) && examples.length > 0)) {
                         let optionsList = [];
                         if (Array.isArray(examples)) {
                             if (examples.length > 0 && Array.isArray(examples[0])) {
