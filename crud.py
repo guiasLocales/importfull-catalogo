@@ -428,7 +428,7 @@ def get_meli_attributes(db: Session, item_id: int):
                             if isinstance(items, list):
                                 for item in items:
                                     if isinstance(item, dict) and "id" in item:
-                                        values_by_id[item["id"]] = item.get("user_input_value")
+                                        values_by_id[str(item["id"]).lower()] = item.get("user_input_value")
 
         # 1. Core Attributes (always present for all products)
         attributes_list = [
