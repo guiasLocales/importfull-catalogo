@@ -452,11 +452,11 @@ def get_meli_attributes(db: Session, item_id: int):
         ]}
     ]
 
+    modified = False
+
     if not existing_settings:
         existing_settings = default_settings
-        attrs.settings = existing_settings
-        db.commit()
-        db.refresh(attrs)
+        modified = True
     else:
         # Heal/complete existing settings if any sections or default fields are missing
         current_sections = {}
@@ -467,8 +467,6 @@ def get_meli_attributes(db: Session, item_id: int):
                         current_sections[sec_name] = items
         
         healed_settings = []
-        modified = False
-
         for def_section in default_settings:
             for sec_name, def_items in def_section.items():
                 if sec_name not in current_sections:
@@ -490,12 +488,92 @@ def get_meli_attributes(db: Session, item_id: int):
                             existing_ids.add(def_id)
                             modified = True
                     healed_settings.append({sec_name: new_items})
-        
-        if modified:
-            existing_settings = healed_settings
-            attrs.settings = existing_settings
-            db.commit()
-            db.refresh(attrs)
+        existing_settings = healed_settings
+
+    # Check if category_id_merged matches current category_id
+    category_id_merged = None
+    for section in existing_settings:
+        if isinstance(section, dict) and "metadata" in section:
+            category_id_merged = section["metadata"].get("category_id_merged")
+            break
+
+    if attrs.category_id and category_id_merged != attrs.category_id:
+        import httpx
+        try:
+            # Fetch attributes directly from MercadoLibre Category API
+            response = httpx.get(f"https://api.mercadolibre.com/categories/{attrs.category_id}/attributes", timeout=10.0)
+            if response.status_code == 200:
+                cat_attrs = response.json()
+                
+                # Locate attributes section
+                attributes_list = None
+                for section in existing_settings:
+                    if isinstance(section, dict) and "attributes" in section:
+                        attributes_list = section["attributes"]
+                        break
+                        
+                if attributes_list is not None:
+                    # Keep track of existing ids
+                    existing_ids = {str(item.get("id")).upper() for item in attributes_list if isinstance(item, dict) and "id" in item}
+                    exclude_ids = {"CONDITION_TYPE", "VALUE_ADDED_TAX", "IMPORT_DUTY", "UNITS_PER_PACK", "BRAND", "MODEL"}
+                    
+                    for attr in cat_attrs:
+                        attr_id = attr.get("id")
+                        if not attr_id:
+                            continue
+                        attr_id_upper = attr_id.upper()
+                        if attr_id_upper in exclude_ids or attr_id_upper in existing_ids:
+                            continue
+                            
+                        tags = attr.get("tags", {})
+                        if isinstance(tags, dict):
+                            if tags.get("hidden") or tags.get("read_only"):
+                                continue
+                                
+                        name = attr.get("name", attr_id)
+                        vals_list = attr.get("values", [])
+                        
+                        cond = "Restricted Input" if vals_list else "Free Input"
+                        val_type_normalized = "list" if vals_list else "string"
+                        
+                        examples = []
+                        if vals_list and isinstance(vals_list, list):
+                            for v in vals_list:
+                                if isinstance(v, dict) and "id" in v and "name" in v:
+                                    examples.append({"id": str(v["id"]), "name": v["name"]})
+                                else:
+                                    examples.append(v)
+                                    
+                        attributes_list.append({
+                            "id": attr_id,
+                            "name": name,
+                            "condition": cond,
+                            "value_type": val_type_normalized,
+                            "value_examples": examples,
+                            "user_input_value": "",
+                            "value_max_lenght": attr.get("value_max_length") or 255
+                        })
+                        existing_ids.add(attr_id_upper)
+                    
+                    # Update metadata section
+                    metadata_section = None
+                    for section in existing_settings:
+                        if isinstance(section, dict) and "metadata" in section:
+                            metadata_section = section
+                            break
+                    if metadata_section:
+                        metadata_section["metadata"]["category_id_merged"] = attrs.category_id
+                    else:
+                        existing_settings.append({"metadata": {"category_id_merged": attrs.category_id}})
+                        
+                    modified = True
+        except Exception as e:
+            print(f"Error fetching category attributes from ML: {e}")
+
+    if modified:
+        attrs.settings = existing_settings
+        db.commit()
+        db.refresh(attrs)
 
     db.expunge(attrs)
     attrs.settings = existing_settings
