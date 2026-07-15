@@ -464,10 +464,12 @@ def get_meli_attributes(db: Session, item_id: int):
     ]
 
     modified = False
+    db_has_settings = (attrs.settings is not None)
 
     if not existing_settings:
         existing_settings = default_settings
-        modified = True
+        # Do not mark as modified so we avoid writing default settings to DB on GET
+        modified = False
     else:
         # Heal/complete existing settings if any sections or default fields are missing
         current_sections = {}
@@ -501,7 +503,7 @@ def get_meli_attributes(db: Session, item_id: int):
                     healed_settings.append({sec_name: new_items})
         existing_settings = healed_settings
 
-    if modified:
+    if modified and db_has_settings:
         attrs.settings = existing_settings
         db.commit()
         db.refresh(attrs)
