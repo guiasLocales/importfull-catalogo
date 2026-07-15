@@ -2362,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         fieldHtml += `</select>`;
 
-                        if (element.id === 'listing_type') {
+                        if (String(element.id).toLowerCase() === 'listing_type') {
                             fieldHtml += `<div id="listing-fee-preview" class="mt-2 text-xs text-blue-600 font-medium"></div>`;
                         }
 
@@ -2411,7 +2411,7 @@ document.addEventListener('DOMContentLoaded', function () {
         container.innerHTML = html;
         if (window.lucide) lucide.createIcons();
 
-        const listingSelect = document.getElementById('attr_listing_type');
+        const listingSelect = document.getElementById('attr_listing_type') || document.getElementById('attr_LISTING_TYPE');
         if (listingSelect) {
             updateListingFeePreview(listingSelect.value, settings);
         }
@@ -2426,7 +2426,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (sectionObj.listing) elements = sectionObj.listing;
         });
 
-        const listingEl = elements.find(e => e.id === 'listing_type');
+        const listingEl = elements.find(e => String(e.id).toLowerCase() === 'listing_type');
         if (!listingEl) return;
 
         const examples = listingEl.value_examples || [];

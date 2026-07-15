@@ -413,7 +413,7 @@ def get_meli_attributes(db: Session, item_id: int):
         except Exception:
             existing_settings = None
 
-    # Normalize all IDs to lowercase and fix Spanish characters encoding issues
+    # Fix Spanish characters encoding issues dynamically on load if they are distorted
     if existing_settings and isinstance(existing_settings, list):
         for section in existing_settings:
             if isinstance(section, dict):
@@ -421,10 +421,7 @@ def get_meli_attributes(db: Session, item_id: int):
                     if isinstance(elements, list):
                         for el in elements:
                             if isinstance(el, dict):
-                                if "id" in el:
-                                    el["id"] = str(el["id"]).lower()
                                 if "name" in el and isinstance(el["name"], str):
-                                    # Fix encoding problems on strings (e.g. Condicin, Garanta)
                                     el["name"] = el["name"].replace("Condicin", "Condición").replace("Garanta", "Garantía").replace("Mtodo", "Método")
 
     product = db.query(Product).filter(Product.id == item_id).first()
@@ -445,24 +442,24 @@ def get_meli_attributes(db: Session, item_id: int):
     ]
     default_settings = [
         {"attributes": [
-            {"id": "condition_type", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
-            {"id": "value_added_tax", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
-            {"id": "import_duty", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
-            {"id": "units_per_pack", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
+            {"id": "CONDITION_TYPE", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
+            {"id": "VALUE_ADDED_TAX", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
+            {"id": "IMPORT_DUTY", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
+            {"id": "UNITS_PER_PACK", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
         ]},
         {"shipping": [
-            {"id": "mode", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
-            {"id": "local_pick_up", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
-            {"id": "free_shipping", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
-            {"id": "logistic_type", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
+            {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
+            {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
+            {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
+            {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
         ]},
         {"sale_terms": [
-            {"id": "warranty_type", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
-            {"id": "warranty_time", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
+            {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
+            {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
         ]},
         {"listing": [
-            {"id": "buying_mode", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
-            {"id": "listing_type", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
+            {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
+            {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
         ]}
     ]
 
@@ -488,14 +485,14 @@ def get_meli_attributes(db: Session, item_id: int):
                     modified = True
                 else:
                     existing_items = current_sections[sec_name]
-                    existing_ids = {str(item.get("id")).lower() for item in existing_items if isinstance(item, dict) and "id" in item}
+                    existing_ids = {str(item.get("id")).upper() for item in existing_items if isinstance(item, dict) and "id" in item}
                     
                     new_items = list(existing_items)
                     for def_item in def_items:
-                        def_id = str(def_item.get("id")).lower()
+                        def_id = str(def_item.get("id")).upper()
                         if def_id not in existing_ids:
-                            # Prepend condition_type and buying_mode to make them look cleaner at the top
-                            if def_id in ("condition_type", "buying_mode"):
+                            # Prepend CONDITION_TYPE and BUYING_MODE to make them look cleaner at the top
+                            if def_id in ("CONDITION_TYPE", "BUYING_MODE"):
                                 new_items.insert(0, def_item)
                             else:
                                 new_items.append(def_item)
