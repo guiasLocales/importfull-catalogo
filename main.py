@@ -118,7 +118,11 @@ def test_db_query(query: str = "SELECT 1", db: Session = Depends(get_db)):
 
 @app.get("/")
 async def serve_index():
-    return FileResponse("static/index.html")
+    return FileResponse("static/index.html", headers={
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    })
 
 @app.get("/health")
 def health_check():
