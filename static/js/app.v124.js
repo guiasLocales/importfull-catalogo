@@ -2348,15 +2348,44 @@ document.addEventListener('DOMContentLoaded', function () {
                             <option value="">-- Seleccionar --</option>
                         `;
 
+                        const translations = {
+                            'true': 'Sí',
+                            'false': 'No',
+                            'True': 'Sí',
+                            'False': 'No',
+                            'fulfillment': 'Fulfillment (Mercado Envíos Full)',
+                            'cross_docking': 'Colecta (Cross Docking)',
+                            'self_service': 'Flex (Envío en el día)',
+                            'drop_off': 'Correo / Puntos de despacho (Drop off)',
+                            'custom': 'Personalizado',
+                            'new': 'Nuevo',
+                            'used': 'Usado',
+                            'reconditioned': 'Reacondicionado',
+                            'me2': 'Mercado Envíos (me2)',
+                            'me1': 'Mercado Envíos 1 (me1)',
+                            'not_specified': 'No especificado',
+                            'buy_it_now': 'Comprar ahora',
+                            'classified': 'Clasificado'
+                        };
+
                         optionsList.forEach(opt => {
                             if (opt && typeof opt === 'object') {
                                 const optId = opt.id;
-                                const optName = opt.name || optId;
+                                let optName = opt.name || optId;
+                                if (typeof optId === 'string' && translations[optId] !== undefined) {
+                                    optName = translations[optId];
+                                } else if (typeof optName === 'string' && translations[optName] !== undefined) {
+                                    optName = translations[optName];
+                                }
                                 const selected = String(optId) === String(val) ? 'selected' : '';
                                 fieldHtml += `<option value="${optId}" ${selected}>${optName}</option>`;
                             } else {
+                                let optName = opt;
+                                if (typeof opt === 'string' && translations[opt] !== undefined) {
+                                    optName = translations[opt];
+                                }
                                 const selected = String(opt) === String(val) ? 'selected' : '';
-                                fieldHtml += `<option value="${opt}" ${selected}>${opt}</option>`;
+                                fieldHtml += `<option value="${opt}" ${selected}>${optName}</option>`;
                             }
                         });
 
