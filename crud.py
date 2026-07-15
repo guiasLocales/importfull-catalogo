@@ -391,7 +391,6 @@ from models import MercadoLibreAttribute
 
 def get_meli_attributes(db: Session, item_id: int):
     import json
-    from models import Product, SellingCalculation
     
     attrs = db.query(MercadoLibreAttribute).filter(MercadoLibreAttribute.item_id == item_id).first()
     
@@ -403,7 +402,8 @@ def get_meli_attributes(db: Session, item_id: int):
             category_id=""
         )
         db.add(attrs)
-        db.flush()
+        db.commit()
+        db.refresh(attrs)
 
     # Parse settings from DB
     existing_settings = attrs.settings
@@ -423,90 +423,6 @@ def get_meli_attributes(db: Session, item_id: int):
                             if isinstance(el, dict):
                                 if "name" in el and isinstance(el["name"], str):
                                     el["name"] = el["name"].replace("Condicin", "Condición").replace("Garanta", "Garantía").replace("Mtodo", "Método")
-
-    product = db.query(Product).filter(Product.id == item_id).first()
-    price = float(product.price_mercadolibre or product.price or 0.0) if product else 0.0
-    sale_fee_gold_special = round(price * 0.1465, 2)
-    sale_fee_gold_pro = round(price * 0.2695, 2)
-    formatted_options = [
-        {
-            "id": "gold_pro", "name": "Premium", "sale_fee_amount": sale_fee_gold_pro,
-            "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_pro, "percentage_fee": 26.95, "meli_percentage_fee": 14.65, "financing_add_on_fee": 12.3},
-            "listing_fee_amount": 0, "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-        },
-        {
-            "id": "gold_special", "name": "Clasica", "sale_fee_amount": sale_fee_gold_special,
-            "sale_fee_details": {"fixed_fee": 0, "gross_amount": sale_fee_gold_special, "percentage_fee": 14.65, "meli_percentage_fee": 14.65, "financing_add_on_fee": 0},
-            "listing_fee_amount": 0, "listing_fee_details": {"fixed_fee": 0, "gross_amount": 0}
-        }
-    ]
-    default_settings = [
-        {"attributes": [
-            {"id": "CONDITION_TYPE", "name": "Condición", "condition": "Restricted Input", "value_type": "list", "value_examples": ["new", "used", "reconditioned"], "user_input_value": "new", "value_max_lenght": ""},
-            {"id": "VALUE_ADDED_TAX", "name": "IVA", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Exento", "0 %", "10.5 %", "21 %", "27 %"], "user_input_value": "21 %", "value_max_lenght": ""},
-            {"id": "IMPORT_DUTY", "name": "Impuesto interno", "condition": "Restricted Input", "value_type": "list", "value_examples": ["0 %", "1 %", "2.5 %", "4 %", "5 %", "8 %", "9.5 %", "10 %", "14 %", "15 %", "18 %", "19 %", "20 %", "23 %", "25 %", "26 %", "70 %"], "user_input_value": "0 %", "value_max_lenght": ""},
-            {"id": "UNITS_PER_PACK", "name": "Unidades por pack", "condition": "Free Input", "value_type": "number", "value_examples": "", "user_input_value": "1", "value_max_lenght": 18}
-        ]},
-        {"shipping": [
-            {"id": "MODE", "name": "Metodo de Envio", "condition": "Restricted Input", "value_type": "list", "value_examples": [["custom", "me1", "me2", "not_specified"]], "user_input_value": "me2", "value_max_lenght": ""},
-            {"id": "LOCAL_PICK_UP", "name": "Buscar en Local", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "True", "value_max_lenght": ""},
-            {"id": "FREE_SHIPPING", "name": "Envio Gratis", "condition": "Restricted Input", "value_type": "list", "value_examples": [["True", "False"]], "user_input_value": "False", "value_max_lenght": ""},
-            {"id": "LOGISTIC_TYPE", "name": "Tipo de Logistica", "condition": "Restricted Input", "value_type": "list", "value_examples": [["fulfillment", "cross_docking", "self_service", "drop_off", "custom"]], "user_input_value": "drop_off", "value_max_lenght": ""}
-        ]},
-        {"sale_terms": [
-            {"id": "WARRANTY_TYPE", "name": "Tipo de garantia", "condition": "Restricted Input", "value_type": "list", "value_examples": ["Garantía del vendedor", "Garantía de fábrica", "Sin garantía"], "user_input_value": "Garantía del vendedor", "value_max_lenght": ""},
-            {"id": "WARRANTY_TIME", "name": "Tiempo de garantia", "condition": "Free Input", "value_type": "number_unit", "value_examples": "", "user_input_value": "30 dias", "value_max_lenght": 255}
-        ]},
-        {"listing": [
-            {"id": "BUYING_MODE", "name": "Método de Compra", "condition": "Restricted Input", "value_type": "list", "value_examples": ["buy_it_now", "classified"], "user_input_value": "buy_it_now", "value_max_lenght": ""},
-            {"id": "LISTING_TYPE", "name": "Campana de Cuotas", "condition": "Restricted Input", "value_type": "list", "value_examples": [formatted_options], "user_input_value": "gold_special", "value_max_lenght": ""}
-        ]}
-    ]
-
-    modified = False
-    db_has_settings = (attrs.settings is not None)
-
-    if not existing_settings:
-        existing_settings = default_settings
-        # Do not mark as modified so we avoid writing default settings to DB on GET
-        modified = False
-    else:
-        # Heal/complete existing settings if any sections or default fields are missing
-        current_sections = {}
-        for section in existing_settings:
-            if isinstance(section, dict):
-                for sec_name, items in section.items():
-                    if isinstance(items, list):
-                        current_sections[sec_name] = items
-        
-        healed_settings = []
-        for def_section in default_settings:
-            for sec_name, def_items in def_section.items():
-                if sec_name not in current_sections:
-                    healed_settings.append({sec_name: def_items})
-                    modified = True
-                else:
-                    existing_items = current_sections[sec_name]
-                    existing_ids = {str(item.get("id")).upper() for item in existing_items if isinstance(item, dict) and "id" in item}
-                    
-                    new_items = list(existing_items)
-                    for def_item in def_items:
-                        def_id = str(def_item.get("id")).upper()
-                        if def_id not in existing_ids:
-                            # Prepend CONDITION_TYPE and BUYING_MODE to make them look cleaner at the top
-                            if def_id in ("CONDITION_TYPE", "BUYING_MODE"):
-                                new_items.insert(0, def_item)
-                            else:
-                                new_items.append(def_item)
-                            existing_ids.add(def_id)
-                            modified = True
-                    healed_settings.append({sec_name: new_items})
-        existing_settings = healed_settings
-
-    if modified and db_has_settings:
-        attrs.settings = existing_settings
-        db.commit()
-        db.refresh(attrs)
 
     db.expunge(attrs)
     attrs.settings = existing_settings
