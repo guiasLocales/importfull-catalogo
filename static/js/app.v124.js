@@ -5028,12 +5028,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     throw new Error(errorMsg);
                 }
 
-                showAlert('IA en proceso', 'Solicitud enviada al servicio de AI. El campo se actualizará en unos momentos.', 'success');
+                showAlert('IA en proceso', 'La IA está optimizando el campo. Por favor, espere unos segundos...', 'info');
+
+                // Wait 3.5 seconds and reload product details dynamically to fetch the updated field
+                setTimeout(async () => {
+                    try {
+                        await openProductDetail(productId);
+                        // Make sure the attributes tab remains active if the user was there,
+                        // or general if they were on general. By default, openProductDetail opens general,
+                        // but since AI title/description are on General tab, this is perfect!
+                        showAlert('IA Completada', `¡El ${field === 'product_name_meli' ? 'título' : 'descripción'} ha sido optimizado y actualizado con éxito!`, 'success');
+                    } catch (refreshErr) {
+                        console.error("Error refreshing after AI generation:", refreshErr);
+                    } finally {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = originalContent;
+                            if (window.lucide) lucide.createIcons();
+                        }
+                    }
+                }, 3500);
 
             } catch (e) {
                 console.error('AI Error:', e);
                 showAlert('Error AI', 'Error al solicitar generación AI: ' + e.message, 'error');
-            } finally {
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = originalContent;
