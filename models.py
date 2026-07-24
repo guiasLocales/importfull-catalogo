@@ -183,6 +183,16 @@ class MercadoLibreAttribute(Base):
     settings = Column(JSON)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+class MercadoLibreProductStatus(Base):
+    __tablename__ = "product_status"
+    __table_args__ = {"schema": "mercadolibre"}
+
+    item_id = Column(Integer, primary_key=True)
+    stock = Column(Integer)
+    variants = Column(JSON)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # --- DEPRECATED COLUMNS ---
     # volume_capacity_required = Column(Integer)
     # volume_capacity = Column(Integer)

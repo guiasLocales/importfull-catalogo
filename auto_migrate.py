@@ -134,9 +134,27 @@ def run_migrations():
             
         db.close()
         print("[OK] Attributes migrations completed")
-        return True
     except Exception as e:
         print(f"Attributes migration error: {e}")
+
+    # 4. Create mercadolibre.product_status table
+    try:
+        db = SessionLocal()
+        print("Checking if mercadolibre.product_status table exists...")
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS mercadolibre.product_status (
+                item_id INT PRIMARY KEY,
+                stock INT,
+                variants JSON,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        """))
+        db.commit()
+        db.close()
+        print("[OK] mercadolibre.product_status table verified/created")
+        return True
+    except Exception as e:
+        print(f"Product status table migration error: {e}")
         return False
 
 if __name__ == "__main__":

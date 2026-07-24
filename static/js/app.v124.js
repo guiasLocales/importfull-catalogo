@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     let currentMeliAttrs = null;
+    let currentMeliStatus = null;
     const elements = {
         container: document.getElementById('productsContainer'),
         loading: document.getElementById('loadingOverlay'),
@@ -1101,10 +1102,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             // Always fetch fresh data for detail view
-            const [resProduct, resFiles, resMeliAttrs] = await Promise.all([
+            const [resProduct, resFiles, resMeliAttrs, resMeliStatus] = await Promise.all([
                 authFetch(`/api/products/${productId}`),
                 authFetch(`/api/products/${productId}/files`).catch(() => ({ ok: false, json: () => [] })),
-                authFetch(`/api/products/${productId}/mercadolibre-attributes`).catch(() => ({ ok: false, json: () => null }))
+                authFetch(`/api/products/${productId}/mercadolibre-attributes`).catch(() => ({ ok: false, json: () => null })),
+                authFetch(`/api/products/${productId}/mercadolibre-status`).catch(() => ({ ok: false, json: () => null }))
             ]);
 
             if (!resProduct.ok) throw new Error('Error fetching product details');
@@ -1142,6 +1144,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             currentMeliAttrs = meliAttrs;
+
+            // Load meli status (variants)
+            let meliStatus = null;
+            if (resMeliStatus && resMeliStatus.ok) {
+                meliStatus = await resMeliStatus.json();
+                if (meliStatus && typeof meliStatus.variants === 'string') {
+                    try { meliStatus.variants = JSON.parse(meliStatus.variants); } catch(e) {}
+                }
+            }
+            currentMeliStatus = meliStatus;
 
             // Try to fetch automated ML costs
             let meliCosts = null;
@@ -1732,6 +1744,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div id="dynamic-meli-settings-container" class="space-y-6">
                             <!-- Rendered dynamically by renderMeliAttributes() -->
                         </div>
+                        <div id="meli-variants-container" class="space-y-6">
+                            <!-- Rendered dynamically by renderMeliVariants() -->
+                        </div>
                     </div>
 
                     <!-- Footer Actions -->
@@ -1800,6 +1815,7 @@ document.addEventListener('DOMContentLoaded', function () {
             openModal(``, html);
             lucide.createIcons();
             renderMeliAttributes(meliAttrs.settings, product.id);
+            renderMeliVariants(currentMeliStatus, product.id);
 
             // Remove any existing keyboard handler first (prevents stacking)
             if (window._productDetailKeyHandler) {
@@ -2483,6 +2499,200 @@ document.addEventListener('DOMContentLoaded', function () {
             previewEl.innerHTML = '';
         }
     }
+
+    function renderMeliVariants(status, productId) {
+        const container = document.getElementById('meli-variants-container');
+        if (!container) return;
+
+        if (!status || !status.variants || !status.variants.variations || !Array.isArray(status.variants.variations) || status.variants.variations.length === 0) {
+            container.innerHTML = ''; // Omit section if no variants
+            return;
+        }
+
+        const variations = status.variants.variations;
+        
+        // Sum variations stock to get product_stock
+        let productStock = 0;
+        variations.forEach(v => {
+            const qty = parseInt(v.available_quantity) || 0;
+            productStock += qty;
+        });
+
+        // Sum comparison: check against status.stock
+        const stockDiff = productStock !== (status.stock || 0);
+
+        let html = `
+        <div class="bg-gray-50/50 dark:bg-gray-900/10 p-5 border border-gray-150 dark:border-gray-800/40 rounded-xl shadow-sm space-y-4 mt-6">
+            <h3 class="text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2 border-b border-gray-250 dark:border-gray-850 pb-2">
+                <i data-lucide="layers" class="h-4 w-4 text-purple-600"></i> Variantes en Mercado Libre
+            </h3>
+        `;
+
+        if (stockDiff) {
+            html += `
+            <div class="p-4 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 rounded-xl border border-amber-200 dark:border-amber-900/50 flex items-start gap-3 shadow-inner">
+                <i data-lucide="alert-triangle" class="h-5 w-5 mt-0.5 text-amber-600 flex-shrink-0"></i>
+                <div class="space-y-0.5">
+                    <h4 class="font-bold text-sm">Discrepancia de Stock</h4>
+                    <p class="text-xs leading-relaxed">
+                        El stock sumado de las variantes en MercadoLibre (<strong>${productStock}</strong> u.) difiere del stock general registrado en la publicación (<strong>${status.stock || 0}</strong> u.).
+                        Por favor, ajustá las variantes manualmente para corregir esta diferencia.
+                    </p>
+                </div>
+            </div>
+            `;
+        }
+
+        html += `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                <thead>
+                    <tr class="text-xs text-gray-500 uppercase font-black tracking-wider text-left">
+                        <th class="py-2 px-3">Variante ID</th>
+                        <th class="py-2 px-3">Características</th>
+                        <th class="py-2 px-3 w-28 text-center">Stock</th>
+                        <th class="py-2 px-3 w-36 text-center">Precio ($)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+        `;
+
+        variations.forEach((v, index) => {
+            // Attribute combinations string (e.g. "Color: Rojo, Talle: M")
+            let attrsDesc = 'Sin atributos';
+            if (v.attribute_combinations && typeof v.attribute_combinations === 'object') {
+                if (Array.isArray(v.attribute_combinations)) {
+                    attrsDesc = v.attribute_combinations.map(comb => {
+                        if (comb && typeof comb === 'object') {
+                            return `${comb.name || comb.id}: ${comb.value_name || comb.value_id}`;
+                        }
+                        return String(comb);
+                    }).join(', ');
+                } else {
+                    attrsDesc = Object.entries(v.attribute_combinations)
+                        .map(([k, val]) => `${k}: ${val}`)
+                        .join(', ');
+                }
+            }
+
+            html += `
+            <tr class="hover:bg-gray-100/50 dark:hover:bg-gray-800/30">
+                <td class="py-3 px-3 font-mono text-xs text-gray-500 dark:text-gray-400">
+                    ${v.id}
+                </td>
+                <td class="py-3 px-3 font-medium text-gray-700 dark:text-gray-300">
+                    ${attrsDesc}
+                </td>
+                <td class="py-2 px-2 text-center">
+                    <input type="number" id="variant_stock_${index}" value="${v.available_quantity || 0}" min="0"
+                           class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white font-bold text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </td>
+                <td class="py-2 px-2 text-center">
+                    <input type="number" id="variant_price_${index}" value="${v.price || 0}" min="0" step="0.01"
+                           class="w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white font-bold text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </td>
+            </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        </div>
+        <div class="flex justify-end pt-2 border-t border-gray-250 dark:border-gray-850">
+            <button onclick="window.saveMeliVariants(${productId}, ${variations.length})" id="btn-save-variants"
+                    class="px-4 py-2 bg-purple-650 hover:bg-purple-750 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5">
+                <i data-lucide="save" class="h-4 w-4"></i> Guardar Variante Stock y Precios
+            </button>
+        </div>
+        </div>
+        `;
+
+        container.innerHTML = html;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    window.saveMeliVariants = async function(productId, variationsLength) {
+        const btn = document.getElementById('btn-save-variants');
+        const originalHTML = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-white"></i> Guardando...';
+            btn.disabled = true;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            if (!currentMeliStatus || !currentMeliStatus.variants || !Array.isArray(currentMeliStatus.variants.variations)) {
+                throw new Error("Estructura de variantes inválida.");
+            }
+
+            const updatedVariations = [];
+            let totalStock = 0;
+
+            for (let i = 0; i < variationsLength; i++) {
+                const stockInput = document.getElementById(`variant_stock_${i}`);
+                const priceInput = document.getElementById(`variant_price_${i}`);
+                
+                if (!stockInput || !priceInput) continue;
+
+                const qty = parseInt(stockInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0.0;
+                
+                const originalVar = currentMeliStatus.variants.variations[i];
+                const updatedVar = {
+                    ...originalVar,
+                    available_quantity: qty,
+                    price: price
+                };
+                
+                updatedVariations.push(updatedVar);
+                totalStock += qty;
+            }
+
+            const updatedVariantsPayload = {
+                product_stock: totalStock,
+                variations: updatedVariations
+            };
+
+            const payload = {
+                item_id: productId,
+                stock: currentMeliStatus.stock,
+                variants: updatedVariantsPayload
+            };
+
+            const response = await authFetch(`/api/products/${productId}/mercadolibre-status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`Error en el servidor: ${text}`);
+            }
+
+            const savedStatus = await response.json();
+            if (typeof savedStatus.variants === 'string') {
+                try { savedStatus.variants = JSON.parse(savedStatus.variants); } catch(e) {}
+            }
+            currentMeliStatus = savedStatus;
+
+            showAlert('Variantes Guardadas', 'El stock y los precios de las variantes se actualizaron en la base de datos.', 'success');
+            
+            // Re-render variants to recalculate discrepancies and show updated inputs
+            renderMeliVariants(currentMeliStatus, productId);
+
+        } catch (error) {
+            console.error('Error saving variants:', error);
+            showAlert('Error', `No se pudieron guardar las variantes: ${error.message}`, 'error');
+        } finally {
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    };
 
     window.onDynamicAttrChange = function(attrId, value, productId) {
         if (currentMeliAttrs && Array.isArray(currentMeliAttrs.settings)) {

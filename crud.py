@@ -451,3 +451,26 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
     db.commit()
     db.refresh(db_attr)
     return db_attr
+
+
+def get_meli_product_status(db: Session, item_id: int):
+    from models import MercadoLibreProductStatus
+    return db.query(MercadoLibreProductStatus).filter(MercadoLibreProductStatus.item_id == item_id).first()
+
+
+def update_meli_product_status(db: Session, item_id: int, updates: dict):
+    from models import MercadoLibreProductStatus
+    db_status = db.query(MercadoLibreProductStatus).filter(MercadoLibreProductStatus.item_id == item_id).first()
+    if not db_status:
+        db_status = MercadoLibreProductStatus(item_id=item_id)
+        db.add(db_status)
+        db.flush()
+    
+    if "stock" in updates:
+        db_status.stock = updates["stock"]
+    if "variants" in updates:
+        db_status.variants = updates["variants"]
+        
+    db.commit()
+    db.refresh(db_status)
+    return db_status

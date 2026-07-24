@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
-from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse, MercadoLibreAttributeSchema
+from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse, MercadoLibreAttributeSchema, MercadoLibreProductStatusSchema
 from routers.auth import get_current_user
 import crud
 import httpx
@@ -508,6 +508,30 @@ def update_mercadolibre_attributes(
         print(f"Error updating ML attributes: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
+
+
+@router.get("/{product_id}/mercadolibre-status", response_model=Optional[MercadoLibreProductStatusSchema])
+def get_mercadolibre_status(product_id: int, db: Session = Depends(get_db)):
+    """Fetch variants status for MercadoLibre"""
+    status = crud.get_meli_product_status(db, product_id)
+    return status
+
+
+@router.put("/{product_id}/mercadolibre-status", response_model=MercadoLibreProductStatusSchema)
+def update_mercadolibre_status(
+    product_id: int,
+    request: MercadoLibreProductStatusSchema,
+    db: Session = Depends(get_db)
+):
+    """Update stock or variants in product_status for MercadoLibre"""
+    updates = request.dict(exclude_unset=True)
+    try:
+        status = crud.update_meli_product_status(db, product_id, updates)
+        return status
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
+
 
 @router.get("/drive-image/{file_id}")
 def get_drive_image(file_id: str, size: str = "thumbnail"):

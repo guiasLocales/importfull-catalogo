@@ -289,6 +289,15 @@ class MercadoLibreAttributeSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class MercadoLibreProductStatusSchema(BaseModel):
+    item_id: int
+    stock: Optional[int] = None
+    variants: Optional[Any] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 class OrderMetricResponse(BaseModel):
     total_sales_count: int
     total_units_sold: float
