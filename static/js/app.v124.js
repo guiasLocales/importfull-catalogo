@@ -1981,13 +1981,118 @@ document.addEventListener('DOMContentLoaded', function () {
         openProductDetail(productId);
     }
 
-    // Toggle publish from detail view and refresh the modal
+    function validateMeliAttributes(meliAttrs) {
+        const errors = [];
+        
+        if (!meliAttrs) {
+            return { valid: false, errors: ['No hay atributos configurados para este producto.'] };
+        }
+
+        // 1. Check Category ID
+        if (!meliAttrs.category_id || String(meliAttrs.category_id).trim() === '') {
+            errors.push('• Categoría de MercadoLibre (ID de categoría)');
+        }
+
+        // 2. Check Settings structure
+        const settings = meliAttrs.settings;
+        if (!settings || !Array.isArray(settings) || settings.length === 0) {
+            errors.push('• Estructura de Atributos (Hacer clic en "Obtener Atributos / IA")');
+            return { valid: false, errors: errors };
+        }
+
+        // Helper to find attribute by ID in settings (case-insensitive)
+        const getAttrValue = (attrId) => {
+            let val = null;
+            settings.forEach(sectionObj => {
+                for (const sectionName in sectionObj) {
+                    const elements = sectionObj[sectionName];
+                    if (Array.isArray(elements)) {
+                        const found = elements.find(e => String(e.id).toUpperCase() === String(attrId).toUpperCase());
+                        if (found) {
+                            val = found.user_input_value;
+                        }
+                    }
+                }
+            });
+            return val;
+        };
+
+        // 3. Validate essential attributes
+        const condition = getAttrValue('CONDITION_TYPE');
+        if (!condition || String(condition).trim() === '') {
+            errors.push('• Condición del producto (Nuevo/Usado)');
+        }
+
+        const iva = getAttrValue('VALUE_ADDED_TAX');
+        if (!iva || String(iva).trim() === '') {
+            errors.push('• IVA (Alícuota de impuesto)');
+        }
+
+        const units = getAttrValue('UNITS_PER_PACK');
+        if (!units || String(units).trim() === '') {
+            errors.push('• Unidades por pack');
+        }
+
+        const shippingMode = getAttrValue('MODE');
+        if (!shippingMode || String(shippingMode).trim() === '') {
+            errors.push('• Método de envío (MODE)');
+        }
+
+        const localPickUp = getAttrValue('LOCAL_PICK_UP');
+        if (!localPickUp || String(localPickUp).trim() === '') {
+            errors.push('• Retiro en sucursal (LOCAL_PICK_UP)');
+        }
+
+        const freeShipping = getAttrValue('FREE_SHIPPING');
+        if (!freeShipping || String(freeShipping).trim() === '') {
+            errors.push('• Envío Gratis');
+        }
+
+        const logisticType = getAttrValue('LOGISTIC_TYPE');
+        if (!logisticType || String(logisticType).trim() === '') {
+            errors.push('• Tipo de Logística');
+        }
+
+        const buyingMode = getAttrValue('BUYING_MODE');
+        if (!buyingMode || String(buyingMode).trim() === '') {
+            errors.push('• Método de Compra (BUYING_MODE)');
+        }
+
+        const listingType = getAttrValue('LISTING_TYPE');
+        if (!listingType || String(listingType).trim() === '') {
+            errors.push('• Tipo de Publicación (Campaña de Cuotas)');
+        }
+
+        const warrantyType = getAttrValue('WARRANTY_TYPE');
+        if (!warrantyType || String(warrantyType).trim() === '') {
+            errors.push('• Tipo de Garantía');
+        } else if (String(warrantyType).toLowerCase().indexOf('sin garantía') === -1) {
+            const warrantyTime = getAttrValue('WARRANTY_TIME');
+            if (!warrantyTime || String(warrantyTime).trim() === '') {
+                errors.push('• Tiempo de Garantía');
+            }
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors: errors
+        };
+    }
+
     // Toggle publish from detail view and refresh the modal
     window.togglePublishFromDetail = async (productId, publish) => {
         // Automatically save the form attributes first before publishing
         if (publish) {
             const saveSuccess = await window.saveMeliAttributes(null, productId);
             if (!saveSuccess) {
+                return;
+            }
+
+            // Perform validation check to prevent publishing incomplete settings
+            const validation = validateMeliAttributes(currentMeliAttrs);
+            if (!validation.valid) {
+                const msg = 'No se puede publicar en MercadoLibre porque faltan completar los siguientes datos obligatorios:\n\n' + validation.errors.join('\n');
+                showAlert('Datos Incompletos', msg, 'warning');
                 return;
             }
         }
