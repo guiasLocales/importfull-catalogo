@@ -1711,10 +1711,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                                     <i data-lucide="tag" class="h-3.5 w-3.5"></i> Categoría MercadoLibre
                                 </label>
-                                <button id="btn-meli-pre-publish" onclick="window.triggerPrePublishMatch(${product.id}, this)"
-                                        class="px-2.5 py-1 text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-650 dark:text-purple-400 rounded-md border border-purple-100 dark:border-purple-800/30 hover:bg-purple-100 dark:hover:bg-purple-800/25 transition-all flex items-center gap-1 shadow-sm">
-                                    <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Obtener Atributos / IA
-                                </button>
+                                <div class="flex items-center gap-1.5">
+                                    <button id="btn-meli-generate-categories" onclick="window.triggerGenerateCategories(${product.id}, this)"
+                                            class="px-2.5 py-1 text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800/30 hover:bg-blue-100 dark:hover:bg-blue-800/25 transition-all flex items-center gap-1 shadow-sm"
+                                            title="Dispara pre-publish para que el webhook regenere las categorías sugeridas">
+                                        <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Generar Categorías
+                                    </button>
+                                    <button id="btn-meli-pre-publish" onclick="window.triggerPrePublishMatch(${product.id}, this)"
+                                            class="px-2.5 py-1 text-xs font-bold bg-purple-50 dark:bg-purple-900/20 text-purple-650 dark:text-purple-400 rounded-md border border-purple-100 dark:border-purple-800/30 hover:bg-purple-100 dark:hover:bg-purple-800/25 transition-all flex items-center gap-1 shadow-sm">
+                                        <i data-lucide="sparkles" class="h-3.5 w-3.5"></i> Obtener Atributos / IA
+                                    </button>
+                                </div>
                             </div>
                             ${categoryOptions && Array.isArray(categoryOptions) && categoryOptions.length > 0 ? `
                                 <div class="relative">
@@ -1735,6 +1742,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
                                        placeholder="ID de Categoría (Seleccionado arriba)">
                             ` : `
+                                <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 italic py-1">
+                                    <i data-lucide="info" class="h-3.5 w-3.5 flex-shrink-0"></i>
+                                    Sin categorías sugeridas. Usá <strong class="not-italic text-blue-500 mx-1">Generar Categorías</strong> para obtenerlas, o ingresá el ID manualmente:
+                                </div>
                                 <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: MLA1234">
@@ -2994,6 +3005,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+
+    window.triggerGenerateCategories = async function(productId, btnEl) {
+        const btn = btnEl || document.getElementById('btn-meli-generate-categories');
+        const originalHTML = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin text-blue-600"></i> Generando...';
+            btn.disabled = true;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            // Fire a clean pre-publish event — no field, no prompt — so the webhook
+            // runs its category-matching logic and populates category_options in the DB.
+            const response = await authFetch(`/api/products/${productId}/pre-publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                let errorMsg = 'Error al disparar el evento';
+                try {
+                    const errData = JSON.parse(text);
+                    if (errData.detail) errorMsg = errData.detail;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
+
+            showAlert(
+                'Categorías en Proceso',
+                'El webhook fue notificado. Las categorías sugeridas aparecerán en unos segundos — el modal se va a recargar automáticamente.',
+                'success'
+            );
+
+            // Wait 4 seconds and do a full modal reload to pick up the new category_options
+            setTimeout(async () => {
+                try {
+                    openProductDetail(productId);
+                } catch(e) {
+                    console.error('Error reloading product after generate categories:', e);
+                } finally {
+                    if (btn) {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+            }, 4000);
+
+        } catch (error) {
+            console.error('Error in triggerGenerateCategories:', error);
+            showAlert('Error', error.message, 'error');
+            if (btn) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    };
 
     async function fetchMetadata() {
 
