@@ -179,6 +179,7 @@ class MercadoLibreAttribute(Base):
     id = Column(String(36), primary_key=True)
     item_id = Column(Integer, index=True)
     category_id = Column(String(50))
+    category_options = Column(JSON)  # Suggested categories from webhook
     # New dynamic configuration column
     settings = Column(JSON)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

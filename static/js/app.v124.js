@@ -1742,10 +1742,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                        class="w-full px-3 py-2 border border-gray-200 dark:border-gray-750 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
                                        placeholder="ID de Categoría (Seleccionado arriba)">
                             ` : `
-                                <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 italic py-1">
-                                    <i data-lucide="info" class="h-3.5 w-3.5 flex-shrink-0"></i>
-                                    Sin categorías sugeridas. Usá <strong class="not-italic text-blue-500 mx-1">Generar Categorías</strong> para obtenerlas, o ingresá el ID manualmente:
-                                </div>
                                 <input type="text" id="attr_category_id" value="${meliAttrs.category_id || ''}" oninput="window.triggerMeliAttributesAutoSave(${product.id})"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow shadow-sm placeholder-gray-400"
                                        placeholder="Ej: MLA1234">
