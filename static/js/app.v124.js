@@ -1995,87 +1995,79 @@ document.addEventListener('DOMContentLoaded', function () {
             return { valid: false, errors: ['No hay atributos configurados para este producto.'] };
         }
 
-        // 1. Check Category ID
+        // 1. Check Category ID — always required
         if (!meliAttrs.category_id || String(meliAttrs.category_id).trim() === '') {
             errors.push('• Categoría de MercadoLibre (ID de categoría)');
         }
 
-        // 2. Check Settings structure
+        // 2. Check Settings structure exists and is not an error state
         const settings = meliAttrs.settings;
         if (!settings || !Array.isArray(settings) || settings.length === 0) {
             errors.push('• Estructura de Atributos (Hacer clic en "Obtener Atributos / IA")');
             return { valid: false, errors: errors };
         }
 
-        // Helper to find attribute by ID in settings (case-insensitive)
-        const getAttrValue = (attrId) => {
-            let val = null;
+        // Check for error state in settings (e.g. [{"Error": "..."}])
+        if (settings.length === 1 && settings[0] && settings[0].Error) {
+            errors.push('• Atributos en estado de error (Hacer clic en "Obtener Atributos / IA")');
+            return { valid: false, errors: errors };
+        }
+
+        // Helper: get attr value IF the field exists in settings
+        // Returns null if field doesn't exist, returns the value (possibly empty) if it does
+        const getAttr = (attrId) => {
+            let found = null;
             settings.forEach(sectionObj => {
                 for (const sectionName in sectionObj) {
                     const elements = sectionObj[sectionName];
                     if (Array.isArray(elements)) {
-                        const found = elements.find(e => String(e.id).toUpperCase() === String(attrId).toUpperCase());
-                        if (found) {
-                            val = found.user_input_value;
-                        }
+                        const el = elements.find(e => String(e.id).toUpperCase() === String(attrId).toUpperCase());
+                        if (el) found = el;
                     }
                 }
             });
-            return val;
+            return found; // returns the element object or null
         };
 
-        // 3. Validate essential attributes
-        const condition = getAttrValue('CONDITION_TYPE');
-        if (!condition || String(condition).trim() === '') {
-            errors.push('• Condición del producto (Nuevo/Usado)');
-        }
+        // Helper: validate a field only if it EXISTS in settings
+        const validateIfPresent = (attrId, label) => {
+            const el = getAttr(attrId);
+            if (el !== null) {
+                const val = el.user_input_value;
+                if (!val || String(val).trim() === '') {
+                    errors.push(`• ${label}`);
+                }
+            }
+            // If field not in settings at all, skip validation (webhook didn't generate it for this category)
+        };
 
-        const iva = getAttrValue('VALUE_ADDED_TAX');
-        if (!iva || String(iva).trim() === '') {
-            errors.push('• IVA (Alícuota de impuesto)');
-        }
+        // Helper: validate a field that MUST exist and have a value
+        const validateRequired = (attrId, label) => {
+            const el = getAttr(attrId);
+            if (!el || !el.user_input_value || String(el.user_input_value).trim() === '') {
+                errors.push(`• ${label}`);
+            }
+        };
 
-        const units = getAttrValue('UNITS_PER_PACK');
-        if (!units || String(units).trim() === '') {
-            errors.push('• Unidades por pack');
-        }
+        // --- Critical fields: must have value if present ---
+        validateIfPresent('CONDITION_TYPE', 'Condición del producto (Nuevo/Usado)');
+        validateIfPresent('UNITS_PER_PACK', 'Unidades por pack');
+        validateIfPresent('BUYING_MODE', 'Método de Compra (BUYING_MODE)');
 
-        const shippingMode = getAttrValue('MODE');
-        if (!shippingMode || String(shippingMode).trim() === '') {
-            errors.push('• Método de envío (MODE)');
-        }
+        // --- Always required if settings exist ---
+        validateRequired('VALUE_ADDED_TAX', 'IVA (Alícuota de impuesto)');
+        validateRequired('MODE', 'Método de envío');
+        validateRequired('LOGISTIC_TYPE', 'Tipo de Logística');
+        validateRequired('LISTING_TYPE', 'Tipo de Publicación (Campaña de Cuotas)');
 
-        const localPickUp = getAttrValue('LOCAL_PICK_UP');
-        if (!localPickUp || String(localPickUp).trim() === '') {
-            errors.push('• Retiro en sucursal (LOCAL_PICK_UP)');
-        }
-
-        const freeShipping = getAttrValue('FREE_SHIPPING');
-        if (!freeShipping || String(freeShipping).trim() === '') {
-            errors.push('• Envío Gratis');
-        }
-
-        const logisticType = getAttrValue('LOGISTIC_TYPE');
-        if (!logisticType || String(logisticType).trim() === '') {
-            errors.push('• Tipo de Logística');
-        }
-
-        const buyingMode = getAttrValue('BUYING_MODE');
-        if (!buyingMode || String(buyingMode).trim() === '') {
-            errors.push('• Método de Compra (BUYING_MODE)');
-        }
-
-        const listingType = getAttrValue('LISTING_TYPE');
-        if (!listingType || String(listingType).trim() === '') {
-            errors.push('• Tipo de Publicación (Campaña de Cuotas)');
-        }
-
-        const warrantyType = getAttrValue('WARRANTY_TYPE');
-        if (!warrantyType || String(warrantyType).trim() === '') {
+        // Warranty: required, and if type is not "sin garantía" also need time
+        const warrantyEl = getAttr('WARRANTY_TYPE');
+        if (!warrantyEl || !warrantyEl.user_input_value || String(warrantyEl.user_input_value).trim() === '') {
             errors.push('• Tipo de Garantía');
-        } else if (String(warrantyType).toLowerCase().indexOf('sin garantía') === -1) {
-            const warrantyTime = getAttrValue('WARRANTY_TIME');
-            if (!warrantyTime || String(warrantyTime).trim() === '') {
+        } else if (String(warrantyEl.user_input_value).toLowerCase().indexOf('sin garantía') === -1 &&
+                   String(warrantyEl.user_input_value).toLowerCase().indexOf('sin garantia') === -1) {
+            const warrantyTimeEl = getAttr('WARRANTY_TIME');
+            if (!warrantyTimeEl || !warrantyTimeEl.user_input_value || String(warrantyTimeEl.user_input_value).trim() === '') {
                 errors.push('• Tiempo de Garantía');
             }
         }
