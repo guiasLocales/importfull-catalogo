@@ -684,11 +684,22 @@ document.addEventListener('DOMContentLoaded', function () {
         inputEl.classList.remove('bg-gray-100', 'hover:bg-gray-200', 'text-gray-800');
         inputEl.classList.add('bg-orange-500', 'text-white');
         
+        // Check modifications
+        const productIndex = state.products.findIndex(p => p.id === id);
+        const originalPrice = productIndex >= 0 ? state.products[productIndex].price_mercadolibre : null;
+        
+        const payload = { price_mercadolibre: parsedPrice };
+        let priceChanged = false;
+        if (originalPrice !== parsedPrice) {
+            payload.price_meli_updated_at = new Date().toISOString();
+            priceChanged = true;
+        }
+
         try {
             const response = await authFetch(`/api/products/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ price_mercadolibre: parsedPrice })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) throw new Error('Error al guardar precio');
@@ -698,7 +709,6 @@ document.addEventListener('DOMContentLoaded', function () {
             inputEl.classList.add('bg-green-600');
             
             // Update local state
-            const productIndex = state.products.findIndex(p => p.id === id);
             if (productIndex >= 0) {
                 state.products[productIndex].price_mercadolibre = parsedPrice;
                 // If detail modal is open for this product, update it too
@@ -706,6 +716,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (detailPrice && currentDetailIndex === productIndex) {
                     detailPrice.value = parsedPrice;
                 }
+            }
+            
+            // If price was modified, trigger automatic sync in background
+            if (priceChanged) {
+                console.log(`[DEBUG] Price MercadoLibre changed inline. Automatically triggering update sync for product ${id}`);
+                authFetch(`/api/products/${id}/notify`, { method: 'POST' }).catch(err => {
+                    console.error('Error triggering auto sync for MercadoLibre:', err);
+                });
             }
             
             // Restore colors after a second
@@ -744,11 +762,20 @@ document.addEventListener('DOMContentLoaded', function () {
         inputEl.classList.remove('bg-blue-50/50', 'hover:bg-blue-100', 'text-blue-700');
         inputEl.classList.add('bg-orange-500', 'text-white');
         
+        // Check modifications
+        const productIndex = state.products.findIndex(p => p.id === id);
+        const originalPrice = productIndex >= 0 ? state.products[productIndex].price_tienda_nube : null;
+        
+        const payload = { price_tienda_nube: parsedPrice };
+        if (originalPrice !== parsedPrice) {
+            payload.price_tnube_updated_at = new Date().toISOString();
+        }
+
         try {
             const response = await authFetch(`/api/products/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ price_tienda_nube: parsedPrice })
+                body: JSON.stringify(payload)
             });
 
             if (!response.ok) throw new Error('Error al guardar precio TN');
@@ -756,7 +783,6 @@ document.addEventListener('DOMContentLoaded', function () {
             inputEl.classList.remove('bg-orange-500');
             inputEl.classList.add('bg-green-600');
             
-            const productIndex = state.products.findIndex(p => p.id === id);
             if (productIndex >= 0) {
                 state.products[productIndex].price_tienda_nube = parsedPrice;
             }
@@ -907,11 +933,29 @@ document.addEventListener('DOMContentLoaded', function () {
             if (linkEl) updates.catalog_link = linkEl.value;
             const descEl = document.getElementById('edit_description');
             if (descEl) updates.description = descEl.value;
+            
+            // Check price modifications and set timestamps
+            const currentProduct = window.currentProductDetail || (state.products.find(p => p.id === id) || {});
+            let meliPriceChanged = false;
+            
             const priceEl = document.getElementById('edit_price');
-            if (priceEl && priceEl.value !== "") updates.price_mercadolibre = parseFloat(priceEl.value);
+            if (priceEl && priceEl.value !== "") {
+                const parsedVal = parseFloat(priceEl.value);
+                if (currentProduct.price_mercadolibre !== parsedVal) {
+                    updates.price_mercadolibre = parsedVal;
+                    updates.price_meli_updated_at = new Date().toISOString();
+                    meliPriceChanged = true;
+                }
+            }
 
             const priceTNEl = document.getElementById('edit_price_tienda_nube');
-            if (priceTNEl && priceTNEl.value !== "") updates.price_tienda_nube = parseFloat(priceTNEl.value);
+            if (priceTNEl && priceTNEl.value !== "") {
+                const parsedVal = parseFloat(priceTNEl.value);
+                if (currentProduct.price_tienda_nube !== parsedVal) {
+                    updates.price_tienda_nube = parsedVal;
+                    updates.price_tnube_updated_at = new Date().toISOString();
+                }
+            }
 
             // MercadoLibre Business Fields — read from currentMeliAttrs.settings (dynamic attrs), not DOM
             // since the old static form elements (edit_listing_type_id, etc.) no longer exist.
@@ -960,11 +1004,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (!response.ok) throw new Error('Error al guardar');
                 const updatedProduct = await response.json();
+                window.currentProductDetail = updatedProduct;
 
                 // Update local state con el producto real devuelto por la base de datos
                 const productIndex = state.products.findIndex(p => p.id === id);
                 if (productIndex >= 0) {
                     state.products[productIndex] = updatedProduct;
+                }
+
+                // If MercadoLibre price was updated, automatically trigger the Update Event sync
+                if (meliPriceChanged) {
+                    console.log(`[DEBUG] Price MercadoLibre changed. Automatically triggering update sync for product ${id}`);
+                    authFetch(`/api/products/${id}/notify`, { method: 'POST' }).catch(err => {
+                        console.error('Error triggering auto sync for MercadoLibre:', err);
+                    });
                 }
 
                 if (statusEl) {
@@ -3380,6 +3433,20 @@ document.addEventListener('DOMContentLoaded', function () {
         data.price_mercadolibre = parseFloat(data.price_mercadolibre);
         data.stock = data.stock ? parseInt(data.stock) : 0;
 
+        // Check modifications and set timestamps
+        let meliPriceChanged = false;
+        if (id) {
+            const product = state.products.find(p => p.id === id);
+            if (product && product.price_mercadolibre !== data.price_mercadolibre) {
+                data.price_meli_updated_at = new Date().toISOString();
+                meliPriceChanged = true;
+            }
+        } else {
+            // New product, set both timestamps
+            data.price_meli_updated_at = new Date().toISOString();
+            data.price_tnube_updated_at = new Date().toISOString();
+        }
+
         // Explicitly check boolean fields
         data.product_use_stock = form.querySelector('[name="product_use_stock"]').checked;
         data.is_validated = form.querySelector('[name="is_validated"]').checked;
@@ -3407,6 +3474,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // Success
             closeModal();
             fetchProducts();
+
+            // If MercadoLibre price was updated, automatically trigger the Update Event sync
+            if (meliPriceChanged && id) {
+                console.log(`[DEBUG] Price MercadoLibre changed in productForm. Automatically triggering update sync for product ${id}`);
+                authFetch(`/api/products/${id}/notify`, { method: 'POST' }).catch(err => {
+                    console.error('Error triggering auto sync for MercadoLibre:', err);
+                });
+            }
 
         } catch (error) {
             console.error(error);

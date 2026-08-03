@@ -33,6 +33,8 @@ class Product(Base):
     price_mercadolibre = Column(Numeric(10, 0))
 
     price_tienda_nube = Column(Numeric(10, 0))
+    price_meli_updated_at = Column(DateTime)
+    price_tnube_updated_at = Column(DateTime)
     
 class TiendaNubeAttribute(Base):
     __tablename__ = "attributes"

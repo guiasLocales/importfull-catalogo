@@ -33,6 +33,8 @@ class ProductBase(BaseModel):
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
     tienda_nube_url: Optional[str] = None
+    price_meli_updated_at: Optional[datetime] = None
+    price_tnube_updated_at: Optional[datetime] = None
     
 
 class ProductCreate(ProductBase):
@@ -53,6 +55,8 @@ class ProductUpdate(BaseModel):
     price_tienda_nube: Optional[Decimal] = None
     tienda_nube_status: Optional[str] = None
     tienda_nube_url: Optional[str] = None
+    price_meli_updated_at: Optional[datetime] = None
+    price_tnube_updated_at: Optional[datetime] = None
 
 class ProductResponse(ProductBase):
     id: int
