@@ -4495,8 +4495,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         <td class="px-4 py-3">
                             <span class="${statusClass}">${statusLabel}</span>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-semibold text-gray-900 dark:text-white">${price}</span>
+                        <td class="px-4 py-3 text-right" onclick="event.stopPropagation()">
+                            <div class="relative w-28 group/price ml-auto">
+                                <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-[10px] pointer-events-none">$</span>
+                                <input type="number" 
+                                       value="${p.price_mercadolibre || ''}" 
+                                       onchange="updateProductPriceInline(${p.id}, this.value, this)"
+                                       onclick="event.stopPropagation()"
+                                       class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                       step="0.01">
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-center">${stockBadge}</td>
                         <td class="px-4 py-3 text-center">
