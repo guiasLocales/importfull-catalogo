@@ -31,7 +31,8 @@
         btnNext: document.getElementById('tnBtnNext'),
         activeCount: document.getElementById('tnActiveCount'),
         unpublishedCount: document.getElementById('tnUnpublishedCount'),
-        totalCount: document.getElementById('tnTotalCount')
+        totalCount: document.getElementById('tnTotalCount'),
+        limitSelector: document.getElementById('tnLimitSelector')
     };
 
     // --- Core Functions ---
@@ -256,13 +257,18 @@
                                     <i data-lucide="zap" class="h-3 w-3"></i> MercadoLibre
                                 </span>` : ''}
                             </div>
-                            ${product.tienda_nube_url || (statusInfo && statusInfo.url) ? `
-                            <div class="mt-5">
-                                <a href="${product.tienda_nube_url || statusInfo.url}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border shadow-sm transition-all" style="background:#E6FFFA;color:#2C7A7B;border-color:#B2F5EA">
+                            <div class="mt-5 flex flex-wrap justify-center gap-2">
+                                ${product.tienda_nube_url || (statusInfo && statusInfo.url) ? `
+                                <a href="${product.tienda_nube_url || statusInfo.url}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border shadow-sm transition-all hover:bg-teal-50" style="background:#E6FFFA;color:#2C7A7B;border-color:#B2F5EA">
                                     <i data-lucide="external-link" class="h-4 w-4"></i> Ver en Tienda Nube
                                 </a>
+                                ` : ''}
+                                ${product.meli_id ? `
+                                <button onclick="closeModal(); window.openProductDetail(${product.id})" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl border border-yellow-200 shadow-sm bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition-all">
+                                    <i data-lucide="zap" class="h-4 w-4"></i> Gestionar ML
+                                </button>
+                                ` : ''}
                             </div>
-                            ` : ''}
                         </div>
                     </div>
 
@@ -643,6 +649,14 @@
     if (tnElements.btnNext) {
         tnElements.btnNext.addEventListener('click', () => {
             tnState.page++;
+            loadTiendaNubeProducts();
+        });
+    }
+
+    if (tnElements.limitSelector) {
+        tnElements.limitSelector.addEventListener('change', () => {
+            tnState.limit = parseInt(tnElements.limitSelector.value) || 50;
+            tnState.page = 1;
             loadTiendaNubeProducts();
         });
     }

@@ -858,8 +858,21 @@
 
                         <!-- Pagination Footer -->
                         <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between flex-none">
-                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                Mostrando <span id="tnShowing" class="mx-1 font-bold">0</span> productos
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                    Mostrando <span id="tnShowing" class="mx-1 font-bold">0</span> productos
+                                </div>
+                                <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-400 text-sm">
+                                    <span>Mostrar:</span>
+                                    <select id="tnLimitSelector"
+                                        class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 p-1">
+                                        <option value="10">10</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="200">200</option>
+                                        <option value="500">500</option>
+                                        <option value="1000">1000</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="flex items-center space-x-3">
                                 <button id="tnBtnPrev" disabled class="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-600 border border-transparent hover:border-gray-200 dark:hover:border-gray-500 text-gray-500 transition-all disabled:opacity-30">
@@ -1573,8 +1586,8 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=174"></script>
-    <script src="/static/js/app.v124.js?v=174"></script>
+    <script src="/static/js/tienda-nube.js?v=175"></script>
+    <script src="/static/js/app.v124.js?v=175"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 
