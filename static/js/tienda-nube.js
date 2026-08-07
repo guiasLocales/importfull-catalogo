@@ -125,10 +125,16 @@
                 <td class="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-600 dark:text-gray-400">
                     ${product.product_code}
                 </td>
-                <td class="px-4 py-4 whitespace-nowrap text-right">
-                    <span class="text-sm font-bold text-gray-900 dark:text-white">
-                        $ ${Number(product.price_tienda_nube || product.price || 0).toLocaleString('es-AR')}
-                    </span>
+                <td class="px-4 py-4 whitespace-nowrap text-right" onclick="event.stopPropagation()">
+                    <div class="relative w-28 group/price ml-auto">
+                        <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-[10px] pointer-events-none">$</span>
+                        <input type="number" 
+                               value="${product.price_tienda_nube || ''}" 
+                               onchange="updateTNPriceInline(${product.id}, this.value, this)"
+                               onclick="event.stopPropagation()"
+                               class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               step="0.01">
+                    </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">
                     <span class="text-sm ${product.stock > 0 ? 'text-gray-600' : 'text-red-500 font-bold'}">${product.stock || 0}</span>

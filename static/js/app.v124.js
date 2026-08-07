@@ -786,6 +786,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (productIndex >= 0) {
                 state.products[productIndex].price_tienda_nube = parsedPrice;
             }
+            if (window.tnState && Array.isArray(window.tnState.products)) {
+                const tnProductIndex = window.tnState.products.findIndex(p => p.id === id);
+                if (tnProductIndex >= 0) {
+                    window.tnState.products[tnProductIndex].price_tienda_nube = parsedPrice;
+                }
+            }
             
             setTimeout(() => {
                 inputEl.classList.remove('bg-green-600', 'text-white');
