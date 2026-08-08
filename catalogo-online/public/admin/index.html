@@ -15,8 +15,8 @@
   </header>
 
   <main class="container">
-    <div id="loginSection" style="max-width: 400px; margin: 3rem auto; background: #141416; padding: 2rem; border-radius: 1rem; border: 1px solid #262626;">
-      <h2 style="margin-bottom: 1.5rem; text-align: center; color: #fff;">Iniciar Sesión</h2>
+    <div id="loginSection" style="max-width: 400px; margin: 3rem auto; background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+      <h2 style="margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Iniciar Sesión</h2>
       <form onsubmit="handleLogin(event)">
         <input type="password" id="adminPass" placeholder="Contraseña Admin" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
         <button type="submit" class="btn-add" style="width: 100%; justify-content: center;">Ingresar</button>
@@ -24,21 +24,32 @@
     </div>
 
     <div id="adminPanelSection" style="display: none;">
-      <h1 style="margin-bottom: 2rem; color: #fff;">Configuración de la Tienda</h1>
+      <h1 style="margin-bottom: 2rem; color: var(--text-primary);">Configuración de la Tienda</h1>
 
-      <form onsubmit="saveConfig(event)" style="background: #141416; padding: 2rem; border-radius: 1rem; border: 1px solid #262626; margin-bottom: 2rem;">
+      <form onsubmit="saveConfig(event)" style="background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          
+          <div style="grid-column: 1/-1;">
+            <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem;">Logos de la Marca</h3>
+          </div>
+
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Logo Modo Claro (Fondo Blanco)</label>
+            <input type="url" id="logo_light_url" placeholder="https://..." class="search-input" style="width: 100%; text-align: left; margin: 0;">
+          </div>
+
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Logo Modo Oscuro (Fondo Negro)</label>
+            <input type="url" id="logo_dark_url" placeholder="https://..." class="search-input" style="width: 100%; text-align: left; margin: 0;">
+          </div>
+
+          <div style="grid-column: 1/-1; margin-top: 1rem;">
+            <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem;">Condiciones Comerciales y Contacto</h3>
+          </div>
+
           <div>
             <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Monto Mínimo de Compra ($)</label>
             <input type="number" id="min_purchase" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Descuento Mayorista 1 (+5u %)</label>
-            <input type="number" id="discount_qty_1" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Descuento Mayorista 2 (+10u %)</label>
-            <input type="number" id="discount_qty_2" class="search-input" style="width: 100%; text-align: left; margin: 0;">
           </div>
           <div>
             <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Teléfono de Pedidos (WhatsApp)</label>
@@ -51,10 +62,6 @@
           <div style="grid-column: 1/-1;">
             <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Horarios de Atención</label>
             <input type="text" id="store_hours" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div style="grid-column: 1/-1;">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Google Maps</label>
-            <input type="text" id="store_maps_url" class="search-input" style="width: 100%; text-align: left; margin: 0;">
           </div>
           <div style="grid-column: 1/-1;">
             <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Instagram</label>
@@ -110,7 +117,7 @@
 
     async function saveConfig(e) {
       e.preventDefault();
-      const fields = ['min_purchase', 'discount_qty_1', 'discount_qty_2', 'whatsapp_number', 'store_address', 'store_hours', 'store_maps_url', 'instagram_url'];
+      const fields = ['logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 'store_address', 'store_hours', 'instagram_url'];
       const payload = {};
 
       fields.forEach(f => {

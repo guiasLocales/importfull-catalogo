@@ -10,17 +10,22 @@
 <body>
 
   <header class="top-header">
-    <div class="brand-title">
-      <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #fff;">
-        <span style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
+    <div class="brand-title" id="headerBrandContainer">
+      <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-primary);">
+        <img id="headerLogoImg" src="" style="display: none;" class="brand-logo-img" alt="IMPORT FULL">
+        <span id="headerBrandText" style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
         <span>•</span>
-        <span id="headerCategoryName" style="color: #9ca3af;">Catálogo</span>
+        <span id="headerCategoryName" style="color: var(--text-secondary);">Catálogo</span>
       </a>
     </div>
-    <button class="btn-cart" onclick="toggleCartModal()">
-      <span>🛒 Carrito</span>
-      <span class="badge-cart-qty" id="cartCountBadge">0</span>
-    </button>
+
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar Tema Modo Claro / Oscuro">☀️</button>
+      <button class="btn-cart" onclick="toggleCartModal()">
+        <span>🛒 Carrito</span>
+        <span class="badge-cart-qty" id="cartCountBadge">0</span>
+      </button>
+    </div>
   </header>
 
   <main class="container">
@@ -74,11 +79,11 @@
   <!-- Product Detail Modal with Multi-Photo Gallery -->
   <div class="modal-backdrop" id="productDetailModal">
     <div class="modal-box" style="max-width: 650px; padding: 2rem; position: relative;">
-      <button style="position: absolute; top: 1rem; right: 1rem; background: #262626; border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10;" onclick="closeDetailModal()">&times;</button>
+      <button style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10;" onclick="closeDetailModal()">&times;</button>
       
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <!-- Product Image & Gallery Thumbnails -->
-        <div style="text-align: center; background: #0a0a0c; padding: 1rem; border-radius: 0.75rem; border: 1px solid #262626;">
+        <div style="text-align: center; background: var(--bg-primary); padding: 1rem; border-radius: 0.75rem; border: 1px solid var(--border-color);">
           <div style="position: relative; display: flex; align-items: center; justify-content: center; min-height: 260px;">
             <button id="btnPrevImg" onclick="changeImage(-1)" style="position: absolute; left: 0.5rem; background: rgba(0,0,0,0.6); border: 1px solid #3f3f46; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none;">&lsaquo;</button>
             <img id="detailImg" src="" style="max-height: 260px; max-width: 100%; object-fit: contain; border-radius: 0.5rem;" alt="Producto">
@@ -92,28 +97,28 @@
         <!-- Product Info -->
         <div>
           <div style="font-size: 0.85rem; color: #f97316; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;" id="detailCategory">CATEGORÍA</div>
-          <h2 style="color: #fff; font-size: 1.4rem; font-weight: 800; line-height: 1.3; margin-bottom: 0.5rem;" id="detailTitle">Nombre del Producto</h2>
+          <h2 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 800; line-height: 1.3; margin-bottom: 0.5rem;" id="detailTitle">Nombre del Producto</h2>
           <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-            <span>Código: <strong id="detailCode" style="color: #e5e7eb;">-</strong></span>
+            <span>Código: <strong id="detailCode" style="color: var(--text-primary);">-</strong></span>
             <span style="margin: 0 0.5rem;">•</span>
-            <span>Marca: <strong id="detailBrand" style="color: #e5e7eb;">-</strong></span>
+            <span>Marca: <strong id="detailBrand" style="color: var(--text-primary);">-</strong></span>
             <span style="margin: 0 0.5rem;">•</span>
             <span>Stock: <strong id="detailStock" style="color: #4ade80;">-</strong></span>
           </div>
 
           <div style="font-size: 1.8rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;" id="detailPrice">$0</div>
 
-          <div style="background: #18181b; padding: 1rem; border-radius: 0.5rem; border: 1px solid #27272a; margin-bottom: 1.5rem;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #9ca3af; margin-bottom: 0.5rem;">DESCRIPCIÓN DEL PRODUCTO</div>
-            <div style="font-size: 0.95rem; color: #d1d5db; line-height: 1.5; white-space: pre-line;" id="detailDescription">Sin descripción disponible.</div>
+          <div style="background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem;">DESCRIPCIÓN DEL PRODUCTO</div>
+            <div style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.5; white-space: pre-line;" id="detailDescription">Sin descripción disponible.</div>
           </div>
 
           <!-- Quantity selector and Add button -->
           <div style="display: flex; gap: 1rem; align-items: center;">
-            <div style="display: flex; align-items: center; background: #262626; border-radius: 0.5rem; border: 1px solid #3f3f46;">
-              <button style="background: none; border: none; color: #fff; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(-1)">-</button>
-              <span id="detailQty" style="width: 40px; text-align: center; font-weight: 800; color: #fff;">1</span>
-              <button style="background: none; border: none; color: #fff; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(1)">+</button>
+            <div style="display: flex; align-items: center; background: var(--bg-card); border-radius: 0.5rem; border: 1px solid var(--border-color);">
+              <button style="background: none; border: none; color: var(--text-primary); width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(-1)">-</button>
+              <span id="detailQty" style="width: 40px; text-align: center; font-weight: 800; color: var(--text-primary);">1</span>
+              <button style="background: none; border: none; color: var(--text-primary); width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(1)">+</button>
             </div>
             <button class="btn-add" style="flex: 1; height: 44px; justify-content: center; font-size: 1rem;" onclick="addDetailToCart()">Agregar al Carrito</button>
           </div>
@@ -125,10 +130,10 @@
   <!-- Cart Modal -->
   <div class="modal-backdrop" id="cartModal">
     <div class="modal-box">
-      <h2 style="margin-bottom: 1rem; color: #fff;">Tu Carrito de Pedido</h2>
+      <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Tu Carrito de Pedido</h2>
       <div id="cartItemsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem;"></div>
 
-      <div style="border-top: 1px solid #262626; padding-top: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 1.1rem; color: var(--text-secondary);">Total Estimado:</span>
         <span id="modalTotal" style="font-size: 1.5rem; font-weight: 800; color: #f97316;">$0</span>
       </div>
@@ -137,7 +142,7 @@
         <input type="text" id="cName" placeholder="Tu Nombre Completo" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
         <input type="tel" id="cPhone" placeholder="Teléfono / WhatsApp" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
         <div style="display: flex; gap: 0.75rem;">
-          <button type="button" class="btn-add" style="background: #262626; flex: 1;" onclick="toggleCartModal()">Cerrar</button>
+          <button type="button" class="btn-add" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); flex: 1;" onclick="toggleCartModal()">Cerrar</button>
           <button type="submit" class="btn-add" style="flex: 2;">Enviar Pedido por WhatsApp</button>
         </div>
       </form>
@@ -156,7 +161,45 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentCategory = urlParams.get('category') || '';
 
+    // Theme Switcher Logic
+    function applySavedTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        document.getElementById('themeToggleBtn').textContent = '🌙';
+      } else {
+        document.body.classList.remove('light-theme');
+        document.getElementById('themeToggleBtn').textContent = '☀️';
+      }
+      updateHeaderLogo();
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      document.getElementById('themeToggleBtn').textContent = isLight ? '🌙' : '☀️';
+      updateHeaderLogo();
+    }
+
+    function updateHeaderLogo() {
+      const isLight = document.body.classList.contains('light-theme');
+      const logoImg = document.getElementById('headerLogoImg');
+      const brandText = document.getElementById('headerBrandText');
+
+      const logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
+      if (logoUrl) {
+        logoImg.src = logoUrl;
+        logoImg.style.display = 'block';
+        brandText.style.display = 'none';
+      } else {
+        logoImg.style.display = 'none';
+        brandText.style.display = 'block';
+      }
+    }
+
     async function initCatalog() {
+      applySavedTheme();
+
       if (currentCategory) {
         document.getElementById('headerCategoryName').textContent = currentCategory;
         document.getElementById('kpiLabel1').textContent = `PRODUCTOS DE ${currentCategory.toUpperCase()}`;
@@ -168,6 +211,7 @@
           config = await confRes.json();
           const minP = parseFloat(config.min_purchase || 15000);
           document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+          updateHeaderLogo();
         }
       } catch (err) {}
 
@@ -210,13 +254,13 @@
               <div class="product-cell">
                 <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
                 <div>
-                  <div class="product-name" style="font-weight: 700;">${p.product_name}</div>
+                  <div class="product-name" style="font-weight: 700; color: var(--text-primary);">${p.product_name}</div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
                 </div>
               </div>
             </td>
             <td>
-              <span class="product-name" style="font-weight: 800; font-size: 1.1rem; color: #fff;">$${price.toLocaleString('es-AR')}</span>
+              <span class="product-name" style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">$${price.toLocaleString('es-AR')}</span>
             </td>
             <td>
               <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(74, 222, 128, 0.3); display: inline-block;">${stockQty} u</span>
@@ -246,7 +290,7 @@
       document.getElementById('detailPrice').textContent = `$${price.toLocaleString('es-AR')}`;
       document.getElementById('detailDescription').textContent = selectedProduct.description || 'Producto importado de alta calidad. Para consultas o ventas al por mayor contáctanos por WhatsApp.';
 
-      // Initialize base image
+      // Base Image
       productImages = [];
       if (selectedProduct.product_image_b_format_url) productImages.push(selectedProduct.product_image_b_format_url);
 
@@ -290,7 +334,7 @@
         btnNext.style.display = 'block';
 
         thumbsContainer.innerHTML = productImages.map((img, idx) => `
-          <button onclick="setCarouselImg(${idx})" style="flex-shrink: 0; width: 50px; height: 50px; border-radius: 0.375rem; border: 2px solid ${idx === currentImgIdx ? '#f97316' : '#262626'}; overflow: hidden; background: #000; cursor: pointer;">
+          <button onclick="setCarouselImg(${idx})" style="flex-shrink: 0; width: 50px; height: 50px; border-radius: 0.375rem; border: 2px solid ${idx === currentImgIdx ? '#f97316' : 'var(--border-color)'}; overflow: hidden; background: #000; cursor: pointer;">
             <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;">
           </button>
         `).join('');
@@ -365,9 +409,9 @@
 
       const list = document.getElementById('cartItemsList');
       list.innerHTML = cart.map(item => `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #262626;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
           <div>
-            <div style="font-weight: 700; color: #fff;">${item.product_name}</div>
+            <div style="font-weight: 700; color: var(--text-primary);">${item.product_name}</div>
             <div style="color: var(--text-muted); font-size: 0.85rem;">$${item.price.toLocaleString('es-AR')} x ${item.qty}</div>
           </div>
           <div style="font-weight: 800; color: #f97316;">$${(item.price * item.qty).toLocaleString('es-AR')}</div>
