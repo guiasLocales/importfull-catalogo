@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('../src/postgres-client');
+const db = require('../src/db-client');
 const { generateToken, verifyToken } = require('../src/auth');
 
 const app = express();
@@ -12,38 +12,39 @@ async function initTables() {
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS store_config (
-        key VARCHAR(255) PRIMARY KEY,
-        value TEXT NOT NULL
-      );
+        \`key\` VARCHAR(255) PRIMARY KEY,
+        \`value\` TEXT NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         customer_name VARCHAR(255) NOT NULL,
         customer_phone VARCHAR(100) NOT NULL,
         customer_email VARCHAR(255),
-        total NUMERIC(12, 2) NOT NULL,
+        total DECIMAL(12, 2) NOT NULL,
         status VARCHAR(50) DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS order_items (
-        id SERIAL PRIMARY KEY,
-        order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT NOT NULL,
         product_code VARCHAR(255) NOT NULL,
         product_name VARCHAR(255) NOT NULL,
-        quantity NUMERIC(10, 2) NOT NULL,
-        unit_price NUMERIC(12, 2) NOT NULL,
-        total_price NUMERIC(12, 2) NOT NULL
-      );
+        quantity DECIMAL(10, 2) NOT NULL,
+        unit_price DECIMAL(12, 2) NOT NULL,
+        total_price DECIMAL(12, 2) NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
     // Insert initial default configs if empty
-    const { rowCount } = await db.query('SELECT 1 FROM store_config LIMIT 1');
-    if (rowCount === 0) {
+    const rows = await db.query('SELECT 1 FROM store_config LIMIT 1');
+    if (rows.length === 0) {
       const defaults = [
         ['min_purchase', '5000'],
         ['discount_qty_1', '10'],
@@ -56,7 +57,7 @@ async function initTables() {
         ['facebook_url', 'https://facebook.com']
       ];
       for (const [k, v] of defaults) {
-        await db.query('INSERT INTO store_config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING', [k, v]);
+        await db.query('INSERT IGNORE INTO store_config (`key`, `value`) VALUES (?, ?)', [k, v]);
       }
     }
   } catch (err) {
@@ -77,13 +78,13 @@ app.use(async (req, res, next) => {
 // 1. GET /api/categories
 app.get('/api/categories', async (req, res) => {
   try {
-    const result = await db.query(`
+    const rows = await db.query(`
       SELECT DISTINCT product_type_path 
       FROM product_catalog_sync 
       WHERE product_type_path IS NOT NULL AND product_type_path != '' 
       ORDER BY product_type_path ASC
     `);
-    const categories = result.rows.map(r => r.product_type_path);
+    const categories = rows.map(r => r.product_type_path);
     res.json(categories);
   } catch (err) {
     res.status(500).json({ error: 'Error al consultar categorías', detail: err.message });
@@ -112,18 +113,19 @@ app.get('/api/products', async (req, res) => {
 
     if (category) {
       params.push(category);
-      query += ` AND product_type_path = $${params.length}`;
+      query += ` AND product_type_path = ?`;
     }
 
     if (search) {
       params.push(`%${search}%`);
-      query += ` AND (LOWER(product_name) LIKE LOWER($${params.length}) OR LOWER(product_code) LIKE LOWER($${params.length}))`;
+      query += ` AND (LOWER(product_name) LIKE LOWER(?) OR LOWER(product_code) LIKE LOWER(?))`;
+      params.push(`%${search}%`);
     }
 
     query += ` ORDER BY product_name ASC LIMIT 100`;
 
-    const result = await db.query(query, params);
-    res.json(result.rows);
+    const rows = await db.query(query, params);
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error al consultar productos', detail: err.message });
   }
@@ -132,9 +134,9 @@ app.get('/api/products', async (req, res) => {
 // 3. GET /api/config
 app.get('/api/config', async (req, res) => {
   try {
-    const result = await db.query('SELECT key, value FROM store_config');
+    const rows = await db.query('SELECT `key`, `value` FROM store_config');
     const configObj = {};
-    result.rows.forEach(r => {
+    rows.forEach(r => {
       configObj[r.key] = r.value;
     });
     res.json(configObj);
@@ -146,12 +148,12 @@ app.get('/api/config', async (req, res) => {
 // PUT /api/config (Protected)
 app.put('/api/config', verifyToken, async (req, res) => {
   try {
-    const configs = req.body; // { key: value, ... }
+    const configs = req.body;
     for (const [key, value] of Object.entries(configs)) {
       await db.query(`
-        INSERT INTO store_config (key, value)
-        VALUES ($1, $2)
-        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+        INSERT INTO store_config (\`key\`, \`value\`)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE \`value\` = VALUES(\`value\`)
       `, [key, String(value)]);
     }
     res.json({ message: 'Configuraciones actualizadas exitosamente' });
@@ -162,7 +164,7 @@ app.put('/api/config', verifyToken, async (req, res) => {
 
 // 4. POST /api/orders
 app.post('/api/orders', async (req, res) => {
-  const client = await db.getClient();
+  const connection = await db.pool.getConnection();
   try {
     const { customer_name, customer_phone, customer_email, items } = req.body;
 
@@ -171,27 +173,25 @@ app.post('/api/orders', async (req, res) => {
     }
 
     // Get store config for rules
-    const configRes = await client.query('SELECT key, value FROM store_config');
+    const [configRows] = await connection.execute('SELECT `key`, `value` FROM store_config');
     const config = {};
-    configRes.rows.forEach(r => { config[r.key] = r.value; });
+    configRows.forEach(r => { config[r.key] = r.value; });
 
     const minPurchase = parseFloat(config.min_purchase || '0');
-    const discount1 = parseFloat(config.discount_qty_1 || '0'); // +5 units
-    const discount2 = parseFloat(config.discount_qty_2 || '0'); // +10 units
+    const discount1 = parseFloat(config.discount_qty_1 || '0');
+    const discount2 = parseFloat(config.discount_qty_2 || '0');
 
     let calculatedTotal = 0;
     const processedItems = [];
 
-    // Fetch products to validate prices
     for (const item of items) {
-      const pRes = await client.query('SELECT product_code, product_name, price FROM product_catalog_sync WHERE id = $1 OR product_code = $2', [item.id || 0, item.product_code || '']);
-      if (pRes.rowCount === 0) continue;
+      const [pRows] = await connection.execute('SELECT product_code, product_name, price FROM product_catalog_sync WHERE id = ? OR product_code = ?', [item.id || 0, item.product_code || '']);
+      if (pRows.length === 0) continue;
 
-      const product = pRes.rows[0];
+      const product = pRows[0];
       const basePrice = parseFloat(product.price || 0);
       const qty = parseFloat(item.quantity || 1);
 
-      // Apply wholesale discounts
       let unitPrice = basePrice;
       if (qty >= 10 && discount2 > 0) {
         unitPrice = basePrice * (1 - discount2 / 100);
@@ -212,30 +212,30 @@ app.post('/api/orders', async (req, res) => {
     }
 
     if (calculatedTotal < minPurchase) {
+      connection.release();
       return res.status(400).json({ 
         error: `El monto total ($${calculatedTotal.toFixed(2)}) no alcanza el mínimo de compra ($${minPurchase.toFixed(2)})` 
       });
     }
 
-    // Begin SQL Transaction
-    await client.query('BEGIN');
+    await connection.beginTransaction();
 
-    const orderRes = await client.query(`
+    const [orderRes] = await connection.execute(`
       INSERT INTO orders (customer_name, customer_phone, customer_email, total, status)
-      VALUES ($1, $2, $3, $4, 'pending')
-      RETURNING id, created_at
+      VALUES (?, ?, ?, ?, 'pending')
     `, [customer_name, customer_phone, customer_email || null, calculatedTotal]);
 
-    const orderId = orderRes.rows[0].id;
+    const orderId = orderRes.insertId;
 
     for (const pItem of processedItems) {
-      await client.query(`
+      await connection.execute(`
         INSERT INTO order_items (order_id, product_code, product_name, quantity, unit_price, total_price)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES (?, ?, ?, ?, ?, ?)
       `, [orderId, pItem.product_code, pItem.product_name, pItem.quantity, pItem.unit_price, pItem.total_price]);
     }
 
-    await client.query('COMMIT');
+    await connection.commit();
+    connection.release();
 
     res.json({
       message: 'Orden creada exitosamente',
@@ -245,17 +245,16 @@ app.post('/api/orders', async (req, res) => {
       whatsapp_number: config.whatsapp_number || ''
     });
   } catch (err) {
-    await client.query('ROLLBACK');
+    await connection.rollback();
+    connection.release();
     res.status(500).json({ error: 'Error al procesar la orden', detail: err.message });
-  } finally {
-    client.release();
   }
 });
 
 // 5. POST /api/auth/login
 app.post('/api/auth/login', (req, res) => {
   const { password } = req.body;
-  const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminPass = process.env.ADMIN_PASSWORD || '!39o.129mAacasu1048x$.';
 
   if (password === adminPass) {
     const token = generateToken({ role: 'admin' });
