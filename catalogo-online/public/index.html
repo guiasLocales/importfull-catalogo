@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo Online | Categorías</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">Mi Tienda Online</div>
+    <a href="/catalog" class="btn-accent">Ver Todo el Catálogo</a>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Explora Nuestras Categorías</h1>
+      <p>Selecciona una categoría para ver los productos y precios locales de venta.</p>
+    </section>
+
+    <div class="grid-categories" id="categoriesContainer">
+      <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">Cargando categorías...</div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container" style="padding: 0;">
+      <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;" id="storeAddress">Cargando dirección...</h3>
+      <p id="storeHours" style="margin-bottom: 1rem;">Horarios de atención...</p>
+      <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem;">
+        <a id="mapLink" href="#" target="_blank" style="color: var(--accent); font-weight: 600;">Ver en Google Maps 📍</a>
+        <a id="socialIg" href="#" target="_blank" style="color: var(--accent); font-weight: 600;">Instagram 📸</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    async function loadData() {
+      try {
+        // Load categories
+        const catRes = await fetch('/api/categories');
+        const categories = await catRes.json();
+
+        const container = document.getElementById('categoriesContainer');
+        if (!Array.isArray(categories) || categories.length === 0) {
+          container.innerHTML = `<div style="grid-column: 1/-1; text-align: center;">No hay categorías cargadas aún.</div>`;
+        } else {
+          container.innerHTML = categories.map(cat => `
+            <div class="card" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
+              <div class="card-title">${cat}</div>
+              <p style="color: var(--text-secondary); font-size: 0.9rem;">Ver productos de ${cat} &rarr;</p>
+            </div>
+          `).join('');
+        }
+
+        // Load store config
+        const confRes = await fetch('/api/config');
+        const config = await confRes.json();
+
+        document.getElementById('storeAddress').textContent = config.store_address || 'Dirección de la tienda';
+        document.getElementById('storeHours').textContent = config.store_hours || '';
+        document.getElementById('mapLink').href = config.store_maps_url || '#';
+        document.getElementById('socialIg').href = config.instagram_url || '#';
+      } catch (err) {
+        console.error('Error cargando datos:', err);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
