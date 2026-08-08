@@ -160,6 +160,14 @@
       'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
     ];
 
+    const allConfigFields = [
+      'logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 
+      'whatsapp_message_template', 'store_address', 'store_hours', 'instagram_url',
+      'cat_img_BAZAR', 'cat_img_BELLEZA', 'cat_img_JUGUETERIA', 'cat_img_BIJOUTERIE',
+      'cat_img_ELECTRONICA', 'cat_img_LIBRERIA', 'cat_img_COTILLON', 'cat_img_FERRETERIA',
+      'cat_img_INDUMENTARIA', 'cat_img_NAVIDAD', 'cat_img_TELEFONIA', 'cat_img_DESCARTABLE'
+    ];
+
     function renderCategoryDropzones() {
       const container = document.getElementById('categoryDropzonesContainer');
       container.innerHTML = categoriesList.map(cat => `
@@ -207,7 +215,6 @@
       }
     }
 
-    // Local Canvas processing into ultra-light WebP Data URL (~10 KB) - 100% reliable, zero CORS/API dependencies
     function processFile(file, targetInputId, previewImgId, statusId) {
       if (!file.type.startsWith('image/')) {
         return alert('Por favor selecciona un archivo de imagen válido');
@@ -245,13 +252,12 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // WebP format at 0.75 quality is ~8-12 KB
           const dataUrl = canvas.toDataURL('image/webp', 0.75);
           document.getElementById(targetInputId).value = dataUrl;
           updatePreview(targetInputId, previewImgId);
 
           if (statusEl) {
-            statusEl.textContent = '✓ Imagen cargada';
+            statusEl.textContent = '✓ Imagen lista';
             statusEl.style.color = '#4ade80';
           }
         };
@@ -299,27 +305,43 @@
       }
     }
 
+    function fillFormFields(configData) {
+      if (!configData || typeof configData !== 'object') return;
+      for (const [key, val] of Object.entries(configData)) {
+        const input = document.getElementById(key);
+        if (input && val !== undefined && val !== null) {
+          input.value = val;
+          if (key.startsWith('cat_img_')) {
+            const catName = key.replace('cat_img_', '');
+            updatePreview(key, `prev_cat_${catName}`);
+          } else if (key === 'logo_light_url') {
+            updatePreview(key, 'prev_logo_light');
+          } else if (key === 'logo_dark_url') {
+            updatePreview(key, 'prev_logo_dark');
+          }
+        }
+      }
+    }
+
     async function showPanel() {
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('adminPanelSection').style.display = 'block';
 
+      // 1. Instant local storage backup restore
+      try {
+        const backupRaw = localStorage.getItem('store_config_backup');
+        if (backupRaw) {
+          fillFormFields(JSON.parse(backupRaw));
+        }
+      } catch (e) {}
+
+      // 2. Fetch server API config
       try {
         const res = await fetch('/api/config');
-        const config = await res.json();
-
-        for (const [key, val] of Object.entries(config)) {
-          const input = document.getElementById(key);
-          if (input) {
-            input.value = val;
-            if (key.startsWith('cat_img_')) {
-              const catName = key.replace('cat_img_', '');
-              updatePreview(key, `prev_cat_${catName}`);
-            } else if (key === 'logo_light_url') {
-              updatePreview(key, 'prev_logo_light');
-            } else if (key === 'logo_dark_url') {
-              updatePreview(key, 'prev_logo_dark');
-            }
-          }
+        if (res.ok) {
+          const serverConfig = await res.json();
+          fillFormFields(serverConfig);
+          localStorage.setItem('store_config_backup', JSON.stringify(serverConfig));
         }
       } catch (err) {}
     }
@@ -335,19 +357,14 @@
       btn.disabled = true;
       btn.textContent = 'Guardando cambios...';
 
-      const fields = [
-        'logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 
-        'whatsapp_message_template', 'store_address', 'store_hours', 'instagram_url',
-        'cat_img_BAZAR', 'cat_img_BELLEZA', 'cat_img_JUGUETERIA', 'cat_img_BIJOUTERIE',
-        'cat_img_ELECTRONICA', 'cat_img_LIBRERIA', 'cat_img_COTILLON', 'cat_img_FERRETERIA',
-        'cat_img_INDUMENTARIA', 'cat_img_NAVIDAD', 'cat_img_TELEFONIA', 'cat_img_DESCARTABLE'
-      ];
-      
       const payload = {};
-      fields.forEach(f => {
+      allConfigFields.forEach(f => {
         const el = document.getElementById(f);
         if (el) payload[f] = el.value;
       });
+
+      // Save instant local backup first
+      localStorage.setItem('store_config_backup', JSON.stringify(payload));
 
       try {
         const res = await fetch('/api/config', {
@@ -368,7 +385,7 @@
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Guardar Todos los Cambios';
-        alert('Error al guardar configuraciones');
+        alert('Configuraciones guardadas localmente (revisar conexión al servidor)');
       }
     }
   </script>
