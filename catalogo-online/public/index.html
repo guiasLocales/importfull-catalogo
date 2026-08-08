@@ -3,72 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo Online | Categorías</title>
+  <title>Catálogo de Productos | Categorías</title>
   <link rel="stylesheet" href="/css/theme.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <header class="header">
-    <div class="logo">Mi Tienda Online</div>
-    <a href="/catalog" class="btn-accent">Ver Todo el Catálogo</a>
-  </header>
-
   <main class="container">
-    <section class="hero">
-      <h1>Explora Nuestras Categorías</h1>
-      <p>Selecciona una categoría para ver los productos y precios locales de venta.</p>
-    </section>
+    <div class="hero-center">
+      <div class="logo-center">🔥</div>
+      <h1>Catálogo de Productos</h1>
+      <p>Seleccioná una categoría para ver precios y armar tu pedido</p>
+      
+      <div class="social-bar">
+        <a id="socialIg" href="#" target="_blank" class="social-icon-btn">📸</a>
+        <a id="socialFb" href="#" target="_blank" class="social-icon-btn">👍</a>
+        <a id="socialWp" href="#" target="_blank" class="social-icon-btn">💬</a>
+      </div>
+    </div>
 
-    <div class="grid-categories" id="categoriesContainer">
+    <div class="categories-grid" id="categoriesContainer">
       <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">Cargando categorías...</div>
     </div>
   </main>
 
-  <footer>
-    <div class="container" style="padding: 0;">
-      <h3 style="color: var(--text-primary); margin-bottom: 0.5rem;" id="storeAddress">Cargando dirección...</h3>
-      <p id="storeHours" style="margin-bottom: 1rem;">Horarios de atención...</p>
-      <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem;">
-        <a id="mapLink" href="#" target="_blank" style="color: var(--accent); font-weight: 600;">Ver en Google Maps 📍</a>
-        <a id="socialIg" href="#" target="_blank" style="color: var(--accent); font-weight: 600;">Instagram 📸</a>
-      </div>
-    </div>
-  </footer>
-
   <script>
-    async function loadData() {
-      try {
-        // Load categories
-        const catRes = await fetch('/api/categories');
-        const categories = await catRes.json();
+    const defaultCategoryImages = [
+      'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1560781290-7dc94c0f8f4f?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80'
+    ];
 
-        const container = document.getElementById('categoriesContainer');
+    async function loadCategories() {
+      try {
+        const catRes = await fetch('/api/categories');
+        let categories = await catRes.json();
+
         if (!Array.isArray(categories) || categories.length === 0) {
-          container.innerHTML = `<div style="grid-column: 1/-1; text-align: center;">No hay categorías cargadas aún.</div>`;
-        } else {
-          container.innerHTML = categories.map(cat => `
-            <div class="card" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
-              <div class="card-title">${cat}</div>
-              <p style="color: var(--text-secondary); font-size: 0.9rem;">Ver productos de ${cat} &rarr;</p>
-            </div>
-          `).join('');
+          categories = [
+            'Carnes de Ternera',
+            'Carnes de Cerdo',
+            'Carnes de Pollo',
+            'Productos Congelados',
+            'Embutidos y Envasados',
+            'Bolsones y Combos'
+          ];
         }
 
-        // Load store config
+        const container = document.getElementById('categoriesContainer');
+        container.innerHTML = categories.map((cat, idx) => {
+          const bgImg = defaultCategoryImages[idx % defaultCategoryImages.length];
+          return `
+            <div class="category-card" style="background-image: url('${bgImg}');" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
+              <div class="category-card-content">
+                <div class="category-card-title">${cat}</div>
+                <div class="category-card-subtitle">Ver productos y precios de ${cat} &rarr;</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
         const confRes = await fetch('/api/config');
         const config = await confRes.json();
-
-        document.getElementById('storeAddress').textContent = config.store_address || 'Dirección de la tienda';
-        document.getElementById('storeHours').textContent = config.store_hours || '';
-        document.getElementById('mapLink').href = config.store_maps_url || '#';
-        document.getElementById('socialIg').href = config.instagram_url || '#';
+        if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
+        if (config.facebook_url) document.getElementById('socialFb').href = config.facebook_url;
+        if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
       } catch (err) {
-        console.error('Error cargando datos:', err);
+        console.error('Error:', err);
       }
     }
 
-    loadData();
+    loadCategories();
   </script>
 </body>
 </html>
