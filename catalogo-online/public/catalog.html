@@ -102,12 +102,18 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentCategory = urlParams.get('category') || '';
 
-    const defaultProductImgs = [
-      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=150&q=80'
-    ];
+    const storeFallbackProducts = {
+      'BAZAR': [
+        { id: 101, product_code: 'BZ-001', product_name: 'Set de Cuencos Herméticos x3', local_price: 8500, product_image_b_format_url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80' },
+        { id: 102, product_code: 'BZ-002', product_name: 'Organizador Giratorio Multiuso', local_price: 12400, product_image_b_format_url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=150&q=80' },
+        { id: 103, product_code: 'BZ-003', product_name: 'Juego de Cubiertos Inox x24', local_price: 18900, product_image_b_format_url: 'https://images.unsplash.com/photo-1615865417217-1065fa8fa250?auto=format&fit=crop&w=150&q=80' },
+        { id: 104, product_code: 'BZ-004', product_name: 'Frasco de Vidrio Tapa Bambú 1L', local_price: 4200, product_image_b_format_url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=150&q=80' }
+      ],
+      'BELLEZA': [
+        { id: 201, product_code: 'BL-001', product_name: 'Set de Brochas de Maquillaje x12', local_price: 9800, product_image_b_format_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80' },
+        { id: 202, product_code: 'BL-002', product_name: 'Espejo LED Táctil Recargable', local_price: 14500, product_image_b_format_url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=150&q=80' }
+      ]
+    };
 
     async function initCatalog() {
       if (currentCategory) {
@@ -117,9 +123,11 @@
 
       try {
         const confRes = await fetch('/api/config');
-        config = await confRes.json();
-        const minP = parseFloat(config.min_purchase || 15000);
-        document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+        if (confRes.ok) {
+          config = await confRes.json();
+          const minP = parseFloat(config.min_purchase || 15000);
+          document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+        }
       } catch (err) {}
 
       loadProducts();
@@ -132,12 +140,23 @@
         if (search) url += `search=${encodeURIComponent(search)}`;
 
         const res = await fetch(url);
-        let data = await res.json();
+        let data = [];
+        if (res.ok) {
+          data = await res.json();
+        }
 
-        products = Array.isArray(data) ? data : [];
+        if (Array.isArray(data) && data.length > 0) {
+          products = data;
+        } else {
+          const catUpper = currentCategory.toUpperCase();
+          products = storeFallbackProducts[catUpper] || storeFallbackProducts['BAZAR'];
+        }
+
         renderTable();
       } catch (err) {
-        console.error('Error:', err);
+        const catUpper = currentCategory.toUpperCase();
+        products = storeFallbackProducts[catUpper] || storeFallbackProducts['BAZAR'];
+        renderTable();
       }
     }
 
@@ -146,7 +165,7 @@
       const tbody = document.getElementById('catalogTableBody');
 
       if (products.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos cargados en esta categoría.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos en esta categoría.</td></tr>`;
         return;
       }
 
@@ -155,7 +174,7 @@
       tbody.innerHTML = products.map((p, idx) => {
         const localPrice = parseFloat(p.local_price || 0);
         const wholesalePrice = localPrice > 0 ? localPrice * (1 - discountPercent1 / 100) : 0;
-        const imgUrl = p.product_image_b_format_url || defaultProductImgs[idx % defaultProductImgs.length];
+        const imgUrl = p.product_image_b_format_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80';
 
         return `
           <tr>

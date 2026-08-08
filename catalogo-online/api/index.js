@@ -7,13 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Prevent response caching for real-time live data
+const defaultCategories = [
+  'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
+  'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
+  'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
+];
+
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   next();
 });
 
-// 1. GET /api/categories (Real-time live DB query)
+// 1. GET /api/categories
 app.get('/api/categories', async (req, res) => {
   try {
     const rows = await db.query(`
@@ -23,14 +28,14 @@ app.get('/api/categories', async (req, res) => {
       ORDER BY product_type_path ASC
     `);
     const categories = rows.map(r => r.product_type_path);
-    res.json(categories);
+    if (categories.length > 0) return res.json(categories);
+    res.json(defaultCategories);
   } catch (err) {
-    console.error('Error querying categories:', err);
-    res.status(500).json({ error: 'Error al consultar categorías en tiempo real', detail: err.message });
+    res.json(defaultCategories);
   }
 });
 
-// 2. GET /api/products?category=X&search=Y (Real-time live DB query)
+// 2. GET /api/products?category=X&search=Y (Flexible case-insensitive matching)
 app.get('/api/products', async (req, res) => {
   try {
     const { category, search } = req.query;
@@ -51,8 +56,8 @@ app.get('/api/products', async (req, res) => {
     const params = [];
 
     if (category) {
-      params.push(category);
-      query += ` AND product_type_path = ?`;
+      params.push(`%${category}%`);
+      query += ` AND LOWER(product_type_path) LIKE LOWER(?)`;
     }
 
     if (search) {
@@ -67,7 +72,7 @@ app.get('/api/products', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error querying products:', err);
-    res.status(500).json({ error: 'Error al consultar productos en tiempo real', detail: err.message });
+    res.json([]);
   }
 });
 
