@@ -112,13 +112,20 @@ def get_categories(db: Session):
 
 def get_meli_products(db: Session, skip: int = 0, limit: int = 500,
                       status: str = None, search: str = None,
-                      sort_by: str = None, sort_order: str = 'asc'):
+                      sort_by: str = None, sort_order: str = 'asc',
+                      channel_filter: str = None):
     """Get products that have a MercadoLibre ID (published on ML)"""
     query = db.query(Product).filter(
         Product.meli_id != None,
         Product.meli_id != ''
     )
     
+    if channel_filter:
+        if channel_filter == 'meli_manual':
+            query = query.filter(Product.mercadolibre_price_manually_changed == 1)
+        elif channel_filter == 'meli_auto':
+            query = query.filter(or_(Product.mercadolibre_price_manually_changed == 0, Product.mercadolibre_price_manually_changed == None))
+
     if status:
         query = query.filter(Product.status == status)
     
@@ -229,20 +236,22 @@ def update_product(db: Session, product_id: int, updates: dict):
     # Automatic flag update for price_mercadolibre
     if 'price_mercadolibre' in updates:
         val = updates['price_mercadolibre']
-        if val is not None and val != '':
-            updates['mercadolibre_price_manually_changed'] = 1
-        else:
-            updates['price_mercadolibre'] = None
-            updates['mercadolibre_price_manually_changed'] = 0
+        if 'mercadolibre_price_manually_changed' not in updates:
+            if val is not None and val != '':
+                updates['mercadolibre_price_manually_changed'] = 1
+            else:
+                updates['price_mercadolibre'] = None
+                updates['mercadolibre_price_manually_changed'] = 0
 
     # Automatic flag update for price_tienda_nube
     if 'price_tienda_nube' in updates:
         val = updates['price_tienda_nube']
-        if val is not None and val != '':
-            updates['tiendanube_price_manually_changed'] = 1
-        else:
-            updates['price_tienda_nube'] = None
-            updates['tiendanube_price_manually_changed'] = 0
+        if 'tiendanube_price_manually_changed' not in updates:
+            if val is not None and val != '':
+                updates['tiendanube_price_manually_changed'] = 1
+            else:
+                updates['price_tienda_nube'] = None
+                updates['tiendanube_price_manually_changed'] = 0
 
     for key, value in updates.items():
         if hasattr(db_product, key):

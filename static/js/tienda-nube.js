@@ -12,6 +12,7 @@
         search: '',
         status: 'active',
         category: '',
+        priceFilter: '',
         isLoading: false,
         sortBy: 'product_code',
         sortOrder: 'asc'
@@ -32,7 +33,8 @@
         activeCount: document.getElementById('tnActiveCount'),
         unpublishedCount: document.getElementById('tnUnpublishedCount'),
         totalCount: document.getElementById('tnTotalCount'),
-        limitSelector: document.getElementById('tnLimitSelector')
+        limitSelector: document.getElementById('tnLimitSelector'),
+        priceFilter: document.getElementById('tnPriceFilter')
     };
 
     // --- Core Functions ---
@@ -56,6 +58,7 @@
             if (tnState.search) params.append('q', tnState.search);
             if (tnState.status) params.append('status', tnState.status);
             if (tnState.category) params.append('category', tnState.category);
+            if (tnState.priceFilter) params.append('channel_filter', tnState.priceFilter);
             
             // Add sorting
             if (tnState.sortBy) params.append('sort_by', tnState.sortBy);
@@ -661,6 +664,14 @@
     if (tnElements.limitSelector) {
         tnElements.limitSelector.addEventListener('change', () => {
             tnState.limit = parseInt(tnElements.limitSelector.value) || 50;
+            tnState.page = 1;
+            loadTiendaNubeProducts();
+        });
+    }
+
+    if (tnElements.priceFilter) {
+        tnElements.priceFilter.addEventListener('change', () => {
+            tnState.priceFilter = tnElements.priceFilter.value;
             tnState.page = 1;
             loadTiendaNubeProducts();
         });

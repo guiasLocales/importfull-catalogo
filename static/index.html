@@ -802,6 +802,12 @@
                             class="pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm cursor-pointer">
                             <option value="">Todas las categorías</option>
                         </select>
+                        <select id="tnPriceFilter"
+                            class="pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm cursor-pointer">
+                            <option value="">Todos los precios</option>
+                            <option value="tn_manual">Precio Manual</option>
+                            <option value="tn_auto">Precio Automático</option>
+                        </select>
                     </div>
 
                     <!-- Table Container -->
@@ -1114,6 +1120,12 @@
                             <option value="paused">Pausados</option>
                             <option value="under_review">En Revisión</option>
                             <option value="closed">Cerrados</option>
+                        </select>
+                        <select id="meliPriceFilter"
+                            class="pl-3 pr-8 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-yellow-500 bg-white shadow-sm cursor-pointer">
+                            <option value="">Todos los precios</option>
+                            <option value="meli_manual">Precio Manual</option>
+                            <option value="meli_auto">Precio Automático</option>
                         </select>
                         <button id="btnBulkPublishMeliToTN" onclick="bulkPublishMeliToTN()" class="hidden ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md transition-all flex items-center gap-2">
                             <i data-lucide="upload-cloud" class="w-4 h-4"></i> Publicar en TN (<span id="meliSelectedCount">0</span>)
@@ -1594,8 +1606,8 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=177"></script>
-    <script src="/static/js/app.v124.js?v=177"></script>
+    <script src="/static/js/tienda-nube.js?v=178"></script>
+    <script src="/static/js/app.v124.js?v=178"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 

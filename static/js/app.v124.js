@@ -824,12 +824,13 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.resetManualPrice = async (id, type) => {
+        const product = state.products.find(p => p.id === id) || {};
         const updates = {};
         if (type === 'meli') {
-            updates.price_mercadolibre = null;
+            updates.price_mercadolibre = product.price_mercadolibre;
             updates.mercadolibre_price_manually_changed = 0;
         } else {
-            updates.price_tienda_nube = null;
+            updates.price_tienda_nube = product.price_tienda_nube;
             updates.tiendanube_price_manually_changed = 0;
         }
 
@@ -4517,10 +4518,12 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const searchInput = document.getElementById('meliSearchInput');
             const statusFilter = document.getElementById('meliStatusFilter');
+            const priceFilter = document.getElementById('meliPriceFilter');
 
             let params = new URLSearchParams();
             if (searchInput && searchInput.value.trim()) params.append('q', searchInput.value.trim());
             if (statusFilter && statusFilter.value) params.append('status', statusFilter.value);
+            if (priceFilter && priceFilter.value) params.append('channel_filter', priceFilter.value);
             
             // Add sorting
             if (state.sortBy) params.append('sort_by', state.sortBy);
@@ -4782,6 +4785,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (meliStatusFilter) {
         meliStatusFilter.addEventListener('change', () => {
             state.meliPage = 1; // Reset to page 1
+            loadMeliProducts();
+        });
+    }
+
+    const meliPriceFilter = document.getElementById('meliPriceFilter');
+    if (meliPriceFilter) {
+        meliPriceFilter.addEventListener('change', () => {
+            state.meliPage = 1;
             loadMeliProducts();
         });
     }

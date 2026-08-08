@@ -119,10 +119,14 @@ def read_meli_products(
     q: Optional[str] = None,
     sort_by: Optional[str] = None,
     sort_order: Optional[str] = 'asc',
+    channel_filter: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Get all products published on MercadoLibre"""
-    result = crud.get_meli_products(db, skip=skip, limit=limit, status=status, search=q, sort_by=sort_by, sort_order=sort_order)
+    result = crud.get_meli_products(
+        db, skip=skip, limit=limit, status=status, search=q,
+        sort_by=sort_by, sort_order=sort_order, channel_filter=channel_filter
+    )
     return {
         "products": [ProductResponse.model_validate(p) for p in result["products"]],
         "total": result["total"],
