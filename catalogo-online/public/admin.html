@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="header">
+    <div class="logo">Panel Administrador</div>
+    <a href="/catalog" class="btn-accent">Ver Tienda</a>
+  </header>
+
+  <main class="container">
+    <!-- Login View -->
+    <div id="loginSection" style="max-width: 400px; margin: 3rem auto; background: var(--bg-card); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+      <h2 style="margin-bottom: 1.5rem; text-align: center;">Iniciar Sesión</h2>
+      <form onsubmit="handleLogin(event)">
+        <input type="password" id="adminPass" placeholder="Contraseña Admin" required class="search-bar" style="width: 100%; margin-bottom: 1rem;">
+        <button type="submit" class="btn-accent" style="width: 100%; justify-content: center;">Ingresar</button>
+      </form>
+    </div>
+
+    <!-- Admin Panel Content (Hidden until logged in) -->
+    <div id="adminPanelSection" style="display: none;">
+      <h1 style="margin-bottom: 2rem;">Configuración de la Tienda</h1>
+
+      <form onsubmit="saveConfig(event)" style="background: var(--bg-card); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Monto Mínimo de Compra ($)</label>
+            <input type="number" id="min_purchase" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Descuento Mayorista 1 (+5u %)</label>
+            <input type="number" id="discount_qty_1" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Descuento Mayorista 2 (+10u %)</label>
+            <input type="number" id="discount_qty_2" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Teléfono de Pedidos (WhatsApp)</label>
+            <input type="text" id="whatsapp_number" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div style="grid-column: 1/-1;">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Dirección Física</label>
+            <input type="text" id="store_address" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div style="grid-column: 1/-1;">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Horarios de Atención</label>
+            <input type="text" id="store_hours" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div style="grid-column: 1/-1;">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Google Maps</label>
+            <input type="text" id="store_maps_url" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+          <div style="grid-column: 1/-1;">
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Instagram</label>
+            <input type="text" id="instagram_url" class="search-bar" style="width: 100%; margin: 0;">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-accent" style="margin-top: 1.5rem;">Guardar Cambios</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    let token = localStorage.getItem('adminToken');
+
+    if (token) {
+      showPanel();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const password = document.getElementById('adminPass').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.error || 'Login fallido');
+
+        token = data.token;
+        localStorage.setItem('adminToken', token);
+        showPanel();
+      } catch (err) {
+        alert('Error conectando con el servidor');
+      }
+    }
+
+    async function showPanel() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('adminPanelSection').style.display = 'block';
+
+      // Load Configs
+      const res = await fetch('/api/config');
+      const config = await res.json();
+
+      for (const [key, val] of Object.entries(config)) {
+        const input = document.getElementById(key);
+        if (input) input.value = val;
+      }
+    }
+
+    async function saveConfig(e) {
+      e.preventDefault();
+      const fields = ['min_purchase', 'discount_qty_1', 'discount_qty_2', 'whatsapp_number', 'store_address', 'store_hours', 'store_maps_url', 'instagram_url'];
+      const payload = {};
+
+      fields.forEach(f => {
+        const el = document.getElementById(f);
+        if (el) payload[f] = el.value;
+      });
+
+      try {
+        const res = await fetch('/api/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (!res.ok) return alert(result.error || 'Error al guardar');
+
+        alert('¡Configuraciones guardadas con éxito!');
+      } catch (err) {
+        alert('Error al guardar configuraciones');
+      }
+    }
+  </script>
+</body>
+</html>

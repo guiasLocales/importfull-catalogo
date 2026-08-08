@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo & Carrito</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="header">
+    <a href="/categories" class="logo">← Tienda</a>
+    <button class="btn-accent" onclick="toggleCartModal()">
+      🛒 Carrito (<span id="cartCount">0</span>)
+    </button>
+  </header>
+
+  <main class="container">
+    <input type="text" id="searchInput" class="search-bar" placeholder="Buscar por nombre o código del producto..." oninput="handleSearch()">
+
+    <div id="categoryHeader" style="margin-bottom: 1.5rem; text-align: center; color: var(--text-secondary);"></div>
+
+    <!-- Desktop Table View -->
+    <div class="table-responsive desktop-only">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Precio Local</th>
+            <th>Descuentos por Cantidad</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody">
+          <tr><td colspan="5" style="text-align: center;">Cargando productos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="grid-categories mobile-only" id="productsCardsBody">
+      <div style="grid-column: 1/-1; text-align: center;">Cargando productos...</div>
+    </div>
+  </main>
+
+  <!-- Cart Modal -->
+  <div class="modal-overlay" id="cartModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom: 1rem;">Tu Carrito de Compras</h2>
+      <div id="cartItemsContainer" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem;"></div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.25rem;">
+          <span>Total:</span>
+          <span id="cartTotal">$0.00</span>
+        </div>
+        <p id="minPurchaseWarning" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; display: none;"></p>
+      </div>
+
+      <form id="checkoutForm" onsubmit="handleCheckout(event)">
+        <div style="margin-bottom: 1rem;">
+          <input type="text" id="custName" placeholder="Tu Nombre Completo" required class="search-bar" style="margin: 0 0 0.75rem 0; width: 100%;">
+          <input type="tel" id="custPhone" placeholder="Tu Teléfono (WhatsApp)" required class="search-bar" style="margin: 0 0 0.75rem 0; width: 100%;">
+          <input type="email" id="custEmail" placeholder="Tu Email (Opcional)" class="search-bar" style="margin: 0; width: 100%;">
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <button type="button" class="btn-accent" style="background: var(--bg-card-hover); color: var(--text-primary); flex: 1;" onclick="toggleCartModal()">Cerrar</button>
+          <button type="submit" class="btn-accent" style="flex: 2;">Enviar Pedido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let productsList = [];
+    let cart = [];
+    let config = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedCategory = urlParams.get('category');
+
+    async function init() {
+      if (selectedCategory) {
+        document.getElementById('categoryHeader').innerHTML = `Filtrando por categoría: <strong style="color: var(--text-primary);">${selectedCategory}</strong>`;
+      }
+
+      const confRes = await fetch('/api/config');
+      config = await confRes.json();
+
+      loadProducts();
+    }
+
+    async function loadProducts(search = '') {
+      let url = '/api/products?';
+      if (selectedCategory) url += `category=${encodeURIComponent(selectedCategory)}&`;
+      if (search) url += `search=${encodeURIComponent(search)}`;
+
+      const res = await fetch(url);
+      productsList = await res.json();
+
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const tbody = document.getElementById('productsTableBody');
+      const cards = document.getElementById('productsCardsBody');
+
+      if (productsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No se encontraron productos.</td></tr>`;
+        cards.innerHTML = `<div style="grid-column: 1/-1; text-align: center;">No se encontraron productos.</div>`;
+        return;
+      }
+
+      const d1 = parseFloat(config.discount_qty_1 || 10);
+      const d2 = parseFloat(config.discount_qty_2 || 20);
+
+      // Desktop Table Rows
+      tbody.innerHTML = productsList.map(p => `
+        <tr>
+          <td style="font-family: monospace;">${p.product_code || '-'}</td>
+          <td style="font-weight: 600;">${p.product_name}</td>
+          <td style="color: #34d399; font-weight: 700;">$${parseFloat(p.local_price || 0).toFixed(2)}</td>
+          <td>
+            <span class="badge badge-wholesale-1">+5u (-${d1}%)</span>
+            <span class="badge badge-wholesale-2">+10u (-${d2}%)</span>
+          </td>
+          <td>
+            <button class="btn-accent" onclick="addToCart(${p.id})">Agregar</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Mobile Cards
+      cards.innerHTML = productsList.map(p => `
+        <div class="card">
+          <div class="card-title">${p.product_name}</div>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Cód: ${p.product_code || '-'}</p>
+          <div style="color: #34d399; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem;">$${parseFloat(p.local_price || 0).toFixed(2)}</div>
+          <div style="margin-bottom: 1rem;">
+            <span class="badge badge-wholesale-1">+5u (-${d1}%)</span>
+            <span class="badge badge-wholesale-2">+10u (-${d2}%)</span>
+          </div>
+          <button class="btn-accent" style="width: 100%; justify-content: center;" onclick="addToCart(${p.id})">Agregar al Carrito</button>
+        </div>
+      `).join('');
+    }
+
+    let searchTimeout;
+    function handleSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const val = document.getElementById('searchInput').value;
+        loadProducts(val);
+      }, 300);
+    }
+
+    function addToCart(productId) {
+      const prod = productsList.find(p => p.id === productId);
+      if (!prod) return;
+
+      const existing = cart.find(item => item.id === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...prod, quantity: 1 });
+      }
+
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+      document.getElementById('cartCount').textContent = count;
+
+      const container = document.getElementById('cartItemsContainer');
+      const d1 = parseFloat(config.discount_qty_1 || 10);
+      const d2 = parseFloat(config.discount_qty_2 || 20);
+
+      let total = 0;
+      container.innerHTML = cart.map((item, idx) => {
+        const basePrice = parseFloat(item.local_price || 0);
+        let unitPrice = basePrice;
+        let discountBadge = '';
+
+        if (item.quantity >= 10 && d2 > 0) {
+          unitPrice = basePrice * (1 - d2 / 100);
+          discountBadge = `<span class="badge badge-wholesale-2">-${d2}% OFF</span>`;
+        } else if (item.quantity >= 5 && d1 > 0) {
+          unitPrice = basePrice * (1 - d1 / 100);
+          discountBadge = `<span class="badge badge-wholesale-1">-${d1}% OFF</span>`;
+        }
+
+        const subtotal = unitPrice * item.quantity;
+        total += subtotal;
+
+        return `
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 0.75rem 0;">
+            <div>
+              <div style="font-weight: 600;">${item.product_name} ${discountBadge}</div>
+              <div style="color: var(--text-secondary); font-size: 0.85rem;">$${unitPrice.toFixed(2)} x ${item.quantity} = <strong>$${subtotal.toFixed(2)}</strong></div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button onclick="changeQty(${idx}, -1)" class="btn-accent" style="padding: 0.2rem 0.6rem;">-</button>
+              <span>${item.quantity}</span>
+              <button onclick="changeQty(${idx}, 1)" class="btn-accent" style="padding: 0.2rem 0.6rem;">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+
+      const minPurchase = parseFloat(config.min_purchase || 0);
+      const warning = document.getElementById('minPurchaseWarning');
+      if (total < minPurchase) {
+        warning.style.display = 'block';
+        warning.textContent = `Compra mínima requerida: $${minPurchase.toFixed(2)}`;
+      } else {
+        warning.style.display = 'none';
+      }
+    }
+
+    function changeQty(index, delta) {
+      cart[index].quantity += delta;
+      if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+      }
+      updateCartUI();
+    }
+
+    function toggleCartModal() {
+      const modal = document.getElementById('cartModal');
+      modal.classList.toggle('active');
+    }
+
+    async function handleCheckout(e) {
+      e.preventDefault();
+      if (cart.length === 0) return alert('El carrito está vacío');
+
+      const data = {
+        customer_name: document.getElementById('custName').value,
+        customer_phone: document.getElementById('custPhone').value,
+        customer_email: document.getElementById('custEmail').value,
+        items: cart
+      };
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (!res.ok) return alert(result.error || 'Error al procesar pedido');
+
+        alert('¡Pedido realizado con éxito!');
+
+        // Redirect to WhatsApp if phone number exists
+        if (result.whatsapp_number) {
+          const text = encodeURIComponent(`Hola! Hice un pedido #${result.order_id} por un total de $${result.total}. Nombre: ${data.customer_name}`);
+          window.open(`https://wa.me/${result.whatsapp_number}?text=${text}`, '_blank');
+        }
+
+        cart = [];
+        updateCartUI();
+        toggleCartModal();
+      } catch (err) {
+        alert('Error conectando con el servidor');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
