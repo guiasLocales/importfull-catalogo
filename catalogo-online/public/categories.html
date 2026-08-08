@@ -102,9 +102,9 @@
     function updateLogos() {
       const isLight = document.body.classList.contains('light-theme');
       let logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
-      
+
       if (!logoUrl || logoUrl.trim() === '') {
-        logoUrl = config.logo_dark_url || config.logo_light_url || config.logo_url || config.logo;
+        logoUrl = config.logo_light_url || config.logo_dark_url || config.logo_url || config.logo;
       }
 
       const heroLogo = document.getElementById('heroLogoImg');
@@ -162,7 +162,32 @@
       }).join('');
     }
 
+    function applyConfig(cfg) {
+      if (!cfg) return;
+      config = { ...config, ...cfg };
+      updateLogos();
+      renderCategoryGrid(loadedCategories);
+
+      if (config.store_address) {
+        document.getElementById('footerAddressLink').textContent = config.store_address;
+        document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
+      }
+      if (config.store_hours) {
+        document.getElementById('footerHours').textContent = config.store_hours;
+      }
+      if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
+      if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
+    }
+
     async function initPage() {
+      // 1. Instant load from local backup
+      try {
+        const backupRaw = localStorage.getItem('store_config_backup');
+        if (backupRaw) {
+          applyConfig(JSON.parse(backupRaw));
+        }
+      } catch (e) {}
+
       applySavedTheme();
       renderCategoryGrid(fallbackList);
 
@@ -176,21 +201,12 @@
         }
       } catch (err) {}
 
+      // 2. Fetch server API config
       try {
         const confRes = await fetch('/api/config');
         if (confRes.ok) {
-          config = await confRes.json();
-          updateLogos();
-          renderCategoryGrid(loadedCategories);
-          if (config.store_address) {
-            document.getElementById('footerAddressLink').textContent = config.store_address;
-            document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
-          }
-          if (config.store_hours) {
-            document.getElementById('footerHours').textContent = config.store_hours;
-          }
-          if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
-          if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
+          const serverConfig = await confRes.json();
+          applyConfig(serverConfig);
         }
       } catch (err) {}
     }
