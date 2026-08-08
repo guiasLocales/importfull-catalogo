@@ -3,73 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Administrador</title>
+  <title>Panel Administrador | IMPORT FULL</title>
   <link rel="stylesheet" href="/css/theme.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <header class="top-header">
-    <div class="brand-title">Panel Administrador</div>
+    <div class="brand-title" style="font-weight: 800; color: #f97316;">Panel Administrador</div>
     <a href="/catalog" class="btn-cart">Ver Tienda</a>
   </header>
 
   <main class="container">
-    <div id="loginSection" style="max-width: 400px; margin: 3rem auto; background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color);">
-      <h2 style="margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Iniciar Sesión</h2>
+    <!-- Login Form -->
+    <div id="loginSection" style="max-width: 420px; margin: 3rem auto; background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color); text-align: center;">
+      <h2 style="margin-bottom: 0.5rem; color: var(--text-primary);">Iniciar Sesión</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Contraseña de acceso predeterminada: <strong style="color: #f97316;">admin123</strong></p>
+      
       <form onsubmit="handleLogin(event)">
-        <input type="password" id="adminPass" placeholder="Contraseña Admin" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
-        <button type="submit" class="btn-add" style="width: 100%; justify-content: center;">Ingresar</button>
+        <input type="password" id="adminPass" placeholder="Contraseña Admin (ej: admin123)" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
+        <button type="submit" class="btn-add" style="width: 100%; justify-content: center;">Ingresar al Panel</button>
       </form>
     </div>
 
+    <!-- Admin Configuration Panel -->
     <div id="adminPanelSection" style="display: none;">
-      <h1 style="margin-bottom: 2rem; color: var(--text-primary);">Configuración de la Tienda</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="color: var(--text-primary); font-size: 1.8rem; font-weight: 800;">Configuración de la Tienda</h1>
+        <button onclick="logout()" class="btn-add" style="background: #ef4444;">Cerrar Sesión</button>
+      </div>
 
-      <form onsubmit="saveConfig(event)" style="background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-          
-          <div style="grid-column: 1/-1;">
-            <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem;">Logos de la Marca</h3>
-          </div>
-
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Logo Modo Claro (Fondo Blanco)</label>
-            <input type="url" id="logo_light_url" placeholder="https://..." class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Logo Modo Oscuro (Fondo Negro)</label>
-            <input type="url" id="logo_dark_url" placeholder="https://..." class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-
-          <div style="grid-column: 1/-1; margin-top: 1rem;">
-            <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem;">Condiciones Comerciales y Contacto</h3>
-          </div>
-
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Monto Mínimo de Compra ($)</label>
-            <input type="number" id="min_purchase" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div>
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Teléfono de Pedidos (WhatsApp)</label>
-            <input type="text" id="whatsapp_number" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div style="grid-column: 1/-1;">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Dirección Física</label>
-            <input type="text" id="store_address" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div style="grid-column: 1/-1;">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Horarios de Atención</label>
-            <input type="text" id="store_hours" class="search-input" style="width: 100%; text-align: left; margin: 0;">
-          </div>
-          <div style="grid-column: 1/-1;">
-            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">URL Instagram</label>
-            <input type="text" id="instagram_url" class="search-input" style="width: 100%; text-align: left; margin: 0;">
+      <form onsubmit="saveConfig(event)">
+        
+        <!-- SECTION 1: LOGOS DE LA TIENDA -->
+        <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">1. Logos de la Marca</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Logo Modo Claro (Fondo Blanco)</label>
+              <input type="url" id="logo_light_url" placeholder="https://..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Logo Modo Oscuro (Fondo Negro)</label>
+              <input type="url" id="logo_dark_url" placeholder="https://..." class="search-input" style="margin: 0;">
+            </div>
           </div>
         </div>
 
-        <button type="submit" class="btn-add" style="margin-top: 1.5rem;">Guardar Cambios</button>
+        <!-- SECTION 2: CONFIGURACIÓN DE WHATSAPP Y MENSAJE -->
+        <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">2. Pedidos por WhatsApp</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Número de WhatsApp para recibir pedidos (con código de país sin +)</label>
+              <input type="text" id="whatsapp_number" placeholder="Ej: 5493513082238" class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Compra Mínima Mayorista ($)</label>
+              <input type="number" id="min_purchase" placeholder="15000" class="search-input" style="margin: 0;">
+            </div>
+            <div style="grid-column: 1/-1;">
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Plantilla del Mensaje de Pedido</label>
+              <textarea id="whatsapp_message_template" rows="4" placeholder="Hola! Quiero realizar un pedido en IMPORT FULL:&#10;&#10;*Cliente:* {nombre}&#10;*Teléfono:* {telefono}&#10;*Dirección:* {direccion}&#10;&#10;*Detalle del Pedido:*&#10;{productos}&#10;&#10;*Total Estimado:* ${total}" class="search-input" style="width: 100%; text-align: left; margin: 0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">Variables disponibles: <code>{nombre}</code>, <code>{telefono}</code>, <code>{direccion}</code>, <code>{productos}</code>, <code>{total}</code>.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: DATOS DEL FOOTER (DIRECCIÓN Y HORARIOS) -->
+        <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">3. Dirección y Horarios de Atención (Footer)</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Dirección del Local / Depósito</label>
+              <input type="text" id="store_address" placeholder="Ej: Pasteur 320, Balvanera, CABA" class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Horarios de Atención</label>
+              <input type="text" id="store_hours" placeholder="Ej: Lunes a Viernes 9:00 a 18:00 hs" class="search-input" style="margin: 0;">
+            </div>
+            <div style="grid-column: 1/-1;">
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Instagram</label>
+              <input type="text" id="instagram_url" placeholder="https://instagram.com/..." class="search-input" style="margin: 0;">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: FOTOS DE CATEGORÍAS -->
+        <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+          <h3 style="color: #f97316; margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 800;">4. Imágenes Portada para Categorías</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Ingresa la URL de la imagen de fondo para cada tarjeta de categoría:</p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BAZAR</label>
+              <input type="url" id="cat_img_BAZAR" placeholder="URL imagen Bazar..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BELLEZA</label>
+              <input type="url" id="cat_img_BELLEZA" placeholder="URL imagen Belleza..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">JUGUETERIA</label>
+              <input type="url" id="cat_img_JUGUETERIA" placeholder="URL imagen Juguetería..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BIJOUTERIE</label>
+              <input type="url" id="cat_img_BIJOUTERIE" placeholder="URL imagen Bijouterie..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">ELECTRONICA</label>
+              <input type="url" id="cat_img_ELECTRONICA" placeholder="URL imagen Electrónica..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">LIBRERIA</label>
+              <input type="url" id="cat_img_LIBRERIA" placeholder="URL imagen Librería..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">COTILLON</label>
+              <input type="url" id="cat_img_COTILLON" placeholder="URL imagen Cotillón..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">FERRETERIA</label>
+              <input type="url" id="cat_img_FERRETERIA" placeholder="URL imagen Ferretería..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">INDUMENTARIA</label>
+              <input type="url" id="cat_img_INDUMENTARIA" placeholder="URL imagen Indumentaria..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">NAVIDAD</label>
+              <input type="url" id="cat_img_NAVIDAD" placeholder="URL imagen Navidad..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">TELEFONIA</label>
+              <input type="url" id="cat_img_TELEFONIA" placeholder="URL imagen Telefonía..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">DESCARTABLE</label>
+              <input type="url" id="cat_img_DESCARTABLE" placeholder="URL imagen Descartables..." class="search-input" style="margin: 0;">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-add" style="width: 100%; height: 50px; justify-content: center; font-size: 1.1rem; border-radius: 0.75rem;">Guardar Todos los Cambios</button>
       </form>
     </div>
   </main>
@@ -115,11 +192,22 @@
       } catch (err) {}
     }
 
+    function logout() {
+      localStorage.removeItem('adminToken');
+      window.location.reload();
+    }
+
     async function saveConfig(e) {
       e.preventDefault();
-      const fields = ['logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 'store_address', 'store_hours', 'instagram_url'];
+      const fields = [
+        'logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 
+        'whatsapp_message_template', 'store_address', 'store_hours', 'instagram_url',
+        'cat_img_BAZAR', 'cat_img_BELLEZA', 'cat_img_JUGUETERIA', 'cat_img_BIJOUTERIE',
+        'cat_img_ELECTRONICA', 'cat_img_LIBRERIA', 'cat_img_COTILLON', 'cat_img_FERRETERIA',
+        'cat_img_INDUMENTARIA', 'cat_img_NAVIDAD', 'cat_img_TELEFONIA', 'cat_img_DESCARTABLE'
+      ];
+      
       const payload = {};
-
       fields.forEach(f => {
         const el = document.getElementById(f);
         if (el) payload[f] = el.value;
@@ -137,7 +225,7 @@
 
         const result = await res.json();
         if (!res.ok) return alert(result.error || 'Error al guardar');
-        alert('¡Configuraciones guardadas con éxito!');
+        alert('¡Configuraciones guardadas exitosamente!');
       } catch (err) {
         alert('Error al guardar configuraciones');
       }

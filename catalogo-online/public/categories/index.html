@@ -75,6 +75,7 @@
 
   <script>
     let config = {};
+    let loadedCategories = [];
 
     function applySavedTheme() {
       const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -121,7 +122,7 @@
       }
     }
 
-    const categoryImageMap = {
+    const defaultCategoryImageMap = {
       'BAZAR': 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
       'BELLEZA': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
       'JUGUETERIA': 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
@@ -145,10 +146,13 @@
     function renderCategoryGrid(categories) {
       const container = document.getElementById('categoriesContainer');
       const list = (Array.isArray(categories) && categories.length > 0) ? categories : fallbackList;
+      loadedCategories = list;
 
       container.innerHTML = list.map((cat) => {
         const upperCat = String(cat || '').toUpperCase();
-        const bgImg = categoryImageMap[upperCat] || categoryImageMap['BAZAR'];
+        const customUrl = config[`cat_img_${upperCat}`];
+        const bgImg = (customUrl && customUrl.trim() !== '') ? customUrl : (defaultCategoryImageMap[upperCat] || defaultCategoryImageMap['BAZAR']);
+
         return `
           <div class="category-card" style="background-image: url('${bgImg}');" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
             <div class="category-card-content">
@@ -179,6 +183,7 @@
         if (confRes.ok) {
           config = await confRes.json();
           updateLogos();
+          renderCategoryGrid(loadedCategories);
           if (config.store_address) {
             document.getElementById('footerAddressLink').textContent = config.store_address;
             document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;

@@ -160,19 +160,21 @@
   <div class="modal-backdrop" id="cartModal">
     <div class="modal-box">
       <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Tu Carrito de Pedido</h2>
-      <div id="cartItemsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem;"></div>
+      <div id="cartItemsList" style="max-height: 220px; overflow-y: auto; margin-bottom: 1.25rem;"></div>
 
-      <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-size: 1.1rem; color: var(--text-secondary);">Total Estimado:</span>
         <span id="modalTotal" style="font-size: 1.5rem; font-weight: 800; color: #f97316;">$0</span>
       </div>
 
       <form onsubmit="submitOrder(event)">
         <input type="text" id="cName" placeholder="Tu Nombre Completo" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
-        <input type="tel" id="cPhone" placeholder="Teléfono / WhatsApp" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
+        <input type="tel" id="cPhone" placeholder="Teléfono / WhatsApp" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
+        <input type="text" id="cAddress" placeholder="Dirección de Envío / Localidad" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
+        
         <div style="display: flex; gap: 0.75rem;">
           <button type="button" class="btn-add" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); flex: 1;" onclick="toggleCartModal()">Cerrar</button>
-          <button type="submit" class="btn-add" style="flex: 2;">Enviar Pedido por WhatsApp</button>
+          <button type="submit" class="btn-add" style="flex: 2; justify-content: center;">Enviar Pedido por WhatsApp</button>
         </div>
       </form>
     </div>
@@ -473,13 +475,25 @@
 
       const name = document.getElementById('cName').value;
       const phone = document.getElementById('cPhone').value;
+      const address = document.getElementById('cAddress').value;
       const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
-      const wpNum = config.whatsapp_number || '5491100000000';
-      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price.toLocaleString('es-AR')}`).join('%0A');
-      const text = encodeURIComponent(`Hola! Quiero realizar un pedido en IMPORT FULL:%0A%0A*Cliente:* ${name}%0A*Teléfono:* ${phone}%0A%0A*Detalle del Pedido:*%0A`) + itemsStr + encodeURIComponent(`%0A%0A*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`);
+      const targetWpNum = config.whatsapp_number || '5493513082238';
+      const itemsListStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price.toLocaleString('es-AR')}`).join('\n');
 
-      window.open(`https://wa.me/${wpNum}?text=${text}`, '_blank');
+      let text = '';
+      if (config.whatsapp_message_template && config.whatsapp_message_template.trim() !== '') {
+        text = config.whatsapp_message_template
+          .replace('{nombre}', name)
+          .replace('{telefono}', phone)
+          .replace('{direccion}', address)
+          .replace('{productos}', itemsListStr)
+          .replace('{total}', subtotal.toLocaleString('es-AR'));
+      } else {
+        text = `Hola! Quiero realizar un pedido en IMPORT FULL:\n\n*Cliente:* ${name}\n*Teléfono:* ${phone}\n*Dirección:* ${address}\n\n*Detalle del Pedido:*\n${itemsListStr}\n\n*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`;
+      }
+
+      window.open(`https://wa.me/${targetWpNum}?text=${encodeURIComponent(text)}`, '_blank');
       toggleCartModal();
     }
 
