@@ -71,16 +71,22 @@
     </div>
   </main>
 
-  <!-- Product Detail Modal -->
+  <!-- Product Detail Modal with Multi-Photo Gallery -->
   <div class="modal-backdrop" id="productDetailModal">
-    <div class="modal-box" style="max-width: 600px; padding: 2rem;">
-      <button style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #9ca3af; font-size: 1.5rem; cursor: pointer;" onclick="closeDetailModal()">&times;</button>
+    <div class="modal-box" style="max-width: 650px; padding: 2rem; position: relative;">
+      <button style="position: absolute; top: 1rem; right: 1rem; background: #262626; border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10;" onclick="closeDetailModal()">&times;</button>
       
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Product Image Carousel -->
-        <div style="text-align: center; background: #0a0a0c; padding: 1rem; border-radius: 0.75rem; border: 1px solid #262626; position: relative;">
-          <img id="detailImg" src="" style="max-height: 260px; max-width: 100%; object-fit: contain; border-radius: 0.5rem;" alt="Producto">
-          <div id="carouselControls" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.75rem;"></div>
+        <!-- Product Image & Gallery Thumbnails -->
+        <div style="text-align: center; background: #0a0a0c; padding: 1rem; border-radius: 0.75rem; border: 1px solid #262626;">
+          <div style="position: relative; display: flex; align-items: center; justify-content: center; min-height: 260px;">
+            <button id="btnPrevImg" onclick="changeImage(-1)" style="position: absolute; left: 0.5rem; background: rgba(0,0,0,0.6); border: 1px solid #3f3f46; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none;">&lsaquo;</button>
+            <img id="detailImg" src="" style="max-height: 260px; max-width: 100%; object-fit: contain; border-radius: 0.5rem;" alt="Producto">
+            <button id="btnNextImg" onclick="changeImage(1)" style="position: absolute; right: 0.5rem; background: rgba(0,0,0,0.6); border: 1px solid #3f3f46; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none;">&rsaquo;</button>
+          </div>
+
+          <!-- Thumbnails Row -->
+          <div id="galleryThumbnails" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-top: 0.75rem; justify-content: center;"></div>
         </div>
 
         <!-- Product Info -->
@@ -216,14 +222,14 @@
               <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(74, 222, 128, 0.3); display: inline-block;">${stockQty} u</span>
             </td>
             <td style="text-align: right;" onclick="event.stopPropagation()">
-              <button class="btn-add" onclick="openDetailModal(${p.id})">Ver Producto</button>
+              <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    function openDetailModal(pId) {
+    async function openDetailModal(pId) {
       selectedProduct = products.find(p => p.id === pId);
       if (!selectedProduct) return;
 
@@ -240,34 +246,70 @@
       document.getElementById('detailPrice').textContent = `$${price.toLocaleString('es-AR')}`;
       document.getElementById('detailDescription').textContent = selectedProduct.description || 'Producto importado de alta calidad. Para consultas o ventas al por mayor contáctanos por WhatsApp.';
 
-      // Image carousel setup
+      // Initialize base image
       productImages = [];
       if (selectedProduct.product_image_b_format_url) productImages.push(selectedProduct.product_image_b_format_url);
-      if (selectedProduct.drive_url) productImages.push(selectedProduct.drive_url);
-      if (productImages.length === 0) productImages.push('https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80');
 
       currentImgIdx = 0;
-      updateCarouselImage();
+      updateGalleryUI();
 
       document.getElementById('productDetailModal').classList.add('active');
+
+      // Live fetch additional pictures if meli_id exists
+      if (selectedProduct.meli_id) {
+        try {
+          const res = await fetch(`https://api.mercadolibre.com/items/${selectedProduct.meli_id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.pictures && Array.isArray(data.pictures) && data.pictures.length > 0) {
+              const extraImgs = data.pictures.map(p => p.secure_url || p.url);
+              if (extraImgs.length > 0) {
+                productImages = extraImgs;
+                currentImgIdx = 0;
+                updateGalleryUI();
+              }
+            }
+          }
+        } catch (err) {}
+      }
     }
 
-    function updateCarouselImage() {
+    function updateGalleryUI() {
+      if (productImages.length === 0) {
+        productImages = ['https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80'];
+      }
+
       document.getElementById('detailImg').src = productImages[currentImgIdx];
-      const controls = document.getElementById('carouselControls');
+
+      const btnPrev = document.getElementById('btnPrevImg');
+      const btnNext = document.getElementById('btnNextImg');
+      const thumbsContainer = document.getElementById('galleryThumbnails');
 
       if (productImages.length > 1) {
-        controls.innerHTML = productImages.map((img, idx) => `
-          <button style="width: 10px; height: 10px; border-radius: 50%; border: none; background: ${idx === currentImgIdx ? '#f97316' : '#3f3f46'}; cursor: pointer;" onclick="setCarouselImg(${idx})"></button>
+        btnPrev.style.display = 'block';
+        btnNext.style.display = 'block';
+
+        thumbsContainer.innerHTML = productImages.map((img, idx) => `
+          <button onclick="setCarouselImg(${idx})" style="flex-shrink: 0; width: 50px; height: 50px; border-radius: 0.375rem; border: 2px solid ${idx === currentImgIdx ? '#f97316' : '#262626'}; overflow: hidden; background: #000; cursor: pointer;">
+            <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;">
+          </button>
         `).join('');
       } else {
-        controls.innerHTML = '';
+        btnPrev.style.display = 'none';
+        btnNext.style.display = 'none';
+        thumbsContainer.innerHTML = '';
       }
+    }
+
+    function changeImage(delta) {
+      if (productImages.length === 0) return;
+      currentImgIdx = (currentImgIdx + delta + productImages.length) % productImages.length;
+      updateGalleryUI();
     }
 
     function setCarouselImg(idx) {
       currentImgIdx = idx;
-      updateCarouselImage();
+      updateGalleryUI();
     }
 
     function closeDetailModal() {
@@ -277,6 +319,22 @@
     function adjustModalQty(delta) {
       selectedQty = Math.max(1, selectedQty + delta);
       document.getElementById('detailQty').textContent = selectedQty;
+    }
+
+    function addToCart(pId) {
+      const prod = products.find(p => p.id === pId);
+      if (!prod) return;
+
+      const price = parseFloat(prod.local_price || 0);
+      const existing = cart.find(item => item.id === pId);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...prod, price, qty: 1 });
+      }
+
+      updateCartStats();
     }
 
     function addDetailToCart() {
