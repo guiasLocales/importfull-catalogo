@@ -35,7 +35,10 @@ class ProductBase(BaseModel):
     tienda_nube_url: Optional[str] = None
     price_meli_updated_at: Optional[datetime] = None
     price_tnube_updated_at: Optional[datetime] = None
+    mercadolibre_price_manually_changed: Optional[int] = None
+    tiendanube_price_manually_changed: Optional[int] = None
     
+
 
 class ProductCreate(ProductBase):
     pass
@@ -57,6 +60,8 @@ class ProductUpdate(BaseModel):
     tienda_nube_url: Optional[str] = None
     price_meli_updated_at: Optional[datetime] = None
     price_tnube_updated_at: Optional[datetime] = None
+    mercadolibre_price_manually_changed: Optional[int] = None
+    tiendanube_price_manually_changed: Optional[int] = None
 
 class ProductResponse(ProductBase):
     id: int

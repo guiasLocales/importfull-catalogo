@@ -133,8 +133,13 @@
                                value="${product.price_tienda_nube || ''}" 
                                onchange="updateTNPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
-                               class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               class="w-full pl-6 pr-4 py-1 text-sm font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${product.tiendanube_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : ''}" 
                                step="0.01">
+                        ${product.tiendanube_price_manually_changed ? `
+                        <button onclick="event.stopPropagation(); resetManualPrice(${product.id}, 'tn')" 
+                                class="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer" 
+                                title="Precio manual. Clic para restablecer."></button>
+                        ` : ''}
                     </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap text-center">

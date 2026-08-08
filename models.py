@@ -35,6 +35,8 @@ class Product(Base):
     price_tienda_nube = Column(Numeric(10, 0))
     price_meli_updated_at = Column(DateTime)
     price_tnube_updated_at = Column(DateTime)
+    mercadolibre_price_manually_changed = Column(Integer, default=0)
+    tiendanube_price_manually_changed = Column(Integer, default=0)
     
 class TiendaNubeAttribute(Base):
     __tablename__ = "attributes"

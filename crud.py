@@ -49,6 +49,14 @@ def get_products(db: Session, skip: int = 0, limit: int = 50,
             query = query.filter(Product.meli_id != None, Product.meli_id != '')
         elif channel_filter == 'meli_not_published':
             query = query.filter(or_(Product.meli_id == None, Product.meli_id == ''))
+        elif channel_filter == 'meli_manual':
+            query = query.filter(Product.mercadolibre_price_manually_changed == 1)
+        elif channel_filter == 'meli_auto':
+            query = query.filter(or_(Product.mercadolibre_price_manually_changed == 0, Product.mercadolibre_price_manually_changed == None))
+        elif channel_filter == 'tn_manual':
+            query = query.filter(Product.tiendanube_price_manually_changed == 1)
+        elif channel_filter == 'tn_auto':
+            query = query.filter(or_(Product.tiendanube_price_manually_changed == 0, Product.tiendanube_price_manually_changed == None))
     elif site == 'tienda-nube':
         # Default TN view behavior if no specific channel_filter
         query = query.outerjoin(TiendaNubeAttribute, Product.id == TiendaNubeAttribute.item_id)\
@@ -218,8 +226,26 @@ def update_product(db: Session, product_id: int, updates: dict):
     db_product = get_product(db, product_id)
     if not db_product:
         return None
+    # Automatic flag update for price_mercadolibre
+    if 'price_mercadolibre' in updates:
+        val = updates['price_mercadolibre']
+        if val is not None and val != '':
+            updates['mercadolibre_price_manually_changed'] = 1
+        else:
+            updates['price_mercadolibre'] = None
+            updates['mercadolibre_price_manually_changed'] = 0
+
+    # Automatic flag update for price_tienda_nube
+    if 'price_tienda_nube' in updates:
+        val = updates['price_tienda_nube']
+        if val is not None and val != '':
+            updates['tiendanube_price_manually_changed'] = 1
+        else:
+            updates['price_tienda_nube'] = None
+            updates['tiendanube_price_manually_changed'] = 0
+
     for key, value in updates.items():
-        if hasattr(db_product, key) and value is not None:
+        if hasattr(db_product, key):
             setattr(db_product, key, value)
     
     db.commit()

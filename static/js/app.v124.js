@@ -464,8 +464,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                value="${product.price_mercadolibre || ''}" 
                                onchange="updateProductPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
-                               class="w-full pl-3.5 pr-1 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               class="w-full pl-3.5 pr-4 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${product.mercadolibre_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : ''}" 
                                step="0.01">
+                        ${product.mercadolibre_price_manually_changed ? `
+                        <button onclick="event.stopPropagation(); resetManualPrice(${product.id}, 'meli')" 
+                                class="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer" 
+                                title="Precio manual. Clic para restablecer."></button>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -477,8 +482,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                value="${product.price_tienda_nube || ''}" 
                                onchange="updateTNPriceInline(${product.id}, this.value, this)"
                                onclick="event.stopPropagation()"
-                               class="w-full pl-3.5 pr-1 py-1 text-xs font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                               class="w-full pl-3.5 pr-4 py-1 text-xs font-semibold text-blue-700 bg-blue-50/50 border border-transparent rounded hover:bg-blue-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${product.tiendanube_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : ''}" 
                                step="0.01">
+                        ${product.tiendanube_price_manually_changed ? `
+                        <button onclick="event.stopPropagation(); resetManualPrice(${product.id}, 'tn')" 
+                                class="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer" 
+                                title="Precio manual. Clic para restablecer."></button>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -673,8 +683,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     window.updateProductPriceInline = async (id, newPrice, inputEl) => {
-        const parsedPrice = parseFloat(newPrice);
-        if (isNaN(parsedPrice)) return;
+        let parsedPrice = parseFloat(newPrice);
+        if (newPrice.trim() === '') {
+            parsedPrice = null;
+        } else {
+            if (isNaN(parsedPrice)) return;
+        }
         
         const originalBg = inputEl.classList.contains('bg-gray-100') ? 'bg-gray-100' : '';
         const originalHover = inputEl.classList.contains('hover:bg-gray-200') ? 'hover:bg-gray-200' : '';
@@ -703,6 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) throw new Error('Error al guardar precio');
+            const updatedProduct = await response.json();
 
             // Success state
             inputEl.classList.remove('bg-orange-500');
@@ -710,11 +725,11 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Update local state
             if (productIndex >= 0) {
-                state.products[productIndex].price_mercadolibre = parsedPrice;
+                state.products[productIndex] = updatedProduct;
                 // If detail modal is open for this product, update it too
                 const detailPrice = document.getElementById('edit_price');
                 if (detailPrice && currentDetailIndex === productIndex) {
-                    detailPrice.value = parsedPrice;
+                    detailPrice.value = updatedProduct.price_mercadolibre || '';
                 }
             }
             
@@ -726,12 +741,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
             
-            // Restore colors after a second
+            // Restore colors and re-render to display/hide dots
             setTimeout(() => {
-                inputEl.classList.remove('bg-green-600', 'text-white');
-                if (originalText) inputEl.classList.add(originalText);
-                if (originalBg) inputEl.classList.add(originalBg);
-                if (originalHover) inputEl.classList.add(originalHover);
+                renderProducts();
             }, 1000);
 
         } catch (e) {
@@ -742,18 +754,18 @@ document.addEventListener('DOMContentLoaded', function () {
             inputEl.classList.remove('bg-orange-500');
             inputEl.classList.add('bg-red-600', 'text-white');
             setTimeout(() => {
-                inputEl.classList.remove('bg-red-600', 'text-white');
-                if (originalText) inputEl.classList.add(originalText);
-                if (originalBg) inputEl.classList.add(originalBg);
-                if (originalHover) inputEl.classList.add(originalHover);
-                // Revert to old valid value? Not strictly necessary, but could be nice.
+                renderProducts();
             }, 1500);
         }
     };
 
     window.updateTNPriceInline = async (id, newPrice, inputEl) => {
-        const parsedPrice = parseFloat(newPrice);
-        if (isNaN(parsedPrice)) return;
+        let parsedPrice = parseFloat(newPrice);
+        if (newPrice.trim() === '') {
+            parsedPrice = null;
+        } else {
+            if (isNaN(parsedPrice)) return;
+        }
         
         const originalBg = inputEl.classList.contains('bg-blue-50/50') ? 'bg-blue-50/50' : '';
         const originalHover = inputEl.classList.contains('hover:bg-blue-100') ? 'hover:bg-blue-100' : '';
@@ -767,8 +779,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const originalPrice = productIndex >= 0 ? state.products[productIndex].price_tienda_nube : null;
         
         const payload = { price_tienda_nube: parsedPrice };
+        let priceChanged = false;
         if (originalPrice !== parsedPrice) {
             payload.price_tnube_updated_at = new Date().toISOString();
+            priceChanged = true;
         }
 
         try {
@@ -779,36 +793,81 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!response.ok) throw new Error('Error al guardar precio TN');
+            const updatedProduct = await response.json();
 
             inputEl.classList.remove('bg-orange-500');
             inputEl.classList.add('bg-green-600');
             
             if (productIndex >= 0) {
-                state.products[productIndex].price_tienda_nube = parsedPrice;
+                state.products[productIndex] = updatedProduct;
             }
             if (window.tnState && Array.isArray(window.tnState.products)) {
                 const tnProductIndex = window.tnState.products.findIndex(p => p.id === id);
                 if (tnProductIndex >= 0) {
-                    window.tnState.products[tnProductIndex].price_tienda_nube = parsedPrice;
+                    window.tnState.products[tnProductIndex] = updatedProduct;
                 }
             }
             
             setTimeout(() => {
-                inputEl.classList.remove('bg-green-600', 'text-white');
-                if (originalText) inputEl.classList.add(originalText);
-                if (originalBg) inputEl.classList.add(originalBg);
-                if (originalHover) inputEl.classList.add(originalHover);
+                renderProducts();
+                if (typeof renderTiendaNubeTable === 'function') renderTiendaNubeTable();
             }, 1000);
         } catch (e) {
             console.error('Error updating TN price:', e);
             inputEl.classList.remove('bg-orange-500');
             inputEl.classList.add('bg-red-600');
             setTimeout(() => {
-                inputEl.classList.remove('bg-red-600', 'text-white');
-                if (originalText) inputEl.classList.add(originalText);
-                if (originalBg) inputEl.classList.add(originalBg);
-                if (originalHover) inputEl.classList.add(originalHover);
+                renderProducts();
+                if (typeof renderTiendaNubeTable === 'function') renderTiendaNubeTable();
             }, 2000);
+        }
+    };
+
+    window.resetManualPrice = async (id, type) => {
+        const updates = {};
+        if (type === 'meli') {
+            updates.price_mercadolibre = null;
+            updates.mercadolibre_price_manually_changed = 0;
+        } else {
+            updates.price_tienda_nube = null;
+            updates.tiendanube_price_manually_changed = 0;
+        }
+
+        try {
+            const response = await authFetch(`/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+
+            if (!response.ok) throw new Error('Error al restablecer precio manual');
+            const updatedProduct = await response.json();
+
+            // Sync with local state
+            const productIndex = state.products.findIndex(p => p.id === id);
+            if (productIndex >= 0) {
+                state.products[productIndex] = updatedProduct;
+            }
+            if (window.tnState && Array.isArray(window.tnState.products)) {
+                const tnProductIndex = window.tnState.products.findIndex(p => p.id === id);
+                if (tnProductIndex >= 0) {
+                    window.tnState.products[tnProductIndex] = updatedProduct;
+                }
+            }
+
+            // Sync window.currentProductDetail if it is the current product
+            if (window.currentProductDetail && window.currentProductDetail.id === id) {
+                window.currentProductDetail = updatedProduct;
+                window.openProductDetail(id);
+            } else {
+                renderProducts();
+                if (typeof renderTiendaNubeTable === 'function') renderTiendaNubeTable();
+                if (typeof loadMeliProducts === 'function') loadMeliProducts();
+            }
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', e.message, 'error');
         }
     };
 
@@ -943,23 +1002,39 @@ document.addEventListener('DOMContentLoaded', function () {
             // Check price modifications and set timestamps
             const currentProduct = window.currentProductDetail || (state.products.find(p => p.id === id) || {});
             let meliPriceChanged = false;
-            
-            const priceEl = document.getElementById('edit_price');
-            if (priceEl && priceEl.value !== "") {
-                const parsedVal = parseFloat(priceEl.value);
-                if (currentProduct.price_mercadolibre !== parsedVal) {
-                    updates.price_mercadolibre = parsedVal;
-                    updates.price_meli_updated_at = new Date().toISOString();
-                    meliPriceChanged = true;
+             const priceEl = document.getElementById('edit_price');
+            if (priceEl) {
+                const valStr = priceEl.value.trim();
+                if (valStr === "") {
+                    if (currentProduct.price_mercadolibre !== null && currentProduct.price_mercadolibre !== undefined) {
+                        updates.price_mercadolibre = null;
+                        updates.price_meli_updated_at = new Date().toISOString();
+                        meliPriceChanged = true;
+                    }
+                } else {
+                    const parsedVal = parseFloat(valStr);
+                    if (currentProduct.price_mercadolibre !== parsedVal) {
+                        updates.price_mercadolibre = parsedVal;
+                        updates.price_meli_updated_at = new Date().toISOString();
+                        meliPriceChanged = true;
+                    }
                 }
             }
 
             const priceTNEl = document.getElementById('edit_price_tienda_nube');
-            if (priceTNEl && priceTNEl.value !== "") {
-                const parsedVal = parseFloat(priceTNEl.value);
-                if (currentProduct.price_tienda_nube !== parsedVal) {
-                    updates.price_tienda_nube = parsedVal;
-                    updates.price_tnube_updated_at = new Date().toISOString();
+            if (priceTNEl) {
+                const valStr = priceTNEl.value.trim();
+                if (valStr === "") {
+                    if (currentProduct.price_tienda_nube !== null && currentProduct.price_tienda_nube !== undefined) {
+                        updates.price_tienda_nube = null;
+                        updates.price_tnube_updated_at = new Date().toISOString();
+                    }
+                } else {
+                    const parsedVal = parseFloat(valStr);
+                    if (currentProduct.price_tienda_nube !== parsedVal) {
+                        updates.price_tienda_nube = parsedVal;
+                        updates.price_tnube_updated_at = new Date().toISOString();
+                    }
                 }
             }
 
@@ -970,23 +1045,33 @@ document.addEventListener('DOMContentLoaded', function () {
                     for (const sec of currentMeliAttrs.settings) {
                         const items = sec[sectionName];
                         if (Array.isArray(items)) {
-                            const found = items.find(e => String(e.id).toUpperCase() === fieldId.toUpperCase());
-                            if (found) return found.user_input_value;
+                            const found = items.find(i => i.id === fieldId);
+                            if (found) return found.value;
                         }
                     }
                     return null;
                 };
-                const listingVal = getSettingVal('listing', 'LISTING_TYPE');
-                if (listingVal !== null && listingVal !== undefined) updates.listing_type_id = listingVal;
+                
+                const getSelectSettingVal = (sectionName, fieldId) => {
+                    for (const sec of currentMeliAttrs.settings) {
+                        const items = sec[sectionName];
+                        if (Array.isArray(items)) {
+                            const found = items.find(i => i.id === fieldId);
+                            if (found && found.selected_value) return found.selected_value.id;
+                        }
+                    }
+                    return null;
+                };
 
-                const modeVal = getSettingVal('shipping', 'MODE');
-                if (modeVal !== null && modeVal !== undefined) updates.mode_shipping = modeVal;
+                const currentListingTypeId = getSelectSettingVal('settings', 'listing_type_id');
+                const currentShippingMode = getSelectSettingVal('shipping', 'shipping_mode');
+                const currentFreeShipping = getSettingVal('shipping', 'free_shipping');
 
-                const freeVal = getSettingVal('shipping', 'FREE_SHIPPING');
-                if (freeVal !== null && freeVal !== undefined) updates.free_shipping = (freeVal === 'True' || freeVal === true || freeVal === 1) ? 1 : 0;
+                if (currentListingTypeId) updates.meli_listing_type_id = currentListingTypeId;
+                if (currentShippingMode) updates.meli_shipping_mode = currentShippingMode;
+                if (currentFreeShipping !== null) updates.meli_free_shipping = currentFreeShipping ? 1 : 0;
             }
 
-            // Compose dimentions from separate fields
             const dH = document.getElementById('dim_h');
             const dW = document.getElementById('dim_w');
             const dL = document.getElementById('dim_l');
@@ -1017,6 +1102,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (productIndex >= 0) {
                     state.products[productIndex] = updatedProduct;
                 }
+                
+                renderProducts();
 
                 // If MercadoLibre price was updated, automatically trigger the Update Event sync
                 if (meliPriceChanged) {
@@ -1522,13 +1609,17 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <input type="number" id="edit_cost" value="${product.cost || ''}" readonly
                                            class="w-full h-11 px-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-800/50 cursor-not-allowed shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
                                 </div>
-                                
-                                <!-- Precio ML (ESPANDIDO PERO LETRA NORMAL) -->
+                                        <!-- Precio ML (ESPANDIDO PERO LETRA NORMAL) -->
                                 <div class="flex flex-col lg:col-span-2 relative">
                                     <label class="block text-[10px] font-black text-blue-600 dark:text-blue-400 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio Mercado Libre ($)</label>
                                     <div class="relative flex items-center">
                                         <input type="number" id="edit_price" value="${product.price_mercadolibre || ''}" oninput="triggerAutoSave(${product.id})"
-                                               class="w-full h-11 pl-4 pr-12 border-2 border-blue-100 dark:border-blue-900/60 rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                               class="w-full h-11 pl-4 pr-16 border rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${product.mercadolibre_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : 'border-blue-100 dark:border-blue-900/60 border-2'}" step="0.01">
+                                        ${product.mercadolibre_price_manually_changed ? `
+                                        <button id="detail_meli_manual_dot" type="button" onclick="event.stopPropagation(); resetManualPrice(${product.id}, 'meli')" 
+                                                class="absolute right-12 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer z-10" 
+                                                title="Precio manual. Clic para restablecer."></button>
+                                        ` : ''}
                                         <button type="button" onclick="triggerMeliCalculation('${product.product_code}')" title="Calcular Costos MercadoLibre" class="absolute right-1.5 w-9 h-9 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-md transition-colors bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm">
                                             <i data-lucide="calculator" class="w-5 h-5"></i>
                                         </button>
@@ -1538,8 +1629,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <!-- Precio TN -->
                                 <div class="flex flex-col">
                                     <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-1.5 uppercase tracking-widest whitespace-nowrap">Precio TN ($)</label>
-                                    <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
-                                           class="w-full h-11 px-3 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" step="0.01">
+                                    <div class="relative flex items-center">
+                                        <input type="number" id="edit_price_tienda_nube" value="${product.price_tienda_nube || ''}" oninput="triggerAutoSave(${product.id})"
+                                               class="w-full h-11 pl-3 pr-8 border rounded-lg text-sm font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${product.tiendanube_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : 'border-gray-200 dark:border-gray-700'}" step="0.01">
+                                        ${product.tiendanube_price_manually_changed ? `
+                                        <button id="detail_tn_manual_dot" type="button" onclick="event.stopPropagation(); resetManualPrice(${product.id}, 'tn')" 
+                                                class="absolute right-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer z-10" 
+                                                title="Precio manual. Clic para restablecer."></button>
+                                        ` : ''}
+                                    </div>
                                 </div>
                                 
                                 <!-- Precio Local -->
@@ -4508,8 +4606,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                        value="${p.price_mercadolibre || ''}" 
                                        onchange="updateProductPriceInline(${p.id}, this.value, this)"
                                        onclick="event.stopPropagation()"
-                                       class="w-full pl-6 pr-2 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                       class="w-full pl-6 pr-4 py-1 text-sm font-semibold text-gray-800 bg-gray-100 border border-transparent rounded hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${p.mercadolibre_price_manually_changed ? 'border-orange-300 ring-1 ring-orange-300' : ''}" 
                                        step="0.01">
+                                ${p.mercadolibre_price_manually_changed ? `
+                                <button onclick="event.stopPropagation(); resetManualPrice(${p.id}, 'meli')" 
+                                        class="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500 hover:bg-red-500 hover:scale-125 transition-all cursor-pointer" 
+                                        title="Precio manual. Clic para restablecer."></button>
+                                ` : ''}
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">${stockBadge}</td>
