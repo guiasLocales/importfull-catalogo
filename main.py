@@ -116,13 +116,33 @@ def test_db_query(query: str = "SELECT 1", db: Session = Depends(get_db)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.get("/")
-async def serve_index():
-    return FileResponse("static/index.html", headers={
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-    })
+@app.get("/api/public/categories")
+def public_categories(db: Session = Depends(get_db)):
+    """Public endpoint to fetch distinct product categories"""
+    try:
+        result = db.execute(text("SELECT DISTINCT product_type_path FROM product_catalog_sync WHERE product_type_path IS NOT NULL AND product_type_path != '' ORDER BY product_type_path ASC")).fetchall()
+        return [row[0] for row in result]
+    except Exception as e:
+        return ["BAZAR", "BELLEZA", "JUGUETERIA", "BIJOUTERIE", "ELECTRONICA", "LIBRERIA", "COTILLON", "FERRETERIA", "INDUMENTARIA", "NAVIDAD", "TELEFONIA", "DESCARTABLE"]
+
+@app.get("/api/public/products")
+def public_products(category: Optional[str] = None, search: Optional[str] = None, db: Session = Depends(get_db)):
+    """Public endpoint for web catalog to fetch products with their local price"""
+    try:
+        sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock, description, brand FROM product_catalog_sync WHERE 1=1"
+        params = {}
+        if category:
+            sql += " AND LOWER(product_type_path) LIKE LOWER(:category)"
+            params["category"] = f"%{category}%"
+        if search:
+            sql += " AND (LOWER(product_name) LIKE LOWER(:search) OR LOWER(product_code) LIKE LOWER(:search))"
+            params["search"] = f"%{search}%"
+        sql += " ORDER BY product_name ASC LIMIT 250"
+        result = db.execute(text(sql), params).fetchall()
+        return [dict(row._mapping) for row in result]
+    except Exception as e:
+        return []
+
 
 @app.get("/health")
 def health_check():
