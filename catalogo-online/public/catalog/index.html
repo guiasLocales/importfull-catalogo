@@ -74,6 +74,35 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Footer Section with 2-Column Card -->
+    <div class="footer-section">
+      <div class="footer-card">
+        <div class="footer-item">
+          <div class="footer-icon-circle">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </div>
+          <div>
+            <div class="footer-item-title">DIRECCIÓN</div>
+            <div class="footer-item-text" id="footerAddress"><a href="#" class="footer-item-link" id="footerAddressLink">Pasteur 320, Balvanera, CABA</a></div>
+          </div>
+        </div>
+
+        <div class="footer-item">
+          <div class="footer-icon-circle">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="footer-item-title">HORARIOS DE ATENCIÓN</div>
+            <div class="footer-item-text" id="footerHours">Lunes a Viernes de 9:00 a 18:00 hs. Sábados de 9:00 a 13:00 hs.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="powered-by">
+        Power by - <span>Guias Locales</span>
+      </div>
+    </div>
   </main>
 
   <!-- Product Detail Modal with Multi-Photo Gallery -->
@@ -211,6 +240,13 @@
           config = await confRes.json();
           const minP = parseFloat(config.min_purchase || 15000);
           document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+          if (config.store_address) {
+            document.getElementById('footerAddressLink').textContent = config.store_address;
+            document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
+          }
+          if (config.store_hours) {
+            document.getElementById('footerHours').textContent = config.store_hours;
+          }
           updateHeaderLogo();
         }
       } catch (err) {}
@@ -254,13 +290,13 @@
               <div class="product-cell">
                 <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
                 <div>
-                  <div class="product-name" style="font-weight: 700; color: var(--text-primary);">${p.product_name}</div>
+                  <div class="product-name">${p.product_name}</div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
                 </div>
               </div>
             </td>
             <td>
-              <span class="product-name" style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">$${price.toLocaleString('es-AR')}</span>
+              <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">$${price.toLocaleString('es-AR')}</span>
             </td>
             <td>
               <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(74, 222, 128, 0.3); display: inline-block;">${stockQty} u</span>

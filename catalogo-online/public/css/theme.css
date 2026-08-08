@@ -1,15 +1,16 @@
 :root {
-  --bg-primary: #0a0a0c;
-  --bg-secondary: #141416;
-  --bg-card: #18181b;
-  --border-color: #262626;
+  --bg-primary: #050505;
+  --bg-secondary: #0d0d0f;
+  --bg-card: #141416;
+  --border-color: #222225;
   --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
   --accent-color: #f97316;
   --accent-hover: #ea580c;
-  --table-hover: #1f1f23;
-  --header-bg: rgba(20, 20, 22, 0.95);
+  --table-hover: #17171c;
+  --header-bg: rgba(13, 13, 15, 0.95);
+  --footer-card-bg: #0b0b0d;
 }
 
 body.light-theme {
@@ -24,6 +25,7 @@ body.light-theme {
   --accent-hover: #ea580c;
   --table-hover: #f1f5f9;
   --header-bg: rgba(255, 255, 255, 0.95);
+  --footer-card-bg: #ffffff;
 }
 
 * {
@@ -31,7 +33,6 @@ body.light-theme {
   margin: 0;
   padding: 0;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 body {
@@ -74,7 +75,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem 1rem;
 }
@@ -91,8 +92,8 @@ body {
 }
 
 .min-purchase-banner {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(234, 88, 12, 0.25));
-  border: 1px solid rgba(249, 115, 22, 0.4);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(234, 88, 12, 0.22));
+  border: 1px solid rgba(249, 115, 22, 0.35);
   color: #f97316;
   text-align: center;
   padding: 0.85rem;
@@ -175,6 +176,7 @@ body {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  color: var(--text-primary);
 }
 
 .catalog-table tr:hover {
@@ -185,6 +187,11 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.product-name {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .product-img {
@@ -237,6 +244,124 @@ body {
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 800;
+}
+
+/* Flat Circular Social Icons */
+.social-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.85rem;
+  margin: 1.5rem 0;
+}
+
+.social-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.social-icon-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.social-icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Custom Footer Box matching image layout */
+.footer-section {
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+}
+
+.footer-card {
+  background: var(--footer-card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 1.25rem;
+  padding: 1.75rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 640px) {
+  .footer-card {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.footer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.footer-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  color: #f97316;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.footer-icon-circle svg {
+  width: 20px;
+  height: 20px;
+  stroke: #f97316;
+  fill: none;
+  stroke-width: 2;
+}
+
+.footer-item-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.footer-item-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.footer-item-link {
+  color: #f97316;
+  text-decoration: underline;
+}
+
+.powered-by {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 2rem;
+}
+
+.powered-by span {
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .modal-backdrop {
