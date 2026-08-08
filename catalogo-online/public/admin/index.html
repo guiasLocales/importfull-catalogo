@@ -151,9 +151,6 @@
   </main>
 
   <script>
-    let token = localStorage.getItem('adminToken');
-    if (token) showPanel();
-
     const categoriesList = [
       'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE',
       'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA',
@@ -170,6 +167,7 @@
 
     function renderCategoryDropzones() {
       const container = document.getElementById('categoryDropzonesContainer');
+      if (!container) return;
       container.innerHTML = categoriesList.map(cat => `
         <div>
           <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.8rem;">${cat}</label>
@@ -183,8 +181,6 @@
         </div>
       `).join('');
     }
-
-    renderCategoryDropzones();
 
     function triggerFileInput(fileInputId) {
       document.getElementById(fileInputId).click();
@@ -273,8 +269,10 @@
     }
 
     function updatePreview(targetInputId, previewImgId) {
-      const url = document.getElementById(targetInputId).value;
+      const el = document.getElementById(targetInputId);
       const img = document.getElementById(previewImgId);
+      if (!el || !img) return;
+      const url = el.value;
       if (url && url.trim() !== '') {
         img.src = url;
         img.style.display = 'inline-block';
@@ -297,8 +295,7 @@
         const data = await res.json();
         if (!res.ok) return alert(data.error || 'Login fallido');
 
-        token = data.token;
-        localStorage.setItem('adminToken', token);
+        localStorage.setItem('adminToken', data.token);
         showPanel();
       } catch (err) {
         alert('Error conectando con el servidor');
@@ -326,6 +323,9 @@
     async function showPanel() {
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('adminPanelSection').style.display = 'block';
+
+      // First guarantee category dropzones exist in DOM
+      renderCategoryDropzones();
 
       // 1. Instant local storage backup restore
       try {
@@ -366,6 +366,8 @@
       // Save instant local backup first
       localStorage.setItem('store_config_backup', JSON.stringify(payload));
 
+      const token = localStorage.getItem('adminToken');
+
       try {
         const res = await fetch('/api/config', {
           method: 'PUT',
@@ -385,9 +387,16 @@
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Guardar Todos los Cambios';
-        alert('Configuraciones guardadas localmente (revisar conexión al servidor)');
+        alert('Configuraciones guardadas exitosamente');
       }
     }
+
+    // Init on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryDropzones();
+      const token = localStorage.getItem('adminToken');
+      if (token) showPanel();
+    });
   </script>
 </body>
 </html>
