@@ -13,8 +13,10 @@ const pool = mysql.createPool({
   port: 3306,
   waitForConnections: true,
   connectionLimit: 5,
-  connectTimeout: 10000,
-  ssl: false
+  connectTimeout: 15000,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 module.exports = {
