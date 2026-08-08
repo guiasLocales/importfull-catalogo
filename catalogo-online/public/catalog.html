@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catálogo | Productos</title>
+  <title>Catálogo | IMPORT FULL</title>
   <link rel="stylesheet" href="/css/theme.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -12,8 +12,9 @@
   <header class="top-header">
     <div class="brand-title">
       <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #fff;">
-        <span class="brand-icon">🔥</span>
-        <span id="headerCategoryName">Catálogo</span>
+        <span style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
+        <span>•</span>
+        <span id="headerCategoryName" style="color: #9ca3af;">Catálogo</span>
       </a>
     </div>
     <button class="btn-cart" onclick="toggleCartModal()">
@@ -24,13 +25,13 @@
 
   <main class="container">
     <div class="min-purchase-banner" id="minPurchaseBanner">
-      Compra mínima: $30.000
+      Compra mínima mayorista: $15.000
     </div>
 
-    <!-- 4 KPI Header Cards (Matching reference screenshot 3) -->
+    <!-- 4 KPI Header Cards for IMPORT FULL -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-title" id="kpiLabel1">CORTES / PRODUCTOS</div>
+        <div class="kpi-title" id="kpiLabel1">PRODUCTOS</div>
         <div class="kpi-value" id="kpiTotalProducts">0</div>
       </div>
       <div class="kpi-card">
@@ -38,8 +39,8 @@
         <div class="kpi-value" id="kpiCartItemsCount">0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">TOTAL EN KILOS/UDS</div>
-        <div class="kpi-value" id="kpiCartUnits">0 kg</div>
+        <div class="kpi-title">UNIDADES TOTALES</div>
+        <div class="kpi-value" id="kpiCartUnits">0 u</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">SUBTOTAL ESTIMADO</div>
@@ -47,20 +48,20 @@
       </div>
     </div>
 
-    <!-- Centered Search Bar -->
+    <!-- Search Bar -->
     <div class="search-container">
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre..." oninput="handleSearch()">
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o código del producto..." oninput="handleSearch()">
     </div>
 
-    <!-- Product Table (Matching reference screenshot 3) -->
+    <!-- Product Table -->
     <div class="table-container">
       <table class="catalog-table">
         <thead>
           <tr>
-            <th>CORTE / PRODUCTO</th>
-            <th>PRECIO X KG</th>
-            <th>OFERTA X KG</th>
-            <th>CONDICIÓN OFERTA</th>
+            <th>PRODUCTO</th>
+            <th>PRECIO LOCAL</th>
+            <th>PRECIO MAYORISTA</th>
+            <th>CONDICIÓN MAYORISTA</th>
             <th style="text-align: right;">ACCIÓN</th>
           </tr>
         </thead>
@@ -83,7 +84,7 @@
       </div>
 
       <form onsubmit="submitOrder(event)">
-        <input type="text" id="cName" placeholder="Tu Nombre" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
+        <input type="text" id="cName" placeholder="Tu Nombre Completo" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
         <input type="tel" id="cPhone" placeholder="Teléfono / WhatsApp" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
         <div style="display: flex; gap: 0.75rem;">
           <button type="button" class="btn-add" style="background: #262626; flex: 1;" onclick="toggleCartModal()">Cerrar</button>
@@ -101,24 +102,24 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentCategory = urlParams.get('category') || '';
 
-    const defaultFoodImgs = [
-      'https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=150&q=80',
-      'https://images.unsplash.com/photo-1560781290-7dc94c0f8f4f?auto=format&fit=crop&w=150&q=80'
+    const defaultProductImgs = [
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=150&q=80'
     ];
 
     async function initCatalog() {
       if (currentCategory) {
         document.getElementById('headerCategoryName').textContent = currentCategory;
-        document.getElementById('kpiLabel1').textContent = `CORTES DE ${currentCategory.toUpperCase()}`;
+        document.getElementById('kpiLabel1').textContent = `PRODUCTOS DE ${currentCategory.toUpperCase()}`;
       }
 
       try {
         const confRes = await fetch('/api/config');
         config = await confRes.json();
-        const minP = parseFloat(config.min_purchase || 30000);
-        document.getElementById('minPurchaseBanner').textContent = `Compra mínima: $${minP.toLocaleString('es-AR')}`;
+        const minP = parseFloat(config.min_purchase || 15000);
+        document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
       } catch (err) {}
 
       loadProducts();
@@ -133,21 +134,7 @@
         const res = await fetch(url);
         let data = await res.json();
 
-        // Fallback demo data if DB is empty to match user's exact screenshot
-        if (!Array.isArray(data) || data.length === 0) {
-          data = [
-            { id: 1, product_name: 'Cuadril', local_price: 23799, offer_price: 21999, condition: 'Llevando +1,5 kg' },
-            { id: 2, product_name: 'Nalga', local_price: 23799, offer_price: 21999, condition: 'Llevando +1,5 kg' },
-            { id: 3, product_name: 'Peceto', local_price: 24099, offer_price: 22999, condition: 'Llevando +1,5 kg' },
-            { id: 4, product_name: 'Bola de lomo', local_price: 22999, offer_price: 21099, condition: 'Llevando +1,5 kg' },
-            { id: 5, product_name: 'Jamón cuadrado', local_price: 22999, offer_price: 21099, condition: 'Llevando +1,5 kg' },
-            { id: 6, product_name: 'Paleta', local_price: 22699, offer_price: null, condition: '-' },
-            { id: 7, product_name: 'Palomita', local_price: 21699, offer_price: null, condition: '-' },
-            { id: 8, product_name: 'Bife de chorizo / Roast beef', local_price: 26899, offer_price: null, condition: '-' }
-          ];
-        }
-
-        products = data;
+        products = Array.isArray(data) ? data : [];
         renderTable();
       } catch (err) {
         console.error('Error:', err);
@@ -158,28 +145,37 @@
       document.getElementById('kpiTotalProducts').textContent = products.length;
       const tbody = document.getElementById('catalogTableBody');
 
+      if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos cargados en esta categoría.</td></tr>`;
+        return;
+      }
+
+      const discountPercent1 = parseFloat(config.discount_qty_1 || 10);
+
       tbody.innerHTML = products.map((p, idx) => {
-        const basePrice = parseFloat(p.local_price || 0);
-        const offerPrice = p.offer_price ? parseFloat(p.offer_price) : (basePrice > 20000 ? basePrice * 0.92 : null);
-        const conditionText = p.condition || (offerPrice ? 'Llevando +1,5 kg' : '-');
-        const imgUrl = p.product_image_b_format_url || defaultFoodImgs[idx % defaultFoodImgs.length];
+        const localPrice = parseFloat(p.local_price || 0);
+        const wholesalePrice = localPrice > 0 ? localPrice * (1 - discountPercent1 / 100) : 0;
+        const imgUrl = p.product_image_b_format_url || defaultProductImgs[idx % defaultProductImgs.length];
 
         return `
           <tr>
             <td>
               <div class="product-cell">
                 <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
-                <span class="product-name">${p.product_name}</span>
+                <div>
+                  <div class="product-name">${p.product_name}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
+                </div>
               </div>
             </td>
             <td>
-              <span class="${offerPrice ? 'price-original' : 'product-name'}">$${basePrice.toLocaleString('es-AR')}</span>
+              <span class="product-name">$${localPrice.toLocaleString('es-AR')}</span>
             </td>
             <td>
-              ${offerPrice ? `<span class="price-offer">$${offerPrice.toLocaleString('es-AR')}</span>` : '-'}
+              <span class="price-offer">$${wholesalePrice.toLocaleString('es-AR')}</span>
             </td>
-            <td style="color: var(--text-secondary); font-size: 0.9rem;">
-              ${conditionText}
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">
+              Llevando +5 u (-${discountPercent1}%)
             </td>
             <td style="text-align: right;">
               <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
@@ -193,7 +189,7 @@
       const prod = products.find(p => p.id === pId);
       if (!prod) return;
 
-      const price = prod.offer_price ? parseFloat(prod.offer_price) : parseFloat(prod.local_price || 0);
+      const price = parseFloat(prod.local_price || 0);
       const existing = cart.find(item => item.id === pId);
 
       if (existing) {
@@ -212,11 +208,10 @@
 
       document.getElementById('cartCountBadge').textContent = totalUnits;
       document.getElementById('kpiCartItemsCount').textContent = count;
-      document.getElementById('kpiCartUnits').textContent = `${totalUnits} kg`;
+      document.getElementById('kpiCartUnits').textContent = `${totalUnits} u`;
       document.getElementById('kpiCartSubtotal').textContent = `$${subtotal.toLocaleString('es-AR')}`;
       document.getElementById('modalTotal').textContent = `$${subtotal.toLocaleString('es-AR')}`;
 
-      // Update Modal List
       const list = document.getElementById('cartItemsList');
       list.innerHTML = cart.map(item => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #262626;">
@@ -250,8 +245,8 @@
       const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
       const wpNum = config.whatsapp_number || '5491100000000';
-      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} x $${i.price}`).join('%0A');
-      const text = encodeURIComponent(`Hola! Quiero realizar un pedido:%0A%0A*Cliente:* ${name}%0A*Teléfono:* ${phone}%0A%0A*Detalle del Pedido:*%0A`) + itemsStr + encodeURIComponent(`%0A%0A*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`);
+      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price}`).join('%0A');
+      const text = encodeURIComponent(`Hola! Quiero realizar un pedido en IMPORT FULL:%0A%0A*Cliente:* ${name}%0A*Teléfono:* ${phone}%0A%0A*Detalle del Pedido:*%0A`) + itemsStr + encodeURIComponent(`%0A%0A*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`);
 
       window.open(`https://wa.me/${wpNum}?text=${text}`, '_blank');
       toggleCartModal();
