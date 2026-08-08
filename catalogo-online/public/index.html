@@ -22,9 +22,7 @@
       </div>
     </div>
 
-    <div class="categories-grid" id="categoriesContainer">
-      <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">Cargando categorías...</div>
-    </div>
+    <div class="categories-grid" id="categoriesContainer"></div>
   </main>
 
   <script>
@@ -43,51 +41,58 @@
       'DESCARTABLE': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80'
     };
 
-    const fallbackImages = [
-      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80'
+    const fallbackList = [
+      'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
+      'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
+      'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
     ];
 
-    async function loadCategories() {
-      try {
-        const catRes = await fetch('/api/categories');
-        let categories = await catRes.json();
+    function renderCategoryGrid(categories) {
+      const container = document.getElementById('categoriesContainer');
+      const list = (Array.isArray(categories) && categories.length > 0) ? categories : fallbackList;
 
-        if (!Array.isArray(categories) || categories.length === 0) {
-          categories = [
-            'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
-            'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
-            'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
-          ];
-        }
-
-        const container = document.getElementById('categoriesContainer');
-        container.innerHTML = categories.map((cat, idx) => {
-          const upperCat = (cat || '').toUpperCase();
-          const bgImg = categoryImageMap[upperCat] || fallbackImages[idx % fallbackImages.length];
-          return `
-            <div class="category-card" style="background-image: url('${bgImg}');" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
-              <div class="category-card-content">
-                <div class="category-card-title">${cat}</div>
-                <div class="category-card-subtitle">Ver productos locales de ${cat} &rarr;</div>
-              </div>
+      container.innerHTML = list.map((cat, idx) => {
+        const upperCat = String(cat || '').toUpperCase();
+        const bgImg = categoryImageMap[upperCat] || categoryImageMap['BAZAR'];
+        return `
+          <div class="category-card" style="background-image: url('${bgImg}');" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
+            <div class="category-card-content">
+              <div class="category-card-title">${cat}</div>
+              <div class="category-card-subtitle">Ver productos locales de ${cat} &rarr;</div>
             </div>
-          `;
-        }).join('');
-
-        const confRes = await fetch('/api/config');
-        const config = await confRes.json();
-        if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
-        if (config.facebook_url) document.getElementById('socialFb').href = config.facebook_url;
-        if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
-      } catch (err) {
-        console.error('Error:', err);
-      }
+          </div>
+        `;
+      }).join('');
     }
 
-    loadCategories();
+    async function initPage() {
+      // Immediate instant render of real store categories
+      renderCategoryGrid(fallbackList);
+
+      try {
+        const catRes = await fetch('/api/categories');
+        if (catRes.ok) {
+          const categories = await catRes.json();
+          if (Array.isArray(categories) && categories.length > 0) {
+            renderCategoryGrid(categories);
+          }
+        }
+      } catch (err) {
+        console.log('Using static store categories fallback');
+      }
+
+      try {
+        const confRes = await fetch('/api/config');
+        if (confRes.ok) {
+          const config = await confRes.json();
+          if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
+          if (config.facebook_url) document.getElementById('socialFb').href = config.facebook_url;
+          if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
+        }
+      } catch (err) {}
+    }
+
+    initPage();
   </script>
 </body>
 </html>
