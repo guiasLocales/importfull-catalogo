@@ -1,4 +1,4 @@
-const http = require('https');
+const db = require('../src/db-client');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,20 +7,17 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const cloudRunUrl = 'https://inventory-app-418609185384.us-central1.run.app/api/public/categories';
-
-  http.get(cloudRunUrl, (apiRes) => {
-    let data = '';
-    apiRes.on('data', chunk => { data += chunk; });
-    apiRes.on('end', () => {
-      try {
-        const categories = JSON.parse(data);
-        res.status(200).json(categories);
-      } catch (e) {
-        res.status(200).json(["BAZAR","BELLEZA","BIJOUTERIE","COTILLON","DESCARTABLE","ELECTRONICA","FERRETERIA","INDUMENTARIA","JUGUETERIA","LIBRERIA","NAVIDAD","TELEFONIA"]);
-      }
-    });
-  }).on('error', () => {
+  try {
+    const rows = await db.query(`
+      SELECT DISTINCT product_type_path 
+      FROM product_catalog_sync 
+      WHERE product_type_path IS NOT NULL AND product_type_path != '' 
+      ORDER BY product_type_path ASC
+    `);
+    const categories = rows.map(r => r.product_type_path);
+    res.status(200).json(categories);
+  } catch (err) {
+    console.error('Categories Query Error:', err);
     res.status(200).json(["BAZAR","BELLEZA","BIJOUTERIE","COTILLON","DESCARTABLE","ELECTRONICA","FERRETERIA","INDUMENTARIA","JUGUETERIA","LIBRERIA","NAVIDAD","TELEFONIA"]);
-  });
+  }
 };

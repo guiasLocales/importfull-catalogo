@@ -1,4 +1,4 @@
-const http = require('https');
+const db = require('../src/db-client');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,23 +7,41 @@ module.exports = async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { category, search } = req.query;
-  let url = 'https://inventory-app-418609185384.us-central1.run.app/api/public/products?';
-  if (category) url += `category=${encodeURIComponent(category)}&`;
-  if (search) url += `search=${encodeURIComponent(search)}`;
+  try {
+    const { category, search } = req.query;
+    let query = `
+      SELECT 
+        id, 
+        product_code, 
+        product_name, 
+        price AS local_price, 
+        product_image_b_format_url, 
+        product_type_path, 
+        stock, 
+        description, 
+        brand 
+      FROM product_catalog_sync 
+      WHERE 1=1
+    `;
+    const params = [];
 
-  http.get(url, (apiRes) => {
-    let data = '';
-    apiRes.on('data', chunk => { data += chunk; });
-    apiRes.on('end', () => {
-      try {
-        const products = JSON.parse(data);
-        res.status(200).json(products);
-      } catch (e) {
-        res.status(200).json([]);
-      }
-    });
-  }).on('error', () => {
+    if (category) {
+      params.push(`%${category}%`);
+      query += ` AND LOWER(product_type_path) LIKE LOWER(?)`;
+    }
+
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND (LOWER(product_name) LIKE LOWER(?) OR LOWER(product_code) LIKE LOWER(?))`;
+      params.push(`%${search}%`);
+    }
+
+    query += ` ORDER BY product_name ASC LIMIT 250`;
+
+    const rows = await db.query(query, params);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Products Query Error:', err);
     res.status(200).json([]);
-  });
+  }
 };
