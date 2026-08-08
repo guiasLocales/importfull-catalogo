@@ -207,8 +207,8 @@
       }
     }
 
-    // Direct cloud image upload to ImgBB to generate lightweight clean HTTPS URLs
-    async function processFile(file, targetInputId, previewImgId, statusId) {
+    // Local Canvas processing into ultra-light WebP Data URL (~10 KB) - 100% reliable, zero CORS/API dependencies
+    function processFile(file, targetInputId, previewImgId, statusId) {
       if (!file.type.startsWith('image/')) {
         return alert('Por favor selecciona un archivo de imagen válido');
       }
@@ -216,37 +216,54 @@
       const statusEl = document.getElementById(statusId);
       if (statusEl) {
         statusEl.style.display = 'block';
-        statusEl.textContent = '⏳ Subiendo imagen...';
+        statusEl.textContent = '⏳ Procesando imagen...';
       }
 
-      try {
-        const formData = new FormData();
-        formData.append('image', file);
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 400;
+          let width = img.width;
+          let height = img.height;
 
-        const res = await fetch('https://api.imgbb.com/1/upload?key=c2b1836561be84e622ef50f4fa9b47e2', {
-          method: 'POST',
-          body: formData
-        });
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
 
-        const data = await res.json();
-        if (data && data.data && data.data.url) {
-          const imgUrl = data.data.url;
-          document.getElementById(targetInputId).value = imgUrl;
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // WebP format at 0.75 quality is ~8-12 KB
+          const dataUrl = canvas.toDataURL('image/webp', 0.75);
+          document.getElementById(targetInputId).value = dataUrl;
           updatePreview(targetInputId, previewImgId);
+
           if (statusEl) {
             statusEl.textContent = '✓ Imagen cargada';
             statusEl.style.color = '#4ade80';
           }
-        } else {
-          throw new Error('Respuesta inválida');
-        }
-      } catch (err) {
-        if (statusEl) {
-          statusEl.textContent = '❌ Error al subir';
-          statusEl.style.color = '#ef4444';
-        }
-        alert('No se pudo subir la imagen. Por favor pega la URL directa https://');
-      }
+        };
+        img.onerror = function() {
+          if (statusEl) {
+            statusEl.textContent = '❌ Error';
+            statusEl.style.color = '#ef4444';
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
 
     function updatePreview(targetInputId, previewImgId) {
