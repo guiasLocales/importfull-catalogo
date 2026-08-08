@@ -6,6 +6,32 @@
   <title>Panel Administrador | IMPORT FULL</title>
   <link rel="stylesheet" href="/css/theme.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      background: var(--bg-primary);
+      cursor: pointer;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.05);
+    }
+    .dropzone img {
+      max-height: 70px;
+      max-width: 100%;
+      object-fit: contain;
+      margin-top: 0.5rem;
+      border-radius: 0.35rem;
+    }
+    .dropzone input[type="file"] {
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
@@ -35,18 +61,33 @@
 
       <form onsubmit="saveConfig(event)">
         
-        <!-- SECTION 1: LOGOS DE LA TIENDA -->
+        <!-- SECTION 1: LOGOS DE LA TIENDA (DRAG AND DROP) -->
         <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
           <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">1. Logos de la Marca</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            
+            <!-- Logo Modo Claro -->
             <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Logo Modo Claro (Fondo Blanco)</label>
-              <input type="url" id="logo_light_url" placeholder="https://..." class="search-input" style="margin: 0;">
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Claro (Fondo Blanco)</label>
+              <div class="dropzone" onclick="triggerFileInput('file_logo_light')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_light_url', 'prev_logo_light')">
+                <input type="file" id="file_logo_light" accept="image/*" onchange="handleFileSelect(event, 'logo_light_url', 'prev_logo_light')">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <img id="prev_logo_light" src="" style="display: none;">
+              </div>
+              <input type="url" id="logo_light_url" placeholder="O pega URL https://..." class="search-input" style="margin-top: 0.5rem; font-size: 0.8rem; padding: 0.5rem 0.75rem;" oninput="updatePreview('logo_light_url', 'prev_logo_light')">
             </div>
+
+            <!-- Logo Modo Oscuro -->
             <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Logo Modo Oscuro (Fondo Negro)</label>
-              <input type="url" id="logo_dark_url" placeholder="https://..." class="search-input" style="margin: 0;">
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Oscuro (Fondo Negro)</label>
+              <div class="dropzone" onclick="triggerFileInput('file_logo_dark')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_dark_url', 'prev_logo_dark')">
+                <input type="file" id="file_logo_dark" accept="image/*" onchange="handleFileSelect(event, 'logo_dark_url', 'prev_logo_dark')">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <img id="prev_logo_dark" src="" style="display: none;">
+              </div>
+              <input type="url" id="logo_dark_url" placeholder="O pega URL https://..." class="search-input" style="margin-top: 0.5rem; font-size: 0.8rem; padding: 0.5rem 0.75rem;" oninput="updatePreview('logo_dark_url', 'prev_logo_dark')">
             </div>
+
           </div>
         </div>
 
@@ -55,24 +96,23 @@
           <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">2. Pedidos por WhatsApp</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Número de WhatsApp para recibir pedidos (con código de país sin +)</label>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Número de WhatsApp para recibir pedidos</label>
               <input type="text" id="whatsapp_number" placeholder="Ej: 5493513082238" class="search-input" style="margin: 0;">
             </div>
             <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Compra Mínima Mayorista ($)</label>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Compra Mínima ($)</label>
               <input type="number" id="min_purchase" placeholder="15000" class="search-input" style="margin: 0;">
             </div>
             <div style="grid-column: 1/-1;">
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Plantilla del Mensaje de Pedido</label>
               <textarea id="whatsapp_message_template" rows="4" placeholder="Hola! Quiero realizar un pedido en IMPORT FULL:&#10;&#10;*Cliente:* {nombre}&#10;*Teléfono:* {telefono}&#10;*Dirección:* {direccion}&#10;&#10;*Detalle del Pedido:*&#10;{productos}&#10;&#10;*Total Estimado:* ${total}" class="search-input" style="width: 100%; text-align: left; margin: 0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">Variables disponibles: <code>{nombre}</code>, <code>{telefono}</code>, <code>{direccion}</code>, <code>{productos}</code>, <code>{total}</code>.</div>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 3: DATOS DEL FOOTER (DIRECCIÓN Y HORARIOS) -->
+        <!-- SECTION 3: DATOS DEL FOOTER -->
         <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">3. Dirección y Horarios de Atención (Footer)</h3>
+          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">3. Dirección y Horarios de Atención</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Dirección del Local / Depósito</label>
@@ -89,61 +129,12 @@
           </div>
         </div>
 
-        <!-- SECTION 4: FOTOS DE CATEGORÍAS -->
+        <!-- SECTION 4: DRAG & DROP FOTOS DE CATEGORÍAS -->
         <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
-          <h3 style="color: #f97316; margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 800;">4. Imágenes Portada para Categorías</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Ingresa la URL de la imagen de fondo para cada tarjeta de categoría:</p>
+          <h3 style="color: #f97316; margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 800;">4. Imágenes Portada para Categorías (Drag & Drop)</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Arrastrá la imagen sobre la tarjeta correspondiente para asignarla:</p>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BAZAR</label>
-              <input type="url" id="cat_img_BAZAR" placeholder="URL imagen Bazar..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BELLEZA</label>
-              <input type="url" id="cat_img_BELLEZA" placeholder="URL imagen Belleza..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">JUGUETERIA</label>
-              <input type="url" id="cat_img_JUGUETERIA" placeholder="URL imagen Juguetería..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">BIJOUTERIE</label>
-              <input type="url" id="cat_img_BIJOUTERIE" placeholder="URL imagen Bijouterie..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">ELECTRONICA</label>
-              <input type="url" id="cat_img_ELECTRONICA" placeholder="URL imagen Electrónica..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">LIBRERIA</label>
-              <input type="url" id="cat_img_LIBRERIA" placeholder="URL imagen Librería..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">COTILLON</label>
-              <input type="url" id="cat_img_COTILLON" placeholder="URL imagen Cotillón..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">FERRETERIA</label>
-              <input type="url" id="cat_img_FERRETERIA" placeholder="URL imagen Ferretería..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">INDUMENTARIA</label>
-              <input type="url" id="cat_img_INDUMENTARIA" placeholder="URL imagen Indumentaria..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">NAVIDAD</label>
-              <input type="url" id="cat_img_NAVIDAD" placeholder="URL imagen Navidad..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">TELEFONIA</label>
-              <input type="url" id="cat_img_TELEFONIA" placeholder="URL imagen Telefonía..." class="search-input" style="margin: 0;">
-            </div>
-            <div>
-              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem; font-weight: 700; font-size: 0.8rem;">DESCARTABLE</label>
-              <input type="url" id="cat_img_DESCARTABLE" placeholder="URL imagen Descartables..." class="search-input" style="margin: 0;">
-            </div>
-          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem;" id="categoryDropzonesContainer"></div>
         </div>
 
         <button type="submit" class="btn-add" style="width: 100%; height: 50px; justify-content: center; font-size: 1.1rem; border-radius: 0.75rem;">Guardar Todos los Cambios</button>
@@ -154,6 +145,83 @@
   <script>
     let token = localStorage.getItem('adminToken');
     if (token) showPanel();
+
+    const categoriesList = [
+      'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE',
+      'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA',
+      'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
+    ];
+
+    function renderCategoryDropzones() {
+      const container = document.getElementById('categoryDropzonesContainer');
+      container.innerHTML = categoriesList.map(cat => `
+        <div>
+          <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.8rem;">${cat}</label>
+          <div class="dropzone" onclick="triggerFileInput('file_cat_${cat}')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'cat_img_${cat}', 'prev_cat_${cat}')">
+            <input type="file" id="file_cat_${cat}" accept="image/*" onchange="handleFileSelect(event, 'cat_img_${cat}', 'prev_cat_${cat}')">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">📷 Arrastrar imagen ${cat}</div>
+            <img id="prev_cat_${cat}" src="" style="display: none; height: 60px;">
+          </div>
+          <input type="url" id="cat_img_${cat}" placeholder="URL https://..." class="search-input" style="margin-top: 0.4rem; font-size: 0.75rem; padding: 0.4rem 0.6rem;" oninput="updatePreview('cat_img_${cat}', 'prev_cat_${cat}')">
+        </div>
+      `).join('');
+    }
+
+    renderCategoryDropzones();
+
+    function triggerFileInput(fileInputId) {
+      document.getElementById(fileInputId).click();
+    }
+
+    function handleDragOver(e, dropzoneEl) {
+      e.preventDefault();
+      dropzoneEl.classList.add('dragover');
+    }
+
+    function handleDragLeave(dropzoneEl) {
+      dropzoneEl.classList.remove('dragover');
+    }
+
+    function handleDrop(e, targetInputId, previewImgId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        processFile(files[0], targetInputId, previewImgId);
+      }
+    }
+
+    function handleFileSelect(e, targetInputId, previewImgId) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        processFile(files[0], targetInputId, previewImgId);
+      }
+    }
+
+    function processFile(file, targetInputId, previewImgId) {
+      if (!file.type.startsWith('image/')) {
+        return alert('Por favor selecciona un archivo de imagen válido');
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        document.getElementById(targetInputId).value = dataUrl;
+        updatePreview(targetInputId, previewImgId);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updatePreview(targetInputId, previewImgId) {
+      const url = document.getElementById(targetInputId).value;
+      const img = document.getElementById(previewImgId);
+      if (url && url.trim() !== '') {
+        img.src = url;
+        img.style.display = 'inline-block';
+      } else {
+        img.style.display = 'none';
+      }
+    }
 
     async function handleLogin(e) {
       e.preventDefault();
@@ -187,7 +255,17 @@
 
         for (const [key, val] of Object.entries(config)) {
           const input = document.getElementById(key);
-          if (input) input.value = val;
+          if (input) {
+            input.value = val;
+            if (key.startsWith('cat_img_')) {
+              const catName = key.replace('cat_img_', '');
+              updatePreview(key, `prev_cat_${catName}`);
+            } else if (key === 'logo_light_url') {
+              updatePreview(key, 'prev_logo_light');
+            } else if (key === 'logo_dark_url') {
+              updatePreview(key, 'prev_logo_dark');
+            }
+          }
         }
       } catch (err) {}
     }

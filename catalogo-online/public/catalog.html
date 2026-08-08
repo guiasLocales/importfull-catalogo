@@ -30,7 +30,7 @@
 
   <main class="container">
     <div class="min-purchase-banner" id="minPurchaseBanner">
-      Compra mínima mayorista: $15.000
+      Compra mínima: $15.000
     </div>
 
     <!-- 4 KPI Header Cards -->
@@ -241,7 +241,7 @@
         if (confRes.ok) {
           config = await confRes.json();
           const minP = parseFloat(config.min_purchase || 15000);
-          document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+          document.getElementById('minPurchaseBanner').textContent = `Compra mínima: $${minP.toLocaleString('es-AR')}`;
           if (config.store_address) {
             document.getElementById('footerAddressLink').textContent = config.store_address;
             document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
