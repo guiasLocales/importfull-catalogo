@@ -7,18 +7,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const defaultCategories = [
-  'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
-  'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
-  'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
-];
-
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   next();
 });
 
-// 1. GET /api/categories
+// Diagnostic route to test DB connection from Vercel serverless
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const rows = await db.query('SELECT COUNT(*) AS total FROM product_catalog_sync');
+    const categories = await db.query('SELECT DISTINCT product_type_path FROM product_catalog_sync WHERE product_type_path IS NOT NULL LIMIT 10');
+    res.json({
+      status: 'SUCCESS',
+      total_products: rows[0].total,
+      sample_categories: categories.map(c => c.product_type_path),
+      host_used: process.env.DB_HOST || process.env.Host || '34.55.226.178'
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'ERROR',
+      message: err.message,
+      code: err.code,
+      errno: err.errno,
+      syscall: err.syscall,
+      host_tried: process.env.DB_HOST || process.env.Host || '34.55.226.178'
+    });
+  }
+});
+
+// 1. GET /api/categories (Strict live query, return DB rows or error)
 app.get('/api/categories', async (req, res) => {
   try {
     const rows = await db.query(`
@@ -28,14 +45,14 @@ app.get('/api/categories', async (req, res) => {
       ORDER BY product_type_path ASC
     `);
     const categories = rows.map(r => r.product_type_path);
-    if (categories.length > 0) return res.json(categories);
-    res.json(defaultCategories);
+    res.json(categories);
   } catch (err) {
-    res.json(defaultCategories);
+    console.error('Categories DB Error:', err.message);
+    res.status(500).json({ error: 'Error de conexión a la base de datos', detail: err.message });
   }
 });
 
-// 2. GET /api/products?category=X&search=Y (Flexible case-insensitive matching)
+// 2. GET /api/products?category=X&search=Y (Strict live query using price column)
 app.get('/api/products', async (req, res) => {
   try {
     const { category, search } = req.query;
@@ -71,8 +88,8 @@ app.get('/api/products', async (req, res) => {
     const rows = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error('Error querying products:', err);
-    res.json([]);
+    console.error('Products DB Error:', err.message);
+    res.status(500).json({ error: 'Error de conexión a la base de datos', detail: err.message });
   }
 });
 
@@ -89,8 +106,7 @@ app.get('/api/config', async (req, res) => {
     res.json({
       min_purchase: '15000',
       discount_qty_1: '10',
-      discount_qty_2: '20',
-      store_hours: 'Lunes a Viernes: 09:00 a 18:00 hs'
+      discount_qty_2: '20'
     });
   }
 });
