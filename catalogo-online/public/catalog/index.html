@@ -19,13 +19,10 @@
       </a>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Cambiar Tema Modo Claro / Oscuro">☀️</button>
-      <button class="btn-cart" onclick="toggleCartModal()">
-        <span>🛒 Carrito</span>
-        <span class="badge-cart-qty" id="cartCountBadge">0</span>
-      </button>
-    </div>
+    <button class="btn-cart" onclick="toggleCartModal()">
+      <span>🛒 Carrito</span>
+      <span class="badge-cart-qty" id="cartCountBadge">0</span>
+    </button>
   </header>
 
   <main class="container">
@@ -197,28 +194,24 @@
       const savedTheme = localStorage.getItem('theme') || 'dark';
       if (savedTheme === 'light') {
         document.body.classList.add('light-theme');
-        document.getElementById('themeToggleBtn').textContent = '🌙';
       } else {
         document.body.classList.remove('light-theme');
-        document.getElementById('themeToggleBtn').textContent = '☀️';
       }
-      updateHeaderLogo();
-    }
-
-    function toggleTheme() {
-      const isLight = document.body.classList.toggle('light-theme');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      document.getElementById('themeToggleBtn').textContent = isLight ? '🌙' : '☀️';
       updateHeaderLogo();
     }
 
     function updateHeaderLogo() {
       const isLight = document.body.classList.contains('light-theme');
+      let logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
+
+      if (!logoUrl || logoUrl.trim() === '') {
+        logoUrl = config.logo_light_url || config.logo_dark_url || config.logo_url || config.logo;
+      }
+
       const logoImg = document.getElementById('headerLogoImg');
       const brandText = document.getElementById('headerBrandText');
 
-      const logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
-      if (logoUrl) {
+      if (logoUrl && logoUrl.trim() !== '') {
         logoImg.src = logoUrl;
         logoImg.style.display = 'block';
         brandText.style.display = 'none';

@@ -55,23 +55,10 @@ body {
 }
 
 .brand-logo-img {
-  max-height: 42px;
+  max-height: 46px;
+  max-width: 180px;
   object-fit: contain;
-}
-
-.theme-toggle-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: block;
 }
 
 .container {
@@ -82,13 +69,15 @@ body {
 
 .hero-center {
   text-align: center;
-  margin: 2.5rem 0;
+  margin: 2.5rem 0 1.5rem 0;
 }
 
 .logo-center {
-  max-height: 80px;
+  max-height: 110px;
+  max-width: 280px;
   object-fit: contain;
-  margin-bottom: 1rem;
+  margin: 0 auto 1.25rem auto;
+  display: block;
 }
 
 .min-purchase-banner {
@@ -246,12 +235,13 @@ body {
   font-weight: 800;
 }
 
-/* Flat Circular Social Icons */
+/* Flat Circular Social Icons Bar & Integrated Theme Toggle */
 .social-bar {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.85rem;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
 }
 
 .social-icon-btn {
@@ -265,6 +255,7 @@ body {
   justify-content: center;
   color: var(--text-primary);
   text-decoration: none;
+  cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -278,6 +269,7 @@ body {
   width: 20px;
   height: 20px;
   fill: currentColor;
+  stroke: none;
 }
 
 /* Custom Footer Box matching image layout */
