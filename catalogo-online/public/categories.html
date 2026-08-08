@@ -9,20 +9,11 @@
 </head>
 <body>
 
-  <header class="top-header">
-    <div class="brand-title">
-      <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-primary);">
-        <img id="navLogoImg" src="" style="display: none;" class="brand-logo-img" alt="IMPORT FULL">
-        <span id="navBrandText" style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
-      </a>
-    </div>
-  </header>
-
-  <main class="container">
+  <main class="container" style="padding-top: 2rem;">
     <div class="hero-center">
-      <img id="heroLogoImg" src="" style="display: none;" class="logo-center" alt="IMPORT FULL">
-      <div id="heroBrandText" style="font-weight: 800; font-size: 2.2rem; color: #f97316;">IMPORT FULL</div>
-      <h1>Catálogo de Productos</h1>
+      <img id="heroLogoImg" src="" style="display: none; max-height: 120px; width: auto; object-fit: contain; margin: 0 auto 1.25rem auto;" class="logo-center" alt="IMPORT FULL" onerror="handleLogoError()">
+      <div id="heroBrandText" style="font-weight: 800; font-size: 2.5rem; color: #f97316;">IMPORT FULL</div>
+      <h1 style="font-size: 1.8rem; margin-top: 0.5rem;">Catálogo de Productos</h1>
       <p style="color: var(--text-secondary); margin-top: 0.5rem;">Seleccioná una categoría para ver precios y armar tu pedido</p>
       
       <!-- Flat Circular Vector Social Icons & Integrated Theme Switcher -->
@@ -103,32 +94,27 @@
       updateLogos();
     }
 
+    function handleLogoError() {
+      document.getElementById('heroLogoImg').style.display = 'none';
+      document.getElementById('heroBrandText').style.display = 'block';
+    }
+
     function updateLogos() {
       const isLight = document.body.classList.contains('light-theme');
       let logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
       
-      // Fallbacks if one is missing
       if (!logoUrl || logoUrl.trim() === '') {
-        logoUrl = config.logo_light_url || config.logo_dark_url || config.logo_url || config.logo;
+        logoUrl = config.logo_dark_url || config.logo_light_url || config.logo_url || config.logo;
       }
 
-      const navLogo = document.getElementById('navLogoImg');
-      const navText = document.getElementById('navBrandText');
       const heroLogo = document.getElementById('heroLogoImg');
       const heroText = document.getElementById('heroBrandText');
 
       if (logoUrl && logoUrl.trim() !== '') {
-        navLogo.src = logoUrl;
-        navLogo.style.display = 'block';
-        navText.style.display = 'none';
-
         heroLogo.src = logoUrl;
         heroLogo.style.display = 'block';
         heroText.style.display = 'none';
       } else {
-        navLogo.style.display = 'none';
-        navText.style.display = 'block';
-
         heroLogo.style.display = 'none';
         heroText.style.display = 'block';
       }
