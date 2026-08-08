@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
 
   const { category, search } = req.query;
 
-  let sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock FROM product_catalog_sync WHERE price IS NOT NULL AND price > 0";
+  let sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock, description, brand FROM product_catalog_sync WHERE price IS NOT NULL AND price > 0 AND stock IS NOT NULL AND stock > 0";
 
   if (category) {
     const cleanCat = category.replace(/'/g, "''").toLowerCase();
@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
       }
     });
   }).on('error', (err) => {
-    console.error('Error fetching all live products:', err);
+    console.error('Error fetching in-stock products:', err);
     res.status(200).json([]);
   });
 };

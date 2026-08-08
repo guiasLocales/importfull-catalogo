@@ -31,7 +31,7 @@
     <!-- 4 KPI Header Cards -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-title" id="kpiLabel1">PRODUCTOS</div>
+        <div class="kpi-title" id="kpiLabel1">PRODUCTOS CON STOCK</div>
         <div class="kpi-value" id="kpiTotalProducts">0</div>
       </div>
       <div class="kpi-card">
@@ -60,11 +60,12 @@
           <tr>
             <th>PRODUCTO</th>
             <th>PRECIO</th>
+            <th>STOCK</th>
             <th style="text-align: right;">ACCIÓN</th>
           </tr>
         </thead>
         <tbody id="catalogTableBody">
-          <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando productos...</td></tr>
+          <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando productos con stock...</td></tr>
         </tbody>
       </table>
     </div>
@@ -91,7 +92,7 @@
             <span style="margin: 0 0.5rem;">•</span>
             <span>Marca: <strong id="detailBrand" style="color: #e5e7eb;">-</strong></span>
             <span style="margin: 0 0.5rem;">•</span>
-            <span>Stock: <strong id="detailStock" style="color: #e5e7eb;">-</strong></span>
+            <span>Stock: <strong id="detailStock" style="color: #4ade80;">-</strong></span>
           </div>
 
           <div style="font-size: 1.8rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;" id="detailPrice">$0</div>
@@ -188,13 +189,14 @@
       const tbody = document.getElementById('catalogTableBody');
 
       if (products.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos con stock en esta categoría.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = products.map((p) => {
         const price = parseFloat(p.local_price || 0);
         const imgUrl = p.product_image_b_format_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80';
+        const stockQty = p.stock || 0;
 
         return `
           <tr style="cursor: pointer;" onclick="openDetailModal(${p.id})">
@@ -209,6 +211,9 @@
             </td>
             <td>
               <span class="product-name" style="font-weight: 800; font-size: 1.1rem; color: #fff;">$${price.toLocaleString('es-AR')}</span>
+            </td>
+            <td>
+              <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(74, 222, 128, 0.3); display: inline-block;">${stockQty} u</span>
             </td>
             <td style="text-align: right;" onclick="event.stopPropagation()">
               <button class="btn-add" onclick="openDetailModal(${p.id})">Ver Producto</button>
@@ -229,7 +234,7 @@
       document.getElementById('detailCategory').textContent = selectedProduct.product_type_path || currentCategory || 'GENERAL';
       document.getElementById('detailCode').textContent = selectedProduct.product_code || '-';
       document.getElementById('detailBrand').textContent = selectedProduct.brand || 'IMPORT FULL';
-      document.getElementById('detailStock').textContent = selectedProduct.stock !== undefined ? `${selectedProduct.stock} u` : 'Disponible';
+      document.getElementById('detailStock').textContent = `${selectedProduct.stock || 0} u disponibles`;
       
       const price = parseFloat(selectedProduct.local_price || 0);
       document.getElementById('detailPrice').textContent = `$${price.toLocaleString('es-AR')}`;
