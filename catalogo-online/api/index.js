@@ -7,79 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const defaultCategories = [
-  'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
-  'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
-  'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
-];
-
-// Helper: Ensure auxiliary tables exist on startup
-async function initTables() {
-  try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS store_config (
-        \`key\` VARCHAR(255) PRIMARY KEY,
-        \`value\` TEXT NOT NULL
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        customer_name VARCHAR(255) NOT NULL,
-        customer_phone VARCHAR(100) NOT NULL,
-        customer_email VARCHAR(255),
-        total DECIMAL(12, 2) NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS order_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        order_id INT NOT NULL,
-        product_code VARCHAR(255) NOT NULL,
-        product_name VARCHAR(255) NOT NULL,
-        quantity DECIMAL(10, 2) NOT NULL,
-        unit_price DECIMAL(12, 2) NOT NULL,
-        total_price DECIMAL(12, 2) NOT NULL,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `);
-
-    const rows = await db.query('SELECT 1 FROM store_config LIMIT 1');
-    if (rows.length === 0) {
-      const defaults = [
-        ['min_purchase', '15000'],
-        ['discount_qty_1', '10'],
-        ['discount_qty_2', '20'],
-        ['store_hours', 'Lunes a Viernes: 09:00 a 18:00 hs'],
-        ['store_address', 'Av. Principal 1234, Ciudad'],
-        ['store_maps_url', 'https://maps.google.com'],
-        ['whatsapp_number', '5491100000000'],
-        ['instagram_url', 'https://instagram.com'],
-        ['facebook_url', 'https://facebook.com']
-      ];
-      for (const [k, v] of defaults) {
-        await db.query('INSERT IGNORE INTO store_config (`key`, `value`) VALUES (?, ?)', [k, v]);
-      }
-    }
-  } catch (err) {
-    console.error('Error initializing tables:', err.message);
-  }
-}
-
-let tablesInitialized = false;
-app.use(async (req, res, next) => {
-  if (!tablesInitialized) {
-    initTables().catch(() => {});
-    tablesInitialized = true;
-  }
+// Prevent response caching for real-time live data
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   next();
 });
 
-// 1. GET /api/categories
+// 1. GET /api/categories (Real-time live DB query)
 app.get('/api/categories', async (req, res) => {
   try {
     const rows = await db.query(`
@@ -89,14 +23,14 @@ app.get('/api/categories', async (req, res) => {
       ORDER BY product_type_path ASC
     `);
     const categories = rows.map(r => r.product_type_path);
-    if (categories.length > 0) return res.json(categories);
-    res.json(defaultCategories);
+    res.json(categories);
   } catch (err) {
-    res.json(defaultCategories);
+    console.error('Error querying categories:', err);
+    res.status(500).json({ error: 'Error al consultar categorías en tiempo real', detail: err.message });
   }
 });
 
-// 2. GET /api/products?category=X&search=Y
+// 2. GET /api/products?category=X&search=Y (Real-time live DB query)
 app.get('/api/products', async (req, res) => {
   try {
     const { category, search } = req.query;
@@ -127,12 +61,13 @@ app.get('/api/products', async (req, res) => {
       params.push(`%${search}%`);
     }
 
-    query += ` ORDER BY product_name ASC LIMIT 100`;
+    query += ` ORDER BY product_name ASC LIMIT 200`;
 
     const rows = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.json([]);
+    console.error('Error querying products:', err);
+    res.status(500).json({ error: 'Error al consultar productos en tiempo real', detail: err.message });
   }
 });
 
