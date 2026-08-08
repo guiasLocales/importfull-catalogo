@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo Online | IMPORT FULL</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <main class="container">
+    <div class="hero-center">
+      <div class="logo-center" style="font-weight: 800; font-size: 2.2rem; color: #f97316;">IMPORT FULL</div>
+      <h1>Catálogo de Productos</h1>
+      <p>Seleccioná una categoría para ver precios locales y armar tu pedido mayorista</p>
+      
+      <div class="social-bar">
+        <a id="socialIg" href="#" target="_blank" class="social-icon-btn">📸</a>
+        <a id="socialFb" href="#" target="_blank" class="social-icon-btn">👍</a>
+        <a id="socialWp" href="#" target="_blank" class="social-icon-btn">💬</a>
+      </div>
+    </div>
+
+    <div class="categories-grid" id="categoriesContainer"></div>
+  </main>
+
+  <script>
+    const categoryImageMap = {
+      'BAZAR': 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
+      'BELLEZA': 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
+      'JUGUETERIA': 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
+      'BIJOUTERIE': 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
+      'ELECTRONICA': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+      'LIBRERIA': 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80',
+      'COTILLON': 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
+      'FERRETERIA': 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+      'INDUMENTARIA': 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=600&q=80',
+      'NAVIDAD': 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?auto=format&fit=crop&w=600&q=80',
+      'TELEFONIA': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+      'DESCARTABLE': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80'
+    };
+
+    const fallbackList = [
+      'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE', 
+      'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA', 
+      'INDUMENTARIA', 'NAVIDAD', 'TELEFONIA', 'DESCARTABLE'
+    ];
+
+    function renderCategoryGrid(categories) {
+      const container = document.getElementById('categoriesContainer');
+      const list = (Array.isArray(categories) && categories.length > 0) ? categories : fallbackList;
+
+      container.innerHTML = list.map((cat, idx) => {
+        const upperCat = String(cat || '').toUpperCase();
+        const bgImg = categoryImageMap[upperCat] || categoryImageMap['BAZAR'];
+        return `
+          <div class="category-card" style="background-image: url('${bgImg}');" onclick="window.location.href='/catalog?category=${encodeURIComponent(cat)}'">
+            <div class="category-card-content">
+              <div class="category-card-title">${cat}</div>
+              <div class="category-card-subtitle">Ver productos locales de ${cat} &rarr;</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function initPage() {
+      renderCategoryGrid(fallbackList);
+
+      try {
+        const catRes = await fetch('/api/categories');
+        if (catRes.ok) {
+          const categories = await catRes.json();
+          if (Array.isArray(categories) && categories.length > 0) {
+            renderCategoryGrid(categories);
+          }
+        }
+      } catch (err) {}
+
+      try {
+        const confRes = await fetch('/api/config');
+        if (confRes.ok) {
+          const config = await confRes.json();
+          if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
+          if (config.facebook_url) document.getElementById('socialFb').href = config.facebook_url;
+          if (config.whatsapp_number) document.getElementById('socialWp').href = `https://wa.me/${config.whatsapp_number}`;
+        }
+      } catch (err) {}
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

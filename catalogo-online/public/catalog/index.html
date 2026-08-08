@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo | IMPORT FULL</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="top-header">
+    <div class="brand-title">
+      <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #fff;">
+        <span style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
+        <span>•</span>
+        <span id="headerCategoryName" style="color: #9ca3af;">Catálogo</span>
+      </a>
+    </div>
+    <button class="btn-cart" onclick="toggleCartModal()">
+      <span>🛒 Carrito</span>
+      <span class="badge-cart-qty" id="cartCountBadge">0</span>
+    </button>
+  </header>
+
+  <main class="container">
+    <div class="min-purchase-banner" id="minPurchaseBanner">
+      Compra mínima mayorista: $15.000
+    </div>
+
+    <!-- 4 KPI Header Cards for IMPORT FULL -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title" id="kpiLabel1">PRODUCTOS</div>
+        <div class="kpi-value" id="kpiTotalProducts">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">PRODUCTOS EN CARRITO</div>
+        <div class="kpi-value" id="kpiCartItemsCount">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">UNIDADES TOTALES</div>
+        <div class="kpi-value" id="kpiCartUnits">0 u</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">SUBTOTAL ESTIMADO</div>
+        <div class="kpi-value" id="kpiCartSubtotal" style="color: #f97316;">$0</div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o código del producto..." oninput="handleSearch()">
+    </div>
+
+    <!-- Product Table -->
+    <div class="table-container">
+      <table class="catalog-table">
+        <thead>
+          <tr>
+            <th>PRODUCTO</th>
+            <th>PRECIO LOCAL</th>
+            <th>PRECIO MAYORISTA</th>
+            <th>CONDICIÓN MAYORISTA</th>
+            <th style="text-align: right;">ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody id="catalogTableBody">
+          <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Cargando productos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Checkout / Cart Modal -->
+  <div class="modal-backdrop" id="cartModal">
+    <div class="modal-box">
+      <h2 style="margin-bottom: 1rem; color: #fff;">Tu Carrito de Pedido</h2>
+      <div id="cartItemsList" style="max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem;"></div>
+
+      <div style="border-top: 1px solid #262626; padding-top: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 1.1rem; color: var(--text-secondary);">Total Estimado:</span>
+        <span id="modalTotal" style="font-size: 1.5rem; font-weight: 800; color: #f97316;">$0</span>
+      </div>
+
+      <form onsubmit="submitOrder(event)">
+        <input type="text" id="cName" placeholder="Tu Nombre Completo" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 0.75rem;">
+        <input type="tel" id="cPhone" placeholder="Teléfono / WhatsApp" required class="search-input" style="width: 100%; text-align: left; margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn-add" style="background: #262626; flex: 1;" onclick="toggleCartModal()">Cerrar</button>
+          <button type="submit" class="btn-add" style="flex: 2;">Enviar Pedido por WhatsApp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let cart = [];
+    let config = {};
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentCategory = urlParams.get('category') || '';
+
+    const defaultProductImgs = [
+      'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80',
+      'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=150&q=80'
+    ];
+
+    async function initCatalog() {
+      if (currentCategory) {
+        document.getElementById('headerCategoryName').textContent = currentCategory;
+        document.getElementById('kpiLabel1').textContent = `PRODUCTOS DE ${currentCategory.toUpperCase()}`;
+      }
+
+      try {
+        const confRes = await fetch('/api/config');
+        config = await confRes.json();
+        const minP = parseFloat(config.min_purchase || 15000);
+        document.getElementById('minPurchaseBanner').textContent = `Compra mínima mayorista: $${minP.toLocaleString('es-AR')}`;
+      } catch (err) {}
+
+      loadProducts();
+    }
+
+    async function loadProducts(search = '') {
+      try {
+        let url = '/api/products?';
+        if (currentCategory) url += `category=${encodeURIComponent(currentCategory)}&`;
+        if (search) url += `search=${encodeURIComponent(search)}`;
+
+        const res = await fetch(url);
+        let data = await res.json();
+
+        products = Array.isArray(data) ? data : [];
+        renderTable();
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    function renderTable() {
+      document.getElementById('kpiTotalProducts').textContent = products.length;
+      const tbody = document.getElementById('catalogTableBody');
+
+      if (products.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos cargados en esta categoría.</td></tr>`;
+        return;
+      }
+
+      const discountPercent1 = parseFloat(config.discount_qty_1 || 10);
+
+      tbody.innerHTML = products.map((p, idx) => {
+        const localPrice = parseFloat(p.local_price || 0);
+        const wholesalePrice = localPrice > 0 ? localPrice * (1 - discountPercent1 / 100) : 0;
+        const imgUrl = p.product_image_b_format_url || defaultProductImgs[idx % defaultProductImgs.length];
+
+        return `
+          <tr>
+            <td>
+              <div class="product-cell">
+                <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
+                <div>
+                  <div class="product-name">${p.product_name}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="product-name">$${localPrice.toLocaleString('es-AR')}</span>
+            </td>
+            <td>
+              <span class="price-offer">$${wholesalePrice.toLocaleString('es-AR')}</span>
+            </td>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">
+              Llevando +5 u (-${discountPercent1}%)
+            </td>
+            <td style="text-align: right;">
+              <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function addToCart(pId) {
+      const prod = products.find(p => p.id === pId);
+      if (!prod) return;
+
+      const price = parseFloat(prod.local_price || 0);
+      const existing = cart.find(item => item.id === pId);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...prod, price, qty: 1 });
+      }
+
+      updateCartStats();
+    }
+
+    function updateCartStats() {
+      const count = cart.length;
+      const totalUnits = cart.reduce((acc, i) => acc + i.qty, 0);
+      const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+
+      document.getElementById('cartCountBadge').textContent = totalUnits;
+      document.getElementById('kpiCartItemsCount').textContent = count;
+      document.getElementById('kpiCartUnits').textContent = `${totalUnits} u`;
+      document.getElementById('kpiCartSubtotal').textContent = `$${subtotal.toLocaleString('es-AR')}`;
+      document.getElementById('modalTotal').textContent = `$${subtotal.toLocaleString('es-AR')}`;
+
+      const list = document.getElementById('cartItemsList');
+      list.innerHTML = cart.map(item => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #262626;">
+          <div>
+            <div style="font-weight: 700; color: #fff;">${item.product_name}</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">$${item.price.toLocaleString('es-AR')} x ${item.qty}</div>
+          </div>
+          <div style="font-weight: 800; color: #f97316;">$${(item.price * item.qty).toLocaleString('es-AR')}</div>
+        </div>
+      `).join('');
+    }
+
+    let timer;
+    function handleSearch() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        loadProducts(document.getElementById('searchInput').value);
+      }, 300);
+    }
+
+    function toggleCartModal() {
+      document.getElementById('cartModal').classList.toggle('active');
+    }
+
+    async function submitOrder(e) {
+      e.preventDefault();
+      if (cart.length === 0) return alert('Agrega productos al carrito primero');
+
+      const name = document.getElementById('cName').value;
+      const phone = document.getElementById('cPhone').value;
+      const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+
+      const wpNum = config.whatsapp_number || '5491100000000';
+      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price}`).join('%0A');
+      const text = encodeURIComponent(`Hola! Quiero realizar un pedido en IMPORT FULL:%0A%0A*Cliente:* ${name}%0A*Teléfono:* ${phone}%0A%0A*Detalle del Pedido:*%0A`) + itemsStr + encodeURIComponent(`%0A%0A*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`);
+
+      window.open(`https://wa.me/${wpNum}?text=${text}`, '_blank');
+      toggleCartModal();
+    }
+
+    initCatalog();
+  </script>
+</body>
+</html>
