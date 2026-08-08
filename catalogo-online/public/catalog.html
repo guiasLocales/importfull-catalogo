@@ -28,7 +28,7 @@
       Compra mínima mayorista: $15.000
     </div>
 
-    <!-- 4 KPI Header Cards for IMPORT FULL -->
+    <!-- 4 KPI Header Cards -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-title" id="kpiLabel1">PRODUCTOS</div>
@@ -59,20 +59,63 @@
         <thead>
           <tr>
             <th>PRODUCTO</th>
-            <th>PRECIO LOCAL</th>
-            <th>PRECIO MAYORISTA</th>
-            <th>CONDICIÓN MAYORISTA</th>
+            <th>PRECIO</th>
             <th style="text-align: right;">ACCIÓN</th>
           </tr>
         </thead>
         <tbody id="catalogTableBody">
-          <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Cargando productos...</td></tr>
+          <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando productos...</td></tr>
         </tbody>
       </table>
     </div>
   </main>
 
-  <!-- Checkout / Cart Modal -->
+  <!-- Product Detail Modal -->
+  <div class="modal-backdrop" id="productDetailModal">
+    <div class="modal-box" style="max-width: 600px; padding: 2rem;">
+      <button style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #9ca3af; font-size: 1.5rem; cursor: pointer;" onclick="closeDetailModal()">&times;</button>
+      
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Product Image Carousel -->
+        <div style="text-align: center; background: #0a0a0c; padding: 1rem; border-radius: 0.75rem; border: 1px solid #262626; position: relative;">
+          <img id="detailImg" src="" style="max-height: 260px; max-width: 100%; object-fit: contain; border-radius: 0.5rem;" alt="Producto">
+          <div id="carouselControls" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.75rem;"></div>
+        </div>
+
+        <!-- Product Info -->
+        <div>
+          <div style="font-size: 0.85rem; color: #f97316; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem;" id="detailCategory">CATEGORÍA</div>
+          <h2 style="color: #fff; font-size: 1.4rem; font-weight: 800; line-height: 1.3; margin-bottom: 0.5rem;" id="detailTitle">Nombre del Producto</h2>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <span>Código: <strong id="detailCode" style="color: #e5e7eb;">-</strong></span>
+            <span style="margin: 0 0.5rem;">•</span>
+            <span>Marca: <strong id="detailBrand" style="color: #e5e7eb;">-</strong></span>
+            <span style="margin: 0 0.5rem;">•</span>
+            <span>Stock: <strong id="detailStock" style="color: #e5e7eb;">-</strong></span>
+          </div>
+
+          <div style="font-size: 1.8rem; font-weight: 800; color: #f97316; margin-bottom: 1rem;" id="detailPrice">$0</div>
+
+          <div style="background: #18181b; padding: 1rem; border-radius: 0.5rem; border: 1px solid #27272a; margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #9ca3af; margin-bottom: 0.5rem;">DESCRIPCIÓN DEL PRODUCTO</div>
+            <div style="font-size: 0.95rem; color: #d1d5db; line-height: 1.5; white-space: pre-line;" id="detailDescription">Sin descripción disponible.</div>
+          </div>
+
+          <!-- Quantity selector and Add button -->
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="display: flex; align-items: center; background: #262626; border-radius: 0.5rem; border: 1px solid #3f3f46;">
+              <button style="background: none; border: none; color: #fff; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(-1)">-</button>
+              <span id="detailQty" style="width: 40px; text-align: center; font-weight: 800; color: #fff;">1</span>
+              <button style="background: none; border: none; color: #fff; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer;" onclick="adjustModalQty(1)">+</button>
+            </div>
+            <button class="btn-add" style="flex: 1; height: 44px; justify-content: center; font-size: 1rem;" onclick="addDetailToCart()">Agregar al Carrito</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
   <div class="modal-backdrop" id="cartModal">
     <div class="modal-box">
       <h2 style="margin-bottom: 1rem; color: #fff;">Tu Carrito de Pedido</h2>
@@ -98,22 +141,13 @@
     let products = [];
     let cart = [];
     let config = {};
+    let selectedProduct = null;
+    let selectedQty = 1;
+    let currentImgIdx = 0;
+    let productImages = [];
 
     const urlParams = new URLSearchParams(window.location.search);
     const currentCategory = urlParams.get('category') || '';
-
-    const storeFallbackProducts = {
-      'BAZAR': [
-        { id: 101, product_code: 'BZ-001', product_name: 'Set de Cuencos Herméticos x3', local_price: 8500, product_image_b_format_url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80' },
-        { id: 102, product_code: 'BZ-002', product_name: 'Organizador Giratorio Multiuso', local_price: 12400, product_image_b_format_url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=150&q=80' },
-        { id: 103, product_code: 'BZ-003', product_name: 'Juego de Cubiertos Inox x24', local_price: 18900, product_image_b_format_url: 'https://images.unsplash.com/photo-1615865417217-1065fa8fa250?auto=format&fit=crop&w=150&q=80' },
-        { id: 104, product_code: 'BZ-004', product_name: 'Frasco de Vidrio Tapa Bambú 1L', local_price: 4200, product_image_b_format_url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=150&q=80' }
-      ],
-      'BELLEZA': [
-        { id: 201, product_code: 'BL-001', product_name: 'Set de Brochas de Maquillaje x12', local_price: 9800, product_image_b_format_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=150&q=80' },
-        { id: 202, product_code: 'BL-002', product_name: 'Espejo LED Táctil Recargable', local_price: 14500, product_image_b_format_url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=150&q=80' }
-      ]
-    };
 
     async function initCatalog() {
       if (currentCategory) {
@@ -140,22 +174,11 @@
         if (search) url += `search=${encodeURIComponent(search)}`;
 
         const res = await fetch(url);
-        let data = [];
         if (res.ok) {
-          data = await res.json();
+          products = await res.json();
         }
-
-        if (Array.isArray(data) && data.length > 0) {
-          products = data;
-        } else {
-          const catUpper = currentCategory.toUpperCase();
-          products = storeFallbackProducts[catUpper] || storeFallbackProducts['BAZAR'];
-        }
-
         renderTable();
       } catch (err) {
-        const catUpper = currentCategory.toUpperCase();
-        products = storeFallbackProducts[catUpper] || storeFallbackProducts['BAZAR'];
         renderTable();
       }
     }
@@ -165,59 +188,105 @@
       const tbody = document.getElementById('catalogTableBody');
 
       if (products.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos en esta categoría.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos.</td></tr>`;
         return;
       }
 
-      const discountPercent1 = parseFloat(config.discount_qty_1 || 10);
-
-      tbody.innerHTML = products.map((p, idx) => {
-        const localPrice = parseFloat(p.local_price || 0);
-        const wholesalePrice = localPrice > 0 ? localPrice * (1 - discountPercent1 / 100) : 0;
+      tbody.innerHTML = products.map((p) => {
+        const price = parseFloat(p.local_price || 0);
         const imgUrl = p.product_image_b_format_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80';
 
         return `
-          <tr>
+          <tr style="cursor: pointer;" onclick="openDetailModal(${p.id})">
             <td>
               <div class="product-cell">
                 <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
                 <div>
-                  <div class="product-name">${p.product_name}</div>
+                  <div class="product-name" style="font-weight: 700;">${p.product_name}</div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
                 </div>
               </div>
             </td>
             <td>
-              <span class="product-name">$${localPrice.toLocaleString('es-AR')}</span>
+              <span class="product-name" style="font-weight: 800; font-size: 1.1rem; color: #fff;">$${price.toLocaleString('es-AR')}</span>
             </td>
-            <td>
-              <span class="price-offer">$${wholesalePrice.toLocaleString('es-AR')}</span>
-            </td>
-            <td style="color: var(--text-secondary); font-size: 0.85rem;">
-              Llevando +5 u (-${discountPercent1}%)
-            </td>
-            <td style="text-align: right;">
-              <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
+            <td style="text-align: right;" onclick="event.stopPropagation()">
+              <button class="btn-add" onclick="openDetailModal(${p.id})">Ver Producto</button>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    function addToCart(pId) {
-      const prod = products.find(p => p.id === pId);
-      if (!prod) return;
+    function openDetailModal(pId) {
+      selectedProduct = products.find(p => p.id === pId);
+      if (!selectedProduct) return;
 
-      const price = parseFloat(prod.local_price || 0);
-      const existing = cart.find(item => item.id === pId);
+      selectedQty = 1;
+      document.getElementById('detailQty').textContent = selectedQty;
+
+      document.getElementById('detailTitle').textContent = selectedProduct.product_name || 'Producto';
+      document.getElementById('detailCategory').textContent = selectedProduct.product_type_path || currentCategory || 'GENERAL';
+      document.getElementById('detailCode').textContent = selectedProduct.product_code || '-';
+      document.getElementById('detailBrand').textContent = selectedProduct.brand || 'IMPORT FULL';
+      document.getElementById('detailStock').textContent = selectedProduct.stock !== undefined ? `${selectedProduct.stock} u` : 'Disponible';
+      
+      const price = parseFloat(selectedProduct.local_price || 0);
+      document.getElementById('detailPrice').textContent = `$${price.toLocaleString('es-AR')}`;
+      document.getElementById('detailDescription').textContent = selectedProduct.description || 'Producto importado de alta calidad. Para consultas o ventas al por mayor contáctanos por WhatsApp.';
+
+      // Image carousel setup
+      productImages = [];
+      if (selectedProduct.product_image_b_format_url) productImages.push(selectedProduct.product_image_b_format_url);
+      if (selectedProduct.drive_url) productImages.push(selectedProduct.drive_url);
+      if (productImages.length === 0) productImages.push('https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80');
+
+      currentImgIdx = 0;
+      updateCarouselImage();
+
+      document.getElementById('productDetailModal').classList.add('active');
+    }
+
+    function updateCarouselImage() {
+      document.getElementById('detailImg').src = productImages[currentImgIdx];
+      const controls = document.getElementById('carouselControls');
+
+      if (productImages.length > 1) {
+        controls.innerHTML = productImages.map((img, idx) => `
+          <button style="width: 10px; height: 10px; border-radius: 50%; border: none; background: ${idx === currentImgIdx ? '#f97316' : '#3f3f46'}; cursor: pointer;" onclick="setCarouselImg(${idx})"></button>
+        `).join('');
+      } else {
+        controls.innerHTML = '';
+      }
+    }
+
+    function setCarouselImg(idx) {
+      currentImgIdx = idx;
+      updateCarouselImage();
+    }
+
+    function closeDetailModal() {
+      document.getElementById('productDetailModal').classList.remove('active');
+    }
+
+    function adjustModalQty(delta) {
+      selectedQty = Math.max(1, selectedQty + delta);
+      document.getElementById('detailQty').textContent = selectedQty;
+    }
+
+    function addDetailToCart() {
+      if (!selectedProduct) return;
+      const price = parseFloat(selectedProduct.local_price || 0);
+      const existing = cart.find(item => item.id === selectedProduct.id);
 
       if (existing) {
-        existing.qty += 1;
+        existing.qty += selectedQty;
       } else {
-        cart.push({ ...prod, price, qty: 1 });
+        cart.push({ ...selectedProduct, price, qty: selectedQty });
       }
 
       updateCartStats();
+      closeDetailModal();
     }
 
     function updateCartStats() {
@@ -264,7 +333,7 @@
       const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
 
       const wpNum = config.whatsapp_number || '5491100000000';
-      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price}`).join('%0A');
+      const itemsStr = cart.map(i => `- ${i.product_name}: ${i.qty} u x $${i.price.toLocaleString('es-AR')}`).join('%0A');
       const text = encodeURIComponent(`Hola! Quiero realizar un pedido en IMPORT FULL:%0A%0A*Cliente:* ${name}%0A*Teléfono:* ${phone}%0A%0A*Detalle del Pedido:*%0A`) + itemsStr + encodeURIComponent(`%0A%0A*Total Estimado:* $${subtotal.toLocaleString('es-AR')}`);
 
       window.open(`https://wa.me/${wpNum}?text=${text}`, '_blank');
