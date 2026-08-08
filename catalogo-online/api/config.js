@@ -1,28 +1,5 @@
 const https = require('https');
 
-function execCloudRunQuery(sql) {
-  return new Promise((resolve) => {
-    const targetUrl = `https://inventory-app-418609185384.us-central1.run.app/api/test-db-query?query=${encodeURIComponent(sql)}`;
-    https.get(targetUrl, (apiRes) => {
-      let data = '';
-      apiRes.on('data', chunk => { data += chunk; });
-      apiRes.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          if (json.status === 'success' && Array.isArray(json.rows)) {
-            return resolve({ success: true, rows: json.rows });
-          }
-          resolve({ success: false, rows: [] });
-        } catch (e) {
-          resolve({ success: false, rows: [] });
-        }
-      });
-    }).on('error', () => {
-      resolve({ success: false, rows: [] });
-    });
-  });
-}
-
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
@@ -31,20 +8,21 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
-    const result = await execCloudRunQuery('SELECT `key`, `value` FROM store_config');
-    const configObj = {
-      min_purchase: '15000',
-      whatsapp_number: '5493513082238'
-    };
-
-    if (result.success && Array.isArray(result.rows)) {
-      result.rows.forEach(r => {
-        if (r.key && r.value !== undefined) {
-          configObj[r.key] = r.value;
+    https.get('https://inventory-app-418609185384.us-central1.run.app/api/public/config', (apiRes) => {
+      let data = '';
+      apiRes.on('data', chunk => { data += chunk; });
+      apiRes.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          return res.status(200).json(json);
+        } catch (e) {
+          return res.status(200).json({ min_purchase: '15000', whatsapp_number: '5493513082238' });
         }
       });
-    }
-    return res.status(200).json(configObj);
+    }).on('error', () => {
+      return res.status(200).json({ min_purchase: '15000', whatsapp_number: '5493513082238' });
+    });
+    return;
   }
 
   if (req.method === 'PUT') {
@@ -54,19 +32,36 @@ module.exports = async (req, res) => {
     }
 
     try {
-      const configs = req.body || {};
-      for (const [key, value] of Object.entries(configs)) {
-        if (!key) continue;
-        const cleanKey = key.replace(/'/g, "''");
-        const cleanVal = String(value || '').replace(/'/g, "''");
-        
-        const sql = `INSERT INTO store_config (\`key\`, \`value\`) VALUES ('${cleanKey}', '${cleanVal}') ON DUPLICATE KEY UPDATE \`value\` = VALUES(\`value\`)`;
-        await execCloudRunQuery(sql);
-      }
-      return res.status(200).json({ message: 'Configuraciones actualizadas exitosamente' });
+      const payloadData = JSON.stringify(req.body || {});
+      const options = {
+        hostname: 'inventory-app-418609185384.us-central1.run.app',
+        port: 443,
+        path: '/api/public/config',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payloadData)
+        }
+      };
+
+      const postReq = https.request(options, (apiRes) => {
+        let responseBody = '';
+        apiRes.on('data', chunk => { responseBody += chunk; });
+        apiRes.on('end', () => {
+          return res.status(200).json({ message: 'Configuraciones guardadas exitosamente' });
+        });
+      });
+
+      postReq.on('error', (e) => {
+        return res.status(500).json({ error: 'Error al enviar configuraciones', detail: e.message });
+      });
+
+      postReq.write(payloadData);
+      postReq.end();
     } catch (err) {
-      return res.status(500).json({ error: 'Error al actualizar configuraciones', detail: err.message });
+      return res.status(500).json({ error: 'Error al procesar configuraciones', detail: err.message });
     }
+    return;
   }
 
   return res.status(405).end();

@@ -22,7 +22,7 @@
       background: rgba(249, 115, 22, 0.05);
     }
     .dropzone img {
-      max-height: 70px;
+      max-height: 80px;
       max-width: 100%;
       object-fit: contain;
       margin-top: 0.5rem;
@@ -30,6 +30,12 @@
     }
     .dropzone input[type="file"] {
       display: none;
+    }
+    .upload-status {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #f97316;
+      margin-top: 0.4rem;
     }
   </style>
 </head>
@@ -69,9 +75,10 @@
             <!-- Logo Modo Claro -->
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Claro (Fondo Blanco)</label>
-              <div class="dropzone" onclick="triggerFileInput('file_logo_light')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_light_url', 'prev_logo_light')">
-                <input type="file" id="file_logo_light" accept="image/*" onchange="handleFileSelect(event, 'logo_light_url', 'prev_logo_light')">
+              <div class="dropzone" onclick="triggerFileInput('file_logo_light')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_light_url', 'prev_logo_light', 'status_logo_light')">
+                <input type="file" id="file_logo_light" accept="image/*" onchange="handleFileSelect(event, 'logo_light_url', 'prev_logo_light', 'status_logo_light')">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <div id="status_logo_light" class="upload-status" style="display: none;"></div>
                 <img id="prev_logo_light" src="" style="display: none;">
               </div>
               <input type="url" id="logo_light_url" placeholder="O pega URL https://..." class="search-input" style="margin-top: 0.5rem; font-size: 0.8rem; padding: 0.5rem 0.75rem;" oninput="updatePreview('logo_light_url', 'prev_logo_light')">
@@ -80,9 +87,10 @@
             <!-- Logo Modo Oscuro -->
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Oscuro (Fondo Negro)</label>
-              <div class="dropzone" onclick="triggerFileInput('file_logo_dark')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_dark_url', 'prev_logo_dark')">
-                <input type="file" id="file_logo_dark" accept="image/*" onchange="handleFileSelect(event, 'logo_dark_url', 'prev_logo_dark')">
+              <div class="dropzone" onclick="triggerFileInput('file_logo_dark')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_dark_url', 'prev_logo_dark', 'status_logo_dark')">
+                <input type="file" id="file_logo_dark" accept="image/*" onchange="handleFileSelect(event, 'logo_dark_url', 'prev_logo_dark', 'status_logo_dark')">
                 <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <div id="status_logo_dark" class="upload-status" style="display: none;"></div>
                 <img id="prev_logo_dark" src="" style="display: none;">
               </div>
               <input type="url" id="logo_dark_url" placeholder="O pega URL https://..." class="search-input" style="margin-top: 0.5rem; font-size: 0.8rem; padding: 0.5rem 0.75rem;" oninput="updatePreview('logo_dark_url', 'prev_logo_dark')">
@@ -157,9 +165,10 @@
       container.innerHTML = categoriesList.map(cat => `
         <div>
           <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.8rem;">${cat}</label>
-          <div class="dropzone" onclick="triggerFileInput('file_cat_${cat}')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'cat_img_${cat}', 'prev_cat_${cat}')">
-            <input type="file" id="file_cat_${cat}" accept="image/*" onchange="handleFileSelect(event, 'cat_img_${cat}', 'prev_cat_${cat}')">
+          <div class="dropzone" onclick="triggerFileInput('file_cat_${cat}')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
+            <input type="file" id="file_cat_${cat}" accept="image/*" onchange="handleFileSelect(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
             <div style="font-size: 0.8rem; color: var(--text-muted);">📷 Arrastrar imagen ${cat}</div>
+            <div id="status_cat_${cat}" class="upload-status" style="display: none;"></div>
             <img id="prev_cat_${cat}" src="" style="display: none; height: 60px;">
           </div>
           <input type="url" id="cat_img_${cat}" placeholder="URL https://..." class="search-input" style="margin-top: 0.4rem; font-size: 0.75rem; padding: 0.4rem 0.6rem;" oninput="updatePreview('cat_img_${cat}', 'prev_cat_${cat}')">
@@ -182,61 +191,62 @@
       dropzoneEl.classList.remove('dragover');
     }
 
-    function handleDrop(e, targetInputId, previewImgId) {
+    function handleDrop(e, targetInputId, previewImgId, statusId) {
       e.preventDefault();
       e.currentTarget.classList.remove('dragover');
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        processFile(files[0], targetInputId, previewImgId);
+        processFile(files[0], targetInputId, previewImgId, statusId);
       }
     }
 
-    function handleFileSelect(e, targetInputId, previewImgId) {
+    function handleFileSelect(e, targetInputId, previewImgId, statusId) {
       const files = e.target.files;
       if (files && files.length > 0) {
-        processFile(files[0], targetInputId, previewImgId);
+        processFile(files[0], targetInputId, previewImgId, statusId);
       }
     }
 
-    // Automatic Canvas Compression to keep Data URLs under 60 KB
-    function processFile(file, targetInputId, previewImgId) {
+    // Direct cloud image upload to ImgBB to generate lightweight clean HTTPS URLs
+    async function processFile(file, targetInputId, previewImgId, statusId) {
       if (!file.type.startsWith('image/')) {
         return alert('Por favor selecciona un archivo de imagen válido');
       }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const maxDim = 600;
-          let width = img.width;
-          let height = img.height;
+      const statusEl = document.getElementById(statusId);
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = '⏳ Subiendo imagen...';
+      }
 
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+        const res = await fetch('https://api.imgbb.com/1/upload?key=c2b1836561be84e622ef50f4fa9b47e2', {
+          method: 'POST',
+          body: formData
+        });
 
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          document.getElementById(targetInputId).value = compressedDataUrl;
+        const data = await res.json();
+        if (data && data.data && data.data.url) {
+          const imgUrl = data.data.url;
+          document.getElementById(targetInputId).value = imgUrl;
           updatePreview(targetInputId, previewImgId);
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+          if (statusEl) {
+            statusEl.textContent = '✓ Imagen cargada';
+            statusEl.style.color = '#4ade80';
+          }
+        } else {
+          throw new Error('Respuesta inválida');
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.textContent = '❌ Error al subir';
+          statusEl.style.color = '#ef4444';
+        }
+        alert('No se pudo subir la imagen. Por favor pega la URL directa https://');
+      }
     }
 
     function updatePreview(targetInputId, previewImgId) {

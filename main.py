@@ -111,8 +111,36 @@ def db_status(db: Session = Depends(get_db)):
 @app.get("/api/test-db-query")
 def test_db_query(query: str = "SELECT 1", db: Session = Depends(get_db)):
     try:
-        result = db.execute(text(query)).fetchall()
+        res = db.execute(text(query))
+        upper_q = query.strip().upper()
+        if upper_q.startswith("INSERT") or upper_q.startswith("UPDATE") or upper_q.startswith("DELETE") or upper_q.startswith("REPLACE"):
+            db.commit()
+            return {"status": "success", "affected_rows": res.rowcount}
+        result = res.fetchall()
         return {"status": "success", "rows": [dict(row._mapping) for row in result]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/public/config")
+def get_public_config(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("CREATE TABLE IF NOT EXISTS store_config (`key` VARCHAR(255) PRIMARY KEY, `value` TEXT)"))
+        db.commit()
+        rows = db.execute(text("SELECT `key`, `value` FROM store_config")).fetchall()
+        return {row[0]: row[1] for row in rows}
+    except Exception as e:
+        return {"min_purchase": "15000", "whatsapp_number": "5493513082238"}
+
+@app.post("/api/public/config")
+def set_public_config(data: dict, db: Session = Depends(get_db)):
+    try:
+        db.execute(text("CREATE TABLE IF NOT EXISTS store_config (`key` VARCHAR(255) PRIMARY KEY, `value` TEXT)"))
+        for k, v in data.items():
+            if not k:
+                continue
+            db.execute(text("INSERT INTO store_config (`key`, `value`) VALUES (:k, :v) ON DUPLICATE KEY UPDATE `value` = :v"), {"k": k, "v": str(v)})
+        db.commit()
+        return {"status": "success", "message": "Configuraciones guardadas"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
