@@ -118,9 +118,9 @@
           </div>
         </div>
 
-        <!-- SECTION 3: DATOS DEL FOOTER -->
+        <!-- SECTION 3: DATOS DEL FOOTER Y REDES SOCIALES -->
         <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">3. Dirección y Horarios de Atención</h3>
+          <h3 style="color: #f97316; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 800;">3. Redes Sociales, Página Web y Dirección</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Dirección del Local / Depósito</label>
@@ -130,9 +130,17 @@
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Horarios de Atención</label>
               <input type="text" id="store_hours" placeholder="Ej: Lunes a Viernes 9:00 a 18:00 hs" class="search-input" style="margin: 0;">
             </div>
-            <div style="grid-column: 1/-1;">
+            <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Instagram</label>
               <input type="text" id="instagram_url" placeholder="https://instagram.com/..." class="search-input" style="margin: 0;">
+            </div>
+            <div>
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Facebook</label>
+              <input type="text" id="facebook_url" placeholder="https://facebook.com/..." class="search-input" style="margin: 0;">
+            </div>
+            <div style="grid-column: 1/-1;">
+              <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Página Web / Sitio Web</label>
+              <input type="text" id="website_url" placeholder="https://tu-sitio-web.com" class="search-input" style="margin: 0;">
             </div>
           </div>
         </div>
@@ -160,6 +168,7 @@
     const allConfigFields = [
       'logo_light_url', 'logo_dark_url', 'min_purchase', 'whatsapp_number', 
       'whatsapp_message_template', 'store_address', 'store_hours', 'instagram_url',
+      'facebook_url', 'website_url',
       'cat_img_BAZAR', 'cat_img_BELLEZA', 'cat_img_JUGUETERIA', 'cat_img_BIJOUTERIE',
       'cat_img_ELECTRONICA', 'cat_img_LIBRERIA', 'cat_img_COTILLON', 'cat_img_FERRETERIA',
       'cat_img_INDUMENTARIA', 'cat_img_NAVIDAD', 'cat_img_TELEFONIA', 'cat_img_DESCARTABLE'
@@ -324,10 +333,8 @@
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('adminPanelSection').style.display = 'block';
 
-      // First guarantee category dropzones exist in DOM
       renderCategoryDropzones();
 
-      // 1. Instant local storage backup restore
       try {
         const backupRaw = localStorage.getItem('store_config_backup');
         if (backupRaw) {
@@ -335,7 +342,6 @@
         }
       } catch (e) {}
 
-      // 2. Fetch server API config
       try {
         const res = await fetch('/api/config');
         if (res.ok) {
@@ -363,9 +369,7 @@
         if (el) payload[f] = el.value;
       });
 
-      // Save instant local backup first
       localStorage.setItem('store_config_backup', JSON.stringify(payload));
-
       const token = localStorage.getItem('adminToken');
 
       try {
@@ -391,7 +395,6 @@
       }
     }
 
-    // Init on DOM ready
     window.addEventListener('DOMContentLoaded', () => {
       renderCategoryDropzones();
       const token = localStorage.getItem('adminToken');

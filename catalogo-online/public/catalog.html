@@ -12,10 +12,10 @@
   <header class="top-header">
     <div class="brand-title" id="headerBrandContainer">
       <a href="/categories" style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-primary);">
-        <img id="headerLogoImg" src="" style="display: none;" class="brand-logo-img" alt="IMPORT FULL">
-        <span id="headerBrandText" style="color: #f97316; font-weight: 800;">IMPORT FULL</span>
-        <span>•</span>
-        <span id="headerCategoryName" style="color: var(--text-secondary);">Catálogo</span>
+        <img id="headerLogoImg" src="" style="display: none;" class="brand-logo-img" alt="IMPORT FULL" onerror="handleHeaderLogoError()">
+        <span id="headerBrandText" style="color: #f97316; font-weight: 800; font-size: 1.3rem;">IMPORT FULL</span>
+        <span style="color: var(--text-muted);">•</span>
+        <span id="headerCategoryName" style="color: var(--text-secondary); font-weight: 700;">Catálogo</span>
       </a>
     </div>
 
@@ -101,6 +101,11 @@
       </div>
     </div>
   </main>
+
+  <!-- Floating Pulsing WhatsApp Button -->
+  <a id="floatingWhatsappBtn" href="#" target="_blank" class="whatsapp-float" title="Contactar por WhatsApp Directo">
+    <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-1.099 4.019 4.019-1.099z"/></svg>
+  </a>
 
   <!-- Product Detail Modal with Multi-Photo Gallery -->
   <div class="modal-backdrop" id="productDetailModal">
@@ -189,7 +194,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentCategory = urlParams.get('category') || '';
 
-    // Theme Switcher Logic
     function applySavedTheme() {
       const savedTheme = localStorage.getItem('theme') || 'dark';
       if (savedTheme === 'light') {
@@ -198,6 +202,11 @@
         document.body.classList.remove('light-theme');
       }
       updateHeaderLogo();
+    }
+
+    function handleHeaderLogoError() {
+      document.getElementById('headerLogoImg').style.display = 'none';
+      document.getElementById('headerBrandText').style.display = 'inline-block';
     }
 
     function updateHeaderLogo() {
@@ -217,11 +226,40 @@
         brandText.style.display = 'none';
       } else {
         logoImg.style.display = 'none';
-        brandText.style.display = 'block';
+        brandText.style.display = 'inline-block';
       }
     }
 
+    function applyConfig(cfg) {
+      if (!cfg) return;
+      config = { ...config, ...cfg };
+
+      const minP = parseFloat(config.min_purchase || 15000);
+      document.getElementById('minPurchaseBanner').textContent = `Compra mínima: $${minP.toLocaleString('es-AR')}`;
+      
+      if (config.store_address) {
+        document.getElementById('footerAddressLink').textContent = config.store_address;
+        document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
+      }
+      if (config.store_hours) {
+        document.getElementById('footerHours').textContent = config.store_hours;
+      }
+
+      const targetWp = config.whatsapp_number || '5493513082238';
+      document.getElementById('floatingWhatsappBtn').href = `https://wa.me/${targetWp}`;
+
+      updateHeaderLogo();
+    }
+
     async function initCatalog() {
+      // 1. Instant local storage backup restore
+      try {
+        const backupRaw = localStorage.getItem('store_config_backup');
+        if (backupRaw) {
+          applyConfig(JSON.parse(backupRaw));
+        }
+      } catch (e) {}
+
       applySavedTheme();
 
       if (currentCategory) {
@@ -232,17 +270,8 @@
       try {
         const confRes = await fetch('/api/config');
         if (confRes.ok) {
-          config = await confRes.json();
-          const minP = parseFloat(config.min_purchase || 15000);
-          document.getElementById('minPurchaseBanner').textContent = `Compra mínima: $${minP.toLocaleString('es-AR')}`;
-          if (config.store_address) {
-            document.getElementById('footerAddressLink').textContent = config.store_address;
-            document.getElementById('footerAddressLink').href = `https://maps.google.com/?q=${encodeURIComponent(config.store_address)}`;
-          }
-          if (config.store_hours) {
-            document.getElementById('footerHours').textContent = config.store_hours;
-          }
-          updateHeaderLogo();
+          const serverConfig = await confRes.json();
+          applyConfig(serverConfig);
         }
       } catch (err) {}
 
@@ -321,7 +350,6 @@
       document.getElementById('detailPrice').textContent = `$${price.toLocaleString('es-AR')}`;
       document.getElementById('detailDescription').textContent = selectedProduct.description || 'Producto importado de alta calidad. Para consultas o ventas al por mayor contáctanos por WhatsApp.';
 
-      // Base Image
       productImages = [];
       if (selectedProduct.product_image_b_format_url) productImages.push(selectedProduct.product_image_b_format_url);
 
@@ -330,7 +358,6 @@
 
       document.getElementById('productDetailModal').classList.add('active');
 
-      // Live fetch additional pictures if meli_id exists
       if (selectedProduct.meli_id) {
         try {
           const res = await fetch(`https://api.mercadolibre.com/items/${selectedProduct.meli_id}`);
