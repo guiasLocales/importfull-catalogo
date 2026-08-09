@@ -351,9 +351,15 @@ body {
   margin-top: 2rem;
 }
 
-.powered-by span {
-  font-weight: 600;
+.powered-by a, .powered-by span {
+  font-weight: 700;
   color: var(--text-secondary);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.powered-by a:hover {
+  color: #f97316;
 }
 
 .modal-backdrop {
