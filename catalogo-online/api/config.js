@@ -2,7 +2,7 @@ let globalStoreConfig = {
   min_purchase: '15000',
   whatsapp_number: '5493513082238',
   store_address: 'Pasteur 320, Balvanera, CABA',
-  store_hours: 'Lunes a Viernes de 9:00 a 18:00 hs. Sábados de 9:00 a 13:00 hs.'
+  store_hours: 'Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs.'
 };
 
 module.exports = async (req, res) => {

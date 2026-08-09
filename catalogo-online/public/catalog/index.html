@@ -271,6 +271,7 @@
         if (confRes.ok) {
           const serverConfig = await confRes.json();
           applyConfig(serverConfig);
+          localStorage.setItem('store_config_backup', JSON.stringify(serverConfig));
         }
       } catch (err) {}
 
