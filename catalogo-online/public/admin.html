@@ -77,7 +77,7 @@
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Claro (Fondo Blanco)</label>
               <div class="dropzone" onclick="triggerFileInput('file_logo_light')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_light_url', 'prev_logo_light', 'status_logo_light')">
                 <input type="file" id="file_logo_light" accept="image/*" onchange="handleFileSelect(event, 'logo_light_url', 'prev_logo_light', 'status_logo_light')">
-                <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <div id="droptext_logo_light" style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
                 <div id="status_logo_light" class="upload-status" style="display: none;"></div>
                 <img id="prev_logo_light" src="" style="display: none;">
               </div>
@@ -89,7 +89,7 @@
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-weight: 700; font-size: 0.85rem;">Logo Modo Oscuro (Fondo Negro)</label>
               <div class="dropzone" onclick="triggerFileInput('file_logo_dark')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'logo_dark_url', 'prev_logo_dark', 'status_logo_dark')">
                 <input type="file" id="file_logo_dark" accept="image/*" onchange="handleFileSelect(event, 'logo_dark_url', 'prev_logo_dark', 'status_logo_dark')">
-                <div style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
+                <div id="droptext_logo_dark" style="font-size: 0.85rem; color: var(--text-muted);">📁 Arrastrá una imagen aquí o <span style="color: #f97316; font-weight: 700;">examiná</span></div>
                 <div id="status_logo_dark" class="upload-status" style="display: none;"></div>
                 <img id="prev_logo_dark" src="" style="display: none;">
               </div>
@@ -113,7 +113,7 @@
             </div>
             <div style="grid-column: 1/-1;">
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Plantilla del Mensaje de Pedido</label>
-              <textarea id="whatsapp_message_template" rows="4" placeholder="Hola! Quiero realizar un pedido en IMPORT FULL:&#10;&#10;*Cliente:* {nombre}&#10;*Teléfono:* {telefono}&#10;*Dirección:* {direccion}&#10;&#10;*Detalle del Pedido:*&#10;{productos}&#10;&#10;*Total Estimado:* ${total}" class="search-input" style="width: 100%; text-align: left; margin: 0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+              <textarea id="whatsapp_message_template" rows="4" placeholder="Hola! Quiero realizar un pedido en IMPORT FULL:&#10;&#10;*Cliente:* {nombre}&#10;*Dirección:* {direccion}&#10;&#10;*Detalle del Pedido:*&#10;{productos}&#10;&#10;*Total Estimado:* ${total}" class="search-input" style="width: 100%; text-align: left; margin: 0; font-family: monospace; font-size: 0.9rem; resize: vertical;"></textarea>
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@
             </div>
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">Horarios de Atención</label>
-              <input type="text" id="store_hours" placeholder="Ej: Lunes a Viernes 9:00 a 18:00 hs" class="search-input" style="margin: 0;">
+              <input type="text" id="store_hours" placeholder="Ej: Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs." class="search-input" style="margin: 0;">
             </div>
             <div>
               <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.85rem;">URL Instagram</label>
@@ -159,6 +159,10 @@
   </main>
 
   <script>
+    const defaultLogoLight = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%230f172a'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
+
+    const defaultLogoDark = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%23ffffff'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
+
     const categoriesList = [
       'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE',
       'ELECTRONICA', 'LIBRERIA', 'COTILLON', 'FERRETERIA',
@@ -313,6 +317,14 @@
 
     function fillFormFields(configData) {
       if (!configData || typeof configData !== 'object') return;
+      
+      if (!configData.logo_light_url || configData.logo_light_url.trim() === '') {
+        configData.logo_light_url = defaultLogoLight;
+      }
+      if (!configData.logo_dark_url || configData.logo_dark_url.trim() === '') {
+        configData.logo_dark_url = defaultLogoDark;
+      }
+
       for (const [key, val] of Object.entries(configData)) {
         const input = document.getElementById(key);
         if (input && val !== undefined && val !== null) {
@@ -339,6 +351,8 @@
         const backupRaw = localStorage.getItem('store_config_backup');
         if (backupRaw) {
           fillFormFields(JSON.parse(backupRaw));
+        } else {
+          fillFormFields({ logo_light_url: defaultLogoLight, logo_dark_url: defaultLogoDark });
         }
       } catch (e) {}
 

@@ -102,9 +102,14 @@
       updateLogos();
     }
 
+    const defaultLogoLight = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%230f172a'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
+
+    const defaultLogoDark = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%23ffffff'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
+
     function handleLogoError() {
-      document.getElementById('heroLogoImg').style.display = 'none';
-      document.getElementById('heroBrandText').style.display = 'block';
+      const isLight = document.body.classList.contains('light-theme');
+      const heroLogo = document.getElementById('heroLogoImg');
+      if (heroLogo) heroLogo.src = isLight ? defaultLogoLight : defaultLogoDark;
     }
 
     function updateLogos() {
@@ -112,19 +117,18 @@
       let logoUrl = isLight ? config.logo_light_url : config.logo_dark_url;
 
       if (!logoUrl || logoUrl.trim() === '') {
-        logoUrl = config.logo_light_url || config.logo_dark_url || config.logo_url || config.logo;
+        logoUrl = isLight ? defaultLogoLight : defaultLogoDark;
       }
 
       const heroLogo = document.getElementById('heroLogoImg');
       const heroText = document.getElementById('heroBrandText');
 
-      if (logoUrl && logoUrl.trim() !== '') {
+      if (heroLogo) {
         heroLogo.src = logoUrl;
         heroLogo.style.display = 'block';
+      }
+      if (heroText) {
         heroText.style.display = 'none';
-      } else {
-        heroLogo.style.display = 'none';
-        heroText.style.display = 'block';
       }
     }
 
