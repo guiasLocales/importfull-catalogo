@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const http = require('https');
 
 const CONFIG_PATH = path.join('/tmp', 'store_config.json');
+const CLOUD_RUN_CONFIG_URL = 'https://inventory-app-418609185384.us-central1.run.app/api/public/config';
 
 const defaultLogoLight = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%230f172a'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
 
@@ -36,6 +38,29 @@ let inMemoryConfig = {
   ...defaultCategoryImages
 };
 
+async function fetchFromDatabase() {
+  try {
+    const res = await fetch(CLOUD_RUN_CONFIG_URL);
+    if (res.ok) {
+      const remote = await res.json();
+      if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
+        inMemoryConfig = { ...inMemoryConfig, ...remote };
+        try { fs.writeFileSync(CONFIG_PATH, JSON.stringify(inMemoryConfig), 'utf8'); } catch (e) {}
+      }
+    }
+  } catch (e) {}
+}
+
+async function saveToDatabase(data) {
+  try {
+    await fetch(CLOUD_RUN_CONFIG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (e) {}
+}
+
 function getActiveConfig() {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
@@ -43,9 +68,7 @@ function getActiveConfig() {
       const parsed = JSON.parse(raw);
       return {
         ...inMemoryConfig,
-        ...parsed,
-        logo_light_url: (parsed.logo_light_url && parsed.logo_light_url.trim() !== '') ? parsed.logo_light_url : defaultLogoLight,
-        logo_dark_url: (parsed.logo_dark_url && parsed.logo_dark_url.trim() !== '') ? parsed.logo_dark_url : defaultLogoDark
+        ...parsed
       };
     }
   } catch (e) {}
@@ -57,7 +80,8 @@ function updateActiveConfig(newData) {
     const current = getActiveConfig();
     const merged = { ...current, ...newData };
     inMemoryConfig = merged;
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(merged), 'utf8');
+    try { fs.writeFileSync(CONFIG_PATH, JSON.stringify(merged), 'utf8'); } catch (e) {}
+    saveToDatabase(merged);
     return merged;
   } catch (e) {
     inMemoryConfig = { ...inMemoryConfig, ...newData };
@@ -73,6 +97,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method === 'GET') {
+    await fetchFromDatabase();
     return res.status(200).json(getActiveConfig());
   }
 
@@ -86,7 +111,7 @@ module.exports = async (req, res) => {
       if (bodyData && typeof bodyData === 'object') {
         const saved = updateActiveConfig(bodyData);
         return res.status(200).json({ 
-          message: 'Configuraciones guardadas exitosamente',
+          message: 'Configuraciones guardadas permanentemente',
           config: saved
         });
       }

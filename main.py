@@ -177,6 +177,39 @@ def health_check():
     return {"status": "healthy"}
 
 @app.get("/db-check")
+@app.get("/api/public/config")
+def get_public_store_config(db: Session = Depends(get_db)):
+    """Fetch persistent store configuration stored in Cloud SQL MySQL."""
+    try:
+        row = db.execute(text("SELECT description FROM product_catalog_sync WHERE product_code = 'STORE_CONFIG_SYNC' LIMIT 1")).fetchone()
+        if row and row[0]:
+            import json
+            return json.loads(row[0])
+    except Exception as e:
+        print(f"Error reading config from MySQL: {e}")
+    return {}
+
+@app.post("/api/public/config")
+@app.put("/api/public/config")
+def save_public_store_config(config_data: dict, db: Session = Depends(get_db)):
+    """Persist store configuration directly into Cloud SQL MySQL."""
+    import json
+    try:
+        config_str = json.dumps(config_data)
+        # Check if record exists
+        existing = db.execute(text("SELECT id FROM product_catalog_sync WHERE product_code = 'STORE_CONFIG_SYNC' LIMIT 1")).fetchone()
+        if existing:
+            db.execute(text("UPDATE product_catalog_sync SET description = :cfg WHERE product_code = 'STORE_CONFIG_SYNC'"), {"cfg": config_str})
+        else:
+            db.execute(text("INSERT INTO product_catalog_sync (product_name, product_code, description, stock, local_price, status) VALUES ('STORE_CONFIG', 'STORE_CONFIG_SYNC', :cfg, 0, 0, 'active')"), {"cfg": config_str})
+        db.commit()
+        return {"status": "success", "message": "Configuración guardada permanentemente en Cloud SQL MySQL", "config": config_data}
+    except Exception as e:
+        db.rollback()
+        print(f"Error persisting config in MySQL: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 def db_check():
     """TEMPORARY: Public diagnostic endpoint to check database tables."""
     from sqlalchemy import text
