@@ -329,27 +329,22 @@
       }
     }
 
-    function fillFormFields(configData) {
+    function fillFormFields(configData, overwriteExisting = false) {
       if (!configData || typeof configData !== 'object') return;
-
-      if (!configData.logo_light_url || configData.logo_light_url.trim() === '') {
-        configData.logo_light_url = defaultLogoLight;
-      }
-      if (!configData.logo_dark_url || configData.logo_dark_url.trim() === '') {
-        configData.logo_dark_url = defaultLogoDark;
-      }
 
       for (const [key, val] of Object.entries(configData)) {
         const input = document.getElementById(key);
         if (input && val !== undefined && val !== null) {
-          input.value = val;
-          if (key.startsWith('cat_img_')) {
-            const catName = key.replace('cat_img_', '');
-            updatePreview(key, `prev_cat_${catName}`);
-          } else if (key === 'logo_light_url') {
-            updatePreview(key, 'prev_logo_light');
-          } else if (key === 'logo_dark_url') {
-            updatePreview(key, 'prev_logo_dark');
+          if (overwriteExisting || !input.value || input.value.trim() === '') {
+            input.value = val;
+            if (key.startsWith('cat_img_')) {
+              const catName = key.replace('cat_img_', '');
+              updatePreview(key, `prev_cat_${catName}`);
+            } else if (key === 'logo_light_url') {
+              updatePreview(key, 'prev_logo_light');
+            } else if (key === 'logo_dark_url') {
+              updatePreview(key, 'prev_logo_dark');
+            }
           }
         }
       }
@@ -361,12 +356,12 @@
 
       renderCategoryDropzones();
 
+      let localConfig = {};
       try {
         const backupRaw = localStorage.getItem('store_config_backup');
         if (backupRaw) {
-          fillFormFields(JSON.parse(backupRaw));
-        } else {
-          fillFormFields({ logo_light_url: defaultLogoLight, logo_dark_url: defaultLogoDark });
+          localConfig = JSON.parse(backupRaw);
+          fillFormFields(localConfig, true);
         }
       } catch (e) {}
 
@@ -374,8 +369,8 @@
         const res = await fetch('/api/config');
         if (res.ok) {
           const serverConfig = await res.json();
-          fillFormFields(serverConfig);
-          localStorage.setItem('store_config_backup', JSON.stringify(serverConfig));
+          const merged = { ...serverConfig, ...localConfig };
+          fillFormFields(merged, false);
         }
       } catch (err) {}
     }
