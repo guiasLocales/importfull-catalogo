@@ -31,9 +31,9 @@ let inMemoryConfig = {
   whatsapp_message_template: 'Hola! Quiero realizar un pedido en IMPORT FULL:\n\n*Cliente:* {nombre}\n*Dirección:* {direccion}\n\n*Detalle del Pedido:*\n{productos}\n\n*Total Estimado:* ${total}',
   store_address: 'Luis de Góngora 627, B° Alta Córdoba, Córdoba Capital',
   store_hours: 'Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs.',
-  instagram_url: '',
-  facebook_url: '',
-  website_url: 'https://guiaslocales.com.ar',
+  instagram_url: 'https://www.instagram.com/importfull_/',
+  facebook_url: 'https://web.facebook.com/Importfullcba/?ref=PROFILE_EDIT_xav_ig_profile_page_web#',
+  website_url: '',
   ...defaultCategoryImages
 };
 

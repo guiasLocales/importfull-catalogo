@@ -188,10 +188,14 @@
       }
       if (config.instagram_url) document.getElementById('socialIg').href = config.instagram_url;
       if (config.facebook_url) document.getElementById('socialFb').href = config.facebook_url;
-      if (config.website_url) {
-        const webBtn = document.getElementById('socialWeb');
-        webBtn.href = config.website_url;
-        webBtn.style.display = 'flex';
+      const webBtn = document.getElementById('socialWeb');
+      if (webBtn) {
+        if (config.website_url && config.website_url.trim() !== '') {
+          webBtn.href = config.website_url;
+          webBtn.style.display = 'flex';
+        } else {
+          webBtn.style.display = 'none';
+        }
       }
 
       const targetWp = config.whatsapp_number || '5493513082238';
