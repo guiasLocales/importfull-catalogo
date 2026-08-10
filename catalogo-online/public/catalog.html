@@ -313,20 +313,21 @@
             <td>
               <div class="product-cell">
                 <img src="${imgUrl}" class="product-img" alt="${p.product_name}">
-                <div>
+                <div style="flex: 1; min-width: 0;">
                   <div class="product-name">${p.product_name}</div>
                   <div style="font-size: 0.75rem; color: var(--text-muted);">Cód: ${p.product_code || '-'}</div>
+                  <div class="mobile-price-tag" style="display: none; font-weight: 800; font-size: 0.95rem; color: #f97316; margin-top: 0.2rem;">$${price.toLocaleString('es-AR')}</div>
                 </div>
               </div>
             </td>
-            <td>
+            <td class="desktop-only-cell">
               <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">$${price.toLocaleString('es-AR')}</span>
             </td>
-            <td>
+            <td class="desktop-only-cell">
               <span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.35rem 0.75rem; border-radius: 0.5rem; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(74, 222, 128, 0.3); display: inline-block;">${stockQty} u</span>
             </td>
             <td style="text-align: right;" onclick="event.stopPropagation()">
-              <button class="btn-add" onclick="addToCart(${p.id})">Agregar</button>
+              <button class="btn-add" onclick="addToCart(${p.id})" title="Agregar producto al carrito">+ Agregar</button>
             </td>
           </tr>
         `;
