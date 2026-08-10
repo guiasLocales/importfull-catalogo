@@ -12,8 +12,12 @@ let inMemoryConfig = {
   logo_dark_url: defaultLogoDark,
   min_purchase: '15000',
   whatsapp_number: '5493513082238',
+  whatsapp_message_template: 'Hola! Quiero realizar un pedido en IMPORT FULL:\n\n*Cliente:* {nombre}\n*Dirección:* {direccion}\n\n*Detalle del Pedido:*\n{productos}\n\n*Total Estimado:* ${total}',
   store_address: 'Pasteur 320, Balvanera, CABA',
-  store_hours: 'Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs.'
+  store_hours: 'Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs.',
+  instagram_url: '',
+  facebook_url: '',
+  website_url: 'https://guiaslocales.com.ar'
 };
 
 function getActiveConfig() {
