@@ -7,6 +7,21 @@ const defaultLogoLight = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 
 const defaultLogoDark = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%23ffffff'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
 
+const defaultCategoryImages = {
+  cat_img_BAZAR: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
+  cat_img_BELLEZA: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
+  cat_img_JUGUETERIA: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
+  cat_img_BIJOUTERIE: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
+  cat_img_ELECTRONICA: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+  cat_img_LIBRERIA: 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80',
+  cat_img_COTILLON: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
+  cat_img_FERRETERIA: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+  cat_img_INDUMENTARIA: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=600&q=80',
+  cat_img_NAVIDAD: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?auto=format&fit=crop&w=600&q=80',
+  cat_img_TELEFONIA: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+  cat_img_DESCARTABLE: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80'
+};
+
 let inMemoryConfig = {
   logo_light_url: defaultLogoLight,
   logo_dark_url: defaultLogoDark,
@@ -17,7 +32,8 @@ let inMemoryConfig = {
   store_hours: 'Lunes a sábados: 09:00 a 21:30 hs. • Domingos: 10:00 a 20:00 hs.',
   instagram_url: '',
   facebook_url: '',
-  website_url: 'https://guiaslocales.com.ar'
+  website_url: 'https://guiaslocales.com.ar',
+  ...defaultCategoryImages
 };
 
 function getActiveConfig() {

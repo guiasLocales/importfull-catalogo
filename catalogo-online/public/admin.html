@@ -148,7 +148,7 @@
         <!-- SECTION 4: DRAG & DROP FOTOS DE CATEGORÍAS -->
         <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
           <h3 style="color: #f97316; margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 800;">4. Imágenes Portada para Categorías (Subida Nube Permanente)</h3>
-          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Arrastrá la imagen sobre la tarjeta correspondiente para subirla a la nube de por vida:</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Arrastrá la imagen sobre la tarjeta correspondiente para cambiarla:</p>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem;" id="categoryDropzonesContainer"></div>
         </div>
@@ -162,6 +162,21 @@
     const defaultLogoLight = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%230f172a'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
 
     const defaultLogoDark = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 90'><rect x='5' y='5' width='80' height='80' rx='16' fill='%23f97316'/><text x='45' y='60' font-family='sans-serif' font-weight='900' font-size='46' fill='%23ffffff' text-anchor='middle'>IF</text><text x='110' y='58' font-family='sans-serif' font-weight='800' font-size='40' fill='%23ffffff'>IMPORT <tspan fill='%23f97316'>FULL</tspan></text></svg>";
+
+    const defaultCategoryImages = {
+      cat_img_BAZAR: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=600&q=80',
+      cat_img_BELLEZA: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
+      cat_img_JUGUETERIA: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
+      cat_img_BIJOUTERIE: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=600&q=80',
+      cat_img_ELECTRONICA: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80',
+      cat_img_LIBRERIA: 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80',
+      cat_img_COTILLON: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
+      cat_img_FERRETERIA: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80',
+      cat_img_INDUMENTARIA: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=600&q=80',
+      cat_img_NAVIDAD: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?auto=format&fit=crop&w=600&q=80',
+      cat_img_TELEFONIA: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+      cat_img_DESCARTABLE: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80'
+    };
 
     const categoriesList = [
       'BAZAR', 'BELLEZA', 'JUGUETERIA', 'BIJOUTERIE',
@@ -181,18 +196,21 @@
     function renderCategoryDropzones() {
       const container = document.getElementById('categoryDropzonesContainer');
       if (!container) return;
-      container.innerHTML = categoriesList.map(cat => `
-        <div>
-          <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.8rem;">${cat}</label>
-          <div class="dropzone" onclick="triggerFileInput('file_cat_${cat}')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
-            <input type="file" id="file_cat_${cat}" accept="image/*" onchange="handleFileSelect(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
-            <div style="font-size: 0.8rem; color: var(--text-muted);">📷 Arrastrar imagen ${cat}</div>
-            <div id="status_cat_${cat}" class="upload-status" style="display: none;"></div>
-            <img id="prev_cat_${cat}" src="" style="display: none; height: 60px;">
+      container.innerHTML = categoriesList.map(cat => {
+        const defaultImgUrl = defaultCategoryImages[`cat_img_${cat}`];
+        return `
+          <div>
+            <label style="color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 700; font-size: 0.8rem;">${cat}</label>
+            <div class="dropzone" onclick="triggerFileInput('file_cat_${cat}')" ondragover="handleDragOver(event, this)" ondragleave="handleDragLeave(this)" ondrop="handleDrop(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
+              <input type="file" id="file_cat_${cat}" accept="image/*" onchange="handleFileSelect(event, 'cat_img_${cat}', 'prev_cat_${cat}', 'status_cat_${cat}')">
+              <div style="font-size: 0.8rem; color: var(--text-muted);">📷 Arrastrar imagen ${cat}</div>
+              <div id="status_cat_${cat}" class="upload-status" style="display: none;"></div>
+              <img id="prev_cat_${cat}" src="${defaultImgUrl}" style="display: inline-block; height: 60px;">
+            </div>
+            <input type="url" id="cat_img_${cat}" value="${defaultImgUrl}" placeholder="URL https://..." class="search-input" style="margin-top: 0.4rem; font-size: 0.75rem; padding: 0.4rem 0.6rem;" oninput="updatePreview('cat_img_${cat}', 'prev_cat_${cat}')">
           </div>
-          <input type="url" id="cat_img_${cat}" placeholder="URL https://..." class="search-input" style="margin-top: 0.4rem; font-size: 0.75rem; padding: 0.4rem 0.6rem;" oninput="updatePreview('cat_img_${cat}', 'prev_cat_${cat}')">
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function triggerFileInput(fileInputId) {
@@ -332,7 +350,9 @@
     function fillFormFields(configData, overwriteExisting = false) {
       if (!configData || typeof configData !== 'object') return;
 
-      for (const [key, val] of Object.entries(configData)) {
+      const mergedData = { ...defaultCategoryImages, ...configData };
+
+      for (const [key, val] of Object.entries(mergedData)) {
         const input = document.getElementById(key);
         if (input && val !== undefined && val !== null) {
           if (overwriteExisting || !input.value || input.value.trim() === '') {
@@ -362,6 +382,8 @@
         if (backupRaw) {
           localConfig = JSON.parse(backupRaw);
           fillFormFields(localConfig, true);
+        } else {
+          fillFormFields(defaultCategoryImages, true);
         }
       } catch (e) {}
 
@@ -369,7 +391,7 @@
         const res = await fetch('/api/config');
         if (res.ok) {
           const serverConfig = await res.json();
-          const merged = { ...serverConfig, ...localConfig };
+          const merged = { ...defaultCategoryImages, ...serverConfig, ...localConfig };
           fillFormFields(merged, false);
         }
       } catch (err) {}
