@@ -509,3 +509,42 @@ def update_meli_product_status(db: Session, item_id: int, updates: dict):
     db.commit()
     db.refresh(db_status)
     return db_status
+
+
+def get_size_grid(db: Session, item_id: int):
+    import json
+    from models import SizeGrid
+    grid = db.query(SizeGrid).filter(SizeGrid.item_id == item_id).first()
+    if not grid:
+        return None
+    
+    existing_settings = grid.settings
+    if existing_settings and isinstance(existing_settings, str):
+        try:
+            existing_settings = json.loads(existing_settings)
+        except Exception:
+            pass
+    db.expunge(grid)
+    grid.settings = existing_settings
+    return grid
+
+
+def update_size_grid_settings(db: Session, item_id: int, settings: any):
+    import uuid
+    from datetime import datetime
+    from models import SizeGrid
+    grid = db.query(SizeGrid).filter(SizeGrid.item_id == item_id).first()
+    if not grid:
+        grid = SizeGrid(
+            id=str(uuid.uuid4()),
+            item_id=item_id,
+            settings=settings
+        )
+        db.add(grid)
+    else:
+        grid.settings = settings
+        grid.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(grid)
+    return grid

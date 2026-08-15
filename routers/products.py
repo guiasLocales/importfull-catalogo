@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from db_conn import get_db
-from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse, MercadoLibreAttributeSchema, MercadoLibreProductStatusSchema
+from schemas import ProductResponse, PublishRequest, ProductUpdate, TiendaNubeAttributeSchema, TiendaNubeStatusResponse, MercadoLibreAttributeSchema, MercadoLibreProductStatusSchema, SizeGridSchema, SizeGridUpdateSchema
 from routers.auth import get_current_user
 import crud
 import httpx
@@ -535,6 +535,57 @@ def update_mercadolibre_status(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
+
+
+@router.get("/{product_id}/mercadolibre-size-grid", response_model=Optional[SizeGridSchema])
+def get_mercadolibre_size_grid(product_id: int, db: Session = Depends(get_db)):
+    """Fetch size grid configuration/status for MercadoLibre"""
+    grid = crud.get_size_grid(db, product_id)
+    return grid
+
+
+@router.put("/{product_id}/mercadolibre-size-grid", response_model=SizeGridSchema)
+def update_mercadolibre_size_grid(
+    product_id: int,
+    request: SizeGridUpdateSchema,
+    db: Session = Depends(get_db)
+):
+    """Save size grid settings template values"""
+    try:
+        grid = crud.update_size_grid_settings(db, product_id, request.settings)
+        return grid
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error en base de datos: {str(e)}")
+
+
+@router.post("/{product_id}/mercadolibre-size-grid/generate-template")
+def generate_mercadolibre_size_grid_template(product_id: int):
+    """Trigger create_template webhook for Size Grid"""
+    success, msg = send_webhook(product_id, "create_template")
+    if not success:
+        raise HTTPException(status_code=502, detail=f"Error al solicitar creación de plantilla: {msg}")
+    return {"message": "Plantilla solicitada con éxito"}
+
+
+@router.post("/{product_id}/mercadolibre-size-grid/create")
+def create_mercadolibre_size_grid(
+    product_id: int,
+    request: Optional[SizeGridUpdateSchema] = None,
+    db: Session = Depends(get_db)
+):
+    """Save current settings if provided and trigger create_size_grid webhook"""
+    if request and request.settings is not None:
+        try:
+            crud.update_size_grid_settings(db, product_id, request.settings)
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Error al guardar plantilla: {str(e)}")
+            
+    success, msg = send_webhook(product_id, "create_size_grid")
+    if not success:
+        raise HTTPException(status_code=502, detail=f"Error al crear guía de talles: {msg}")
+    return {"message": "Guía de talles enviada a creación con éxito"}
 
 
 @router.get("/drive-image/{file_id}")

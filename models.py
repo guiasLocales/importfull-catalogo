@@ -198,6 +198,18 @@ class MercadoLibreProductStatus(Base):
     variants = Column(JSON)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+class SizeGrid(Base):
+    __tablename__ = "size_grid"
+    __table_args__ = {"schema": "mercadolibre"}
+
+    id = Column(String(36), primary_key=True)
+    item_id = Column(Integer, index=True)
+    size_grid_id = Column(Integer, nullable=True)
+    settings = Column(JSON, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    response = Column(String(1000), nullable=True)
+
     # --- DEPRECATED COLUMNS ---
     # volume_capacity_required = Column(Integer)
     # volume_capacity = Column(Integer)

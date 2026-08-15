@@ -307,6 +307,20 @@ class MercadoLibreProductStatusSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class SizeGridSchema(BaseModel):
+    id: Optional[str] = None
+    item_id: int
+    size_grid_id: Optional[int] = None
+    settings: Optional[Any] = None
+    updated_at: Optional[datetime] = None
+    response: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class SizeGridUpdateSchema(BaseModel):
+    settings: Optional[Any] = None
+
 class OrderMetricResponse(BaseModel):
     total_sales_count: int
     total_units_sold: float

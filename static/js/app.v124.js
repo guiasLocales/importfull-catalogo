@@ -2556,6 +2556,362 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // Size Grid Widget Management
+    window.currentSizeGridData = null;
+
+    window.addSizeGridRow = (attrId, productId) => {
+        if (!window.currentSizeGridData || !Array.isArray(window.currentSizeGridData.settings)) return;
+        const item = window.currentSizeGridData.settings.find(i => i.id === attrId);
+        if (!item) return;
+        if (!Array.isArray(item.user_input)) item.user_input = [];
+        item.user_input.push({ SIZE: '', value: '' });
+        window.renderMeliSizeGridWidget(productId);
+    };
+
+    window.removeSizeGridRow = (attrId, index, productId) => {
+        if (!window.currentSizeGridData || !Array.isArray(window.currentSizeGridData.settings)) return;
+        const item = window.currentSizeGridData.settings.find(i => i.id === attrId);
+        if (!item || !Array.isArray(item.user_input)) return;
+        item.user_input.splice(index, 1);
+        window.renderMeliSizeGridWidget(productId);
+    };
+
+    window.updateSizeGridRow = (attrId, index, key, value) => {
+        if (!window.currentSizeGridData || !Array.isArray(window.currentSizeGridData.settings)) return;
+        const item = window.currentSizeGridData.settings.find(i => i.id === attrId);
+        if (!item || !Array.isArray(item.user_input)) return;
+        if (!item.user_input[index]) item.user_input[index] = { SIZE: '', value: '' };
+        item.user_input[index][key] = value;
+    };
+
+    window.updateSizeGridInput = (attrId, value) => {
+        if (!window.currentSizeGridData || !Array.isArray(window.currentSizeGridData.settings)) return;
+        const item = window.currentSizeGridData.settings.find(i => i.id === attrId);
+        if (!item) return;
+        item.user_input = value;
+    };
+
+    window.saveMeliSizeGridTemplate = async (productId, showToast = true) => {
+        if (!window.currentSizeGridData || !window.currentSizeGridData.settings) return false;
+        try {
+            const res = await authFetch(`/api/products/${productId}/mercadolibre-size-grid`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ settings: window.currentSizeGridData.settings })
+            });
+            if (!res.ok) throw new Error('Error al guardar la plantilla');
+            if (showToast) showAlert('Plantilla Guardada', 'Los cambios en la plantilla de talles se guardaron correctamente.', 'success');
+            return true;
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', e.message, 'error');
+            return false;
+        }
+    };
+
+    window.generateMeliSizeGridTemplate = async (productId) => {
+        const btn = document.getElementById('btn-gen-size-grid');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-1.5"></div> Solicitando...';
+        }
+        try {
+            const res = await authFetch(`/api/products/${productId}/mercadolibre-size-grid/generate-template`, {
+                method: 'POST'
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Error al solicitar plantilla');
+            }
+            showAlert('Solicitud Enviada', 'Se solicitó la generación de la plantilla a Mercado Libre. En unos segundos se generará en la base de datos.', 'info');
+            setTimeout(() => {
+                window.renderMeliSizeGridWidget(productId);
+            }, 3000);
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', e.message, 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="file-plus" class="h-4 w-4"></i> Generar Plantilla de Talles';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    };
+
+    window.createMeliSizeGrid = async (productId) => {
+        const btn = document.getElementById('btn-create-size-grid');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-1.5"></div> Creando Guía...';
+        }
+        try {
+            // Guardar cambios previos de la plantilla
+            const saved = await window.saveMeliSizeGridTemplate(productId, false);
+            if (!saved) {
+                if (btn) btn.disabled = false;
+                return;
+            }
+
+            const res = await authFetch(`/api/products/${productId}/mercadolibre-size-grid/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ settings: window.currentSizeGridData.settings })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Error al crear la guía de talles');
+            }
+
+            showAlert('Guía en Proceso', 'La solicitud de creación de guía de talles y publicación fue enviada con éxito.', 'success');
+            setTimeout(() => {
+                window.renderMeliSizeGridWidget(productId);
+            }, 3000);
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', e.message, 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="sparkles" class="h-4 w-4"></i> Paso 3: Crear Guía de Talles y Publicar';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    };
+
+    window.renderMeliSizeGridWidget = async function(productId) {
+        const widgetContainer = document.getElementById('meli-size-grid-widget');
+        if (!widgetContainer) return;
+
+        widgetContainer.innerHTML = `
+            <div class="p-4 rounded-xl border border-orange-200 dark:border-orange-900/50 bg-orange-50/40 dark:bg-orange-950/20 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-orange-700 dark:text-orange-300 font-semibold">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                    Cargando estado de la Guía de Talles...
+                </div>
+            </div>
+        `;
+
+        try {
+            const res = await authFetch(`/api/products/${productId}/mercadolibre-size-grid`);
+            let gridData = null;
+            if (res.ok) {
+                gridData = await res.json();
+                if (gridData && typeof gridData.settings === 'string') {
+                    try { gridData.settings = JSON.parse(gridData.settings); } catch(e) {}
+                }
+            }
+            window.currentSizeGridData = gridData || { item_id: productId, settings: null };
+
+            let contentHtml = '';
+
+            if (gridData && gridData.size_grid_id) {
+                contentHtml = `
+                <div class="p-5 rounded-xl border-2 border-green-300 dark:border-green-800 bg-green-50/60 dark:bg-green-950/30 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="p-2 bg-green-500 text-white rounded-lg shadow-sm">
+                                <i data-lucide="check-circle-2" class="h-5 w-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-black text-green-900 dark:text-green-200">Guía de Talles Creada y Publicación Iniciada</h4>
+                                <p class="text-xs text-green-700 dark:text-green-300">ID de Guía en Mercado Libre: <span class="font-mono font-bold">${gridData.size_grid_id}</span></p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.renderMeliSizeGridWidget(${productId})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-gray-800 text-green-800 dark:text-green-200 border border-green-300 hover:bg-green-100 transition-all flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Actualizar
+                        </button>
+                    </div>
+                    ${gridData.response ? `
+                        <div class="text-xs font-mono bg-white/80 dark:bg-gray-900/60 p-2.5 rounded-lg border border-green-200 text-gray-700 dark:text-gray-300 overflow-x-auto">
+                            ${gridData.response}
+                        </div>
+                    ` : ''}
+                </div>
+                `;
+            } else if (gridData && gridData.settings && Array.isArray(gridData.settings) && gridData.settings.length > 0) {
+                let fieldsHtml = '';
+
+                gridData.settings.forEach((item) => {
+                    const hasUserInput = item.user_input !== undefined;
+                    const valType = item.value_type || 'string';
+                    const itemId = item.id || '';
+
+                    if (hasUserInput) {
+                        if (valType === 'number_unit') {
+                            let rows = Array.isArray(item.user_input) ? item.user_input : [];
+                            rows = rows.map(r => (typeof r === 'object' && r !== null ? r : { SIZE: '', value: '' }));
+
+                            let rowsHtml = '';
+                            rows.forEach((r, rIdx) => {
+                                rowsHtml += `
+                                <div class="flex items-center gap-2 pt-1.5">
+                                    <div class="w-1/3">
+                                        <input type="text" value="${r.SIZE || ''}" oninput="window.updateSizeGridRow('${itemId}', ${rIdx}, 'SIZE', this.value)"
+                                               placeholder="Talla (ej: L, M)" class="w-full h-9 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-bold bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-orange-500">
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="text" value="${r.value || ''}" oninput="window.updateSizeGridRow('${itemId}', ${rIdx}, 'value', this.value)"
+                                               placeholder="Medida (ej: 92 cm)" class="w-full h-9 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-bold bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-orange-500">
+                                    </div>
+                                    <button type="button" onclick="window.removeSizeGridRow('${itemId}', ${rIdx}, ${productId})" title="Eliminar fila"
+                                            class="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors">
+                                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                    </button>
+                                </div>
+                                `;
+                            });
+
+                            fieldsHtml += `
+                            <div class="p-3.5 bg-white dark:bg-gray-800/80 rounded-xl border border-orange-200 dark:border-orange-800/40 space-y-2 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-black text-orange-900 dark:text-orange-200 uppercase tracking-wide flex items-center gap-1.5">
+                                        <i data-lucide="ruler" class="h-3.5 w-3.5 text-orange-600"></i> ${itemId} (Medidas por Talla)
+                                    </label>
+                                    <button type="button" onclick="window.addSizeGridRow('${itemId}', ${productId})" 
+                                            class="px-2.5 py-1 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/40 rounded-lg border border-orange-200 dark:border-orange-800 flex items-center gap-1 transition-all">
+                                        <i data-lucide="plus" class="h-3 w-3"></i> Agregar Talla
+                                    </button>
+                                </div>
+                                <div class="space-y-1.5">
+                                    ${rowsHtml || '<p class="text-xs text-gray-400 italic py-1">No hay tallas cargadas. Haz clic en "Agregar Talla" para ingresar medidas.</p>'}
+                                </div>
+                            </div>
+                            `;
+                        } else {
+                            const strVal = typeof item.user_input === 'string' ? item.user_input : '';
+                            fieldsHtml += `
+                            <div class="p-3.5 bg-white dark:bg-gray-800/80 rounded-xl border border-orange-200 dark:border-orange-800/40 space-y-1.5 shadow-sm">
+                                <label class="block text-xs font-black text-orange-900 dark:text-orange-200 uppercase tracking-wide flex items-center gap-1.5">
+                                    <i data-lucide="tag" class="h-3.5 w-3.5 text-orange-600"></i> ${itemId === 'GRID_NAME' ? 'Nombre de la Guía (GRID_NAME)' : itemId}
+                                </label>
+                                <input type="text" value="${strVal}" oninput="window.updateSizeGridInput('${itemId}', this.value)"
+                                       placeholder="${itemId === 'GRID_NAME' ? 'Ingresa un nombre único para la guía (ej: Vestido Bata 2026)' : 'Completar valor...'}"
+                                       class="w-full h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-bold bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-orange-500">
+                                <p class="text-[10px] text-gray-500 italic">Debe ser un nombre descriptivo y único.</p>
+                            </div>
+                            `;
+                        }
+                    }
+                });
+
+                let refBadges = '';
+                gridData.settings.forEach(item => {
+                    if (item.user_input === undefined && item.id) {
+                        let valStr = '';
+                        if (item.values) {
+                            if (Array.isArray(item.values)) {
+                                valStr = item.values.map(v => v.name || v.id).join(', ');
+                            } else if (typeof item.values === 'object') {
+                                valStr = item.values.name || item.values.id || '';
+                            }
+                        }
+                        if (valStr) {
+                            refBadges += `
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-orange-100/70 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 border border-orange-200">
+                                <span class="font-mono text-[9px] uppercase text-orange-600">${item.id}:</span> ${valStr}
+                            </span>
+                            `;
+                        }
+                    }
+                });
+
+                contentHtml = `
+                <div class="p-5 rounded-2xl border-2 border-orange-300 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 space-y-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200 dark:border-orange-800/60 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="p-2 bg-orange-500 text-white rounded-lg shadow-sm">
+                                <i data-lucide="ruler" class="h-5 w-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-black text-orange-950 dark:text-orange-100 flex items-center gap-2">
+                                    Paso 2: Completar Plantilla de Talles
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-200 text-orange-800">Pendiente de Creación</span>
+                                </h4>
+                                <p class="text-xs text-orange-700 dark:text-orange-300">Completa los campos con datos de usuario requeridos para generar la guía.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="window.renderMeliSizeGridWidget(${productId})" class="px-3 py-2 rounded-lg text-xs font-bold bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 shadow-sm transition-all">
+                                <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Refrescar
+                            </button>
+                        </div>
+                    </div>
+
+                    ${refBadges ? `
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold text-orange-800 dark:text-orange-300">Datos de Referencia:</span>
+                        ${refBadges}
+                    </div>
+                    ` : ''}
+
+                    ${gridData.response ? `
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-start gap-2">
+                            <i data-lucide="alert-triangle" class="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="font-bold">Última Respuesta / Estado:</span>
+                                <p class="font-mono mt-0.5">${gridData.response}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="space-y-3">
+                        ${fieldsHtml || '<p class="text-xs text-gray-500 italic">No se detectaron campos de entrada en la plantilla.</p>'}
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3 pt-3 border-t border-orange-200 dark:border-orange-800/60">
+                        <button type="button" id="btn-save-size-grid" onclick="window.saveMeliSizeGridTemplate(${productId})" 
+                                class="px-4 py-2 text-xs font-black text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 shadow-sm transition-all flex items-center gap-1.5">
+                            <i data-lucide="save" class="h-3.5 w-3.5"></i> Guardar Borrador
+                        </button>
+                        <button type="button" id="btn-create-size-grid" onclick="window.createMeliSizeGrid(${productId})" 
+                                class="px-5 py-2.5 text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl shadow-md transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                            <i data-lucide="sparkles" class="h-4 w-4"></i> Paso 3: Crear Guía de Talles y Publicar
+                        </button>
+                    </div>
+                </div>
+                `;
+            } else {
+                contentHtml = `
+                <div class="p-5 rounded-2xl border-2 border-orange-300 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 space-y-3 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 bg-orange-500 text-white rounded-lg shadow-sm flex-shrink-0 mt-0.5">
+                                <i data-lucide="ruler" class="h-5 w-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-black text-orange-950 dark:text-orange-100">Paso 1: Guía de Talles Requerida</h4>
+                                <p class="text-xs text-orange-700 dark:text-orange-300 mt-0.5 leading-relaxed">
+                                    Esta categoría requiere crear una Guía de Talles en Mercado Libre antes de poder publicar el producto.
+                                    Genera la plantilla correspondiente para completar las medidas requeridas.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <button type="button" id="btn-gen-size-grid" onclick="window.generateMeliSizeGridTemplate(${productId})" 
+                                    class="px-4 py-2.5 text-xs font-black text-white bg-orange-600 hover:bg-orange-700 rounded-xl shadow-md transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                                <i data-lucide="file-plus" class="h-4 w-4"></i> Generar Plantilla de Talles
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+
+            widgetContainer.innerHTML = contentHtml;
+            if (window.lucide) lucide.createIcons();
+
+        } catch (e) {
+            console.error("Error rendering size grid widget:", e);
+            widgetContainer.innerHTML = `
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center justify-between">
+                    <span>Error al cargar estado de la Guía de Talles: ${e.message}</span>
+                    <button type="button" onclick="window.renderMeliSizeGridWidget(${productId})" class="px-2.5 py-1 text-xs font-bold bg-white border border-red-300 rounded hover:bg-red-100">Reintentar</button>
+                </div>
+            `;
+        }
+    };
+
     function renderMeliAttributes(settings, productId) {
         const container = document.getElementById('dynamic-meli-settings-container');
         if (!container) return;
@@ -2565,7 +2921,26 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Detect if category requires Size Grid
+        let hasSizeGrid = false;
+        for (const sectionObj of settings) {
+            for (const sec in sectionObj) {
+                const els = sectionObj[sec];
+                if (Array.isArray(els)) {
+                    if (els.some(e => String(e.id || '').toUpperCase() === 'SIZE_GRID_ID')) {
+                        hasSizeGrid = true;
+                        break;
+                    }
+                }
+            }
+            if (hasSizeGrid) break;
+        }
+
         let html = '';
+
+        if (hasSizeGrid) {
+            html += `<div id="meli-size-grid-widget" class="mb-6"></div>`;
+        }
 
         // Iterate over sections: each item in settings represents a section
         settings.forEach(sectionObj => {
@@ -2610,7 +2985,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     let fieldHtml = '';
 
-                    if (condition === 'Restricted Input' || valType === 'list' || (Array.isArray(examples) && examples.length > 0)) {
+                    const upperId = String(element.id || '').toUpperCase();
+                    if (upperId === 'SIZE_GRID_ID' || upperId === 'SIZE_GRID_ROW_ID') {
+                        fieldHtml = `
+                        <input type="text" id="${inputId}" value="${val || 'Asignación automática mediante Guía de Talles'}" readonly
+                               class="w-full h-10 px-3 border border-orange-200 dark:border-orange-900/50 rounded-lg text-xs bg-orange-50/50 dark:bg-orange-950/20 text-orange-800 dark:text-orange-300 font-semibold cursor-not-allowed shadow-inner"
+                               title="Este atributo se asigna automáticamente al crear la guía de talles">
+                        `;
+                    } else if (condition === 'Restricted Input' || valType === 'list' || (Array.isArray(examples) && examples.length > 0)) {
                         let optionsList = [];
                         if (Array.isArray(examples)) {
                             if (examples.length > 0 && Array.isArray(examples[0])) {
@@ -2717,6 +3099,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         container.innerHTML = html;
         if (window.lucide) lucide.createIcons();
+
+        if (hasSizeGrid) {
+            window.renderMeliSizeGridWidget(productId);
+        }
 
         const listingSelect = document.getElementById('attr_listing_type') || document.getElementById('attr_LISTING_TYPE');
         if (listingSelect) {
