@@ -331,7 +331,10 @@ class OrderMetricResponse(BaseModel):
 
 class OrderListItem(BaseModel):
     venta_id: str
+    pack_id: Optional[str] = None
     created_at: datetime
+    updated_at: Optional[datetime] = None
+    status: Optional[str] = None
     item_id: str
     title: str
     category_id: Optional[str] = None

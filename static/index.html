@@ -916,8 +916,8 @@
                         <!-- Filters -->
                         <div class="flex flex-wrap items-center gap-2">
                             <!-- Search -->
-                            <div class="relative min-w-[200px]">
-                                <input type="text" id="orderSearchInput" placeholder="Buscar venta, item, título..." oninput="window.triggerOrderFilterChange()"
+                            <div class="relative min-w-[180px]">
+                                <input type="text" id="orderSearchInput" placeholder="Buscar venta, pack, título..." oninput="window.triggerOrderFilterChange()"
                                     class="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm">
                                 <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
                             </div>
@@ -933,6 +933,16 @@
                                 <option value="this_month">Este mes</option>
                             </select>
 
+                            <!-- Status Filter -->
+                            <select id="orderStatusFilter" onchange="window.triggerOrderFilterChange()"
+                                class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                <option value="">Todos los estados</option>
+                                <option value="paid">Pagadas</option>
+                                <option value="confirmed">Confirmadas</option>
+                                <option value="delivered">Entregadas</option>
+                                <option value="cancelled">Canceladas</option>
+                            </select>
+
                             <!-- Condition Filter -->
                             <select id="orderConditionFilter" onchange="window.triggerOrderFilterChange()"
                                 class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
@@ -940,52 +950,77 @@
                                 <option value="new">Nuevos</option>
                                 <option value="used">Usados</option>
                             </select>
+
+                            <!-- Category Filter -->
+                            <select id="orderCategoryFilter" onchange="window.triggerOrderFilterChange()"
+                                class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none max-w-[170px] truncate bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]">
+                                <option value="">Todas las categorías</option>
+                            </select>
+
+                            <!-- Export CSV Button -->
+                            <button id="btnExportOrdersCSV" onclick="window.exportOrdersToCSV()"
+                                class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all"
+                                title="Descargar reporte en CSV para Excel">
+                                <i data-lucide="download" class="h-4 w-4 text-blue-600 dark:text-blue-400"></i>
+                                <span class="hidden sm:inline">Exportar</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Metrics Grid (KPIs) -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 flex-none">
+                    <!-- Metrics Grid (KPIs) - 5 Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6 flex-none">
                         <!-- Revenue Card -->
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Ingresos Brutos</span>
-                                <h3 id="metricGrossRevenue" class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">$0.00</h3>
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div class="min-w-0">
+                                <span class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5 truncate">Ingresos Brutos</span>
+                                <h3 id="metricGrossRevenue" class="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white truncate">$0.00</h3>
                             </div>
-                            <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
-                                <i data-lucide="dollar-sign" class="h-6 w-6"></i>
+                            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg flex-shrink-0">
+                                <i data-lucide="dollar-sign" class="h-5 w-5"></i>
                             </div>
                         </div>
                         
                         <!-- Net Profit Card -->
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Ingreso Neto (Menos Fee)</span>
-                                <h3 id="metricNetRevenue" class="text-xl sm:text-2xl font-extrabold text-green-600 dark:text-green-400">$0.00</h3>
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div class="min-w-0">
+                                <span class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5 truncate">Ingreso Neto</span>
+                                <h3 id="metricNetRevenue" class="text-lg sm:text-xl font-extrabold text-green-600 dark:text-green-400 truncate">$0.00</h3>
                             </div>
-                            <div class="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
-                                <i data-lucide="trending-up" class="h-6 w-6"></i>
+                            <div class="p-2.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg flex-shrink-0">
+                                <i data-lucide="trending-up" class="h-5 w-5"></i>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Promedio (AOV) Card -->
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div class="min-w-0">
+                                <span class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5 truncate">Ticket Promedio</span>
+                                <h3 id="metricAOV" class="text-lg sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 truncate">$0.00</h3>
+                            </div>
+                            <div class="p-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg flex-shrink-0">
+                                <i data-lucide="receipt" class="h-5 w-5"></i>
                             </div>
                         </div>
 
                         <!-- Orders Count Card -->
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Órdenes Totales</span>
-                                <h3 id="metricOrdersCount" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400">0</h3>
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                            <div class="min-w-0">
+                                <span class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5 truncate">Órdenes Totales</span>
+                                <h3 id="metricOrdersCount" class="text-lg sm:text-xl font-extrabold text-purple-600 dark:text-purple-400 truncate">0</h3>
                             </div>
-                            <div class="p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
-                                <i data-lucide="shopping-cart" class="h-6 w-6"></i>
+                            <div class="p-2.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg flex-shrink-0">
+                                <i data-lucide="shopping-cart" class="h-5 w-5"></i>
                             </div>
                         </div>
 
                         <!-- Units Sold Card -->
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between">
-                            <div>
-                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-1">Unidades Vendidas</span>
-                                <h3 id="metricUnitsSold" class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">0</h3>
+                        <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex items-center justify-between col-span-2 md:col-span-1">
+                            <div class="min-w-0">
+                                <span class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-0.5 truncate">Unidades Vendidas</span>
+                                <h3 id="metricUnitsSold" class="text-lg sm:text-xl font-extrabold text-indigo-600 dark:text-indigo-400 truncate">0</h3>
                             </div>
-                            <div class="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg">
-                                <i data-lucide="package" class="h-6 w-6"></i>
+                            <div class="p-2.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex-shrink-0">
+                                <i data-lucide="package" class="h-5 w-5"></i>
                             </div>
                         </div>
                     </div>
@@ -1002,14 +1037,24 @@
                             </div>
                         </div>
 
-                        <!-- Leaderboards Panel -->
+                        <!-- Leaderboards Panel with Internal Sub-tabs -->
                         <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-150 dark:border-gray-700 shadow-sm flex flex-col h-full overflow-y-auto custom-scrollbar">
-                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-                                <i data-lucide="award" class="h-4 w-4 text-yellow-500"></i> Top 5 Productos Vendidos
-                            </span>
+                            <div class="flex items-center justify-between border-b border-gray-150 dark:border-gray-700 pb-2 mb-3 flex-none">
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="award" class="h-4 w-4 text-yellow-500"></i> Top Líderes
+                                </span>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-700 p-0.5 rounded-lg text-[10px] font-bold">
+                                    <button id="btnTabTopProducts" onclick="window.switchOrdersTopTab('products')" class="px-2 py-1 rounded-md bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs transition-all">Productos</button>
+                                    <button id="btnTabTopCategories" onclick="window.switchOrdersTopTab('categories')" class="px-2 py-1 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-800 transition-all">Categorías</button>
+                                </div>
+                            </div>
+                            <!-- Tab: Top Products -->
                             <div id="topProductsList" class="space-y-2 flex-1 text-xs">
-                                <!-- Populated dynamically -->
                                 <div class="text-gray-400 italic text-center py-4">No hay datos de productos</div>
+                            </div>
+                            <!-- Tab: Top Categories -->
+                            <div id="topCategoriesList" class="space-y-2 flex-1 text-xs hidden">
+                                <div class="text-gray-400 italic text-center py-4">No hay datos de categorías</div>
                             </div>
                         </div>
                     </div>
@@ -1031,8 +1076,9 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-gray-50 dark:bg-gray-750 text-slate-400 dark:text-gray-400 uppercase text-[10px] font-bold tracking-wider sticky top-0 z-10">
-                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">ID Venta</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">ID Venta / Pack</th>
                                         <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">Fecha</th>
+                                        <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">Estado</th>
                                         <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700">Producto</th>
                                         <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-center">Unidades</th>
                                         <th class="py-3 px-5 border-b border-gray-150 dark:border-gray-700 text-right">Precio Unitario</th>
@@ -1044,7 +1090,7 @@
                                 <tbody id="ordersTableBody" class="divide-y divide-gray-150 dark:divide-gray-700 text-sm">
                                     <!-- Populated dynamically -->
                                     <tr>
-                                        <td colspan="8" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td>
+                                        <td colspan="9" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1606,8 +1652,8 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=179"></script>
-    <script src="/static/js/app.v124.js?v=179"></script>
+    <script src="/static/js/tienda-nube.js?v=180"></script>
+    <script src="/static/js/app.v124.js?v=180"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 

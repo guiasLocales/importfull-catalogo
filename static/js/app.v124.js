@@ -6266,23 +6266,110 @@ document.addEventListener('DOMContentLoaded', function () {
     let cachedChartData = null;
     let cachedTopStats = null;
 
-    window.fetchOrdersDashboardData = async (paginationOnly = false) => {
+    async function loadOrderCategories() {
+        const catSelect = document.getElementById('orderCategoryFilter');
+        if (!catSelect || catSelect.children.length > 1) return;
+        try {
+            const res = await authFetch('/api/orders/categories');
+            if (res.ok) {
+                const cats = await res.json();
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = `Cat: ${c}`;
+                    catSelect.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            console.error("Error loading order categories:", e);
+        }
+    }
+
+    window.switchOrdersTopTab = (tab) => {
+        const prodTab = document.getElementById('topProductsList');
+        const catTab = document.getElementById('topCategoriesList');
+        const btnProd = document.getElementById('btnTabTopProducts');
+        const btnCat = document.getElementById('btnTabTopCategories');
+        if (tab === 'products') {
+            prodTab?.classList.remove('hidden');
+            catTab?.classList.add('hidden');
+            btnProd?.classList.add('bg-white', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-blue-400', 'shadow-xs');
+            btnProd?.classList.remove('text-gray-500', 'dark:text-gray-400');
+            btnCat?.classList.remove('bg-white', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-blue-400', 'shadow-xs');
+            btnCat?.classList.add('text-gray-500', 'dark:text-gray-400');
+        } else {
+            prodTab?.classList.add('hidden');
+            catTab?.classList.remove('hidden');
+            btnCat?.classList.add('bg-white', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-blue-400', 'shadow-xs');
+            btnCat?.classList.remove('text-gray-500', 'dark:text-gray-400');
+            btnProd?.classList.remove('bg-white', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-blue-400', 'shadow-xs');
+            btnProd?.classList.add('text-gray-500', 'dark:text-gray-400');
+        }
+    };
+
+    window.exportOrdersToCSV = () => {
         const searchVal = document.getElementById('orderSearchInput')?.value || '';
         const dateFilter = document.getElementById('orderDateFilter')?.value || 'all_time';
+        const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
         const conditionFilter = document.getElementById('orderConditionFilter')?.value || '';
+        const categoryFilter = document.getElementById('orderCategoryFilter')?.value || '';
+        const { start, end } = getFilterDates(dateFilter);
+        
+        let exportUrl = `/api/orders/export-csv?`;
+        if (start) exportUrl += `&start_date=${start}`;
+        if (end) exportUrl += `&end_date=${end}`;
+        if (statusFilter) exportUrl += `&status=${encodeURIComponent(statusFilter)}`;
+        if (conditionFilter) exportUrl += `&condition_item=${encodeURIComponent(conditionFilter)}`;
+        if (categoryFilter) exportUrl += `&category_id=${encodeURIComponent(categoryFilter)}`;
+        if (searchVal) exportUrl += `&search=${encodeURIComponent(searchVal)}`;
+        
+        const token = localStorage.getItem('token');
+        fetch(exportUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al generar el reporte CSV');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ventas_mercadolibre_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showAlert('Exportación Completa', 'El reporte CSV se ha descargado exitosamente.', 'success');
+        })
+        .catch(err => {
+            console.error("Export Error:", err);
+            showAlert('Error', 'No se pudo exportar el listado de órdenes.', 'error');
+        });
+    };
+
+    window.fetchOrdersDashboardData = async (paginationOnly = false) => {
+        loadOrderCategories();
+        const searchVal = document.getElementById('orderSearchInput')?.value || '';
+        const dateFilter = document.getElementById('orderDateFilter')?.value || 'all_time';
+        const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
+        const conditionFilter = document.getElementById('orderConditionFilter')?.value || '';
+        const categoryFilter = document.getElementById('orderCategoryFilter')?.value || '';
         
         const { start, end } = getFilterDates(dateFilter);
         
         let queryParams = `?limit=${state.ordersPageLimit}&offset=${state.ordersPageOffset}`;
         if (start) queryParams += `&start_date=${start}`;
         if (end) queryParams += `&end_date=${end}`;
+        if (statusFilter) queryParams += `&status=${encodeURIComponent(statusFilter)}`;
         if (conditionFilter) queryParams += `&condition_item=${conditionFilter}`;
+        if (categoryFilter) queryParams += `&category_id=${encodeURIComponent(categoryFilter)}`;
         if (searchVal) queryParams += `&search=${encodeURIComponent(searchVal)}`;
         
         try {
             const tbody = document.getElementById('ordersTableBody');
             if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-blue-600 mx-auto"></i> Cargando órdenes...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8"><i data-lucide="loader-2" class="h-6 w-6 animate-spin text-blue-600 mx-auto"></i> Cargando órdenes...</td></tr>`;
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             }
             
@@ -6296,7 +6383,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 let metricsParams = '';
                 if (start) metricsParams += `&start_date=${start}`;
                 if (end) metricsParams += `&end_date=${end}`;
+                if (statusFilter) metricsParams += `&status=${encodeURIComponent(statusFilter)}`;
                 if (conditionFilter) metricsParams += `&condition_item=${conditionFilter}`;
+                if (categoryFilter) metricsParams += `&category_id=${encodeURIComponent(categoryFilter)}`;
                 if (searchVal) metricsParams += `&search=${encodeURIComponent(searchVal)}`;
                 if (metricsParams) metricsParams = '?' + metricsParams.substring(1);
                 
@@ -6327,11 +6416,13 @@ document.addEventListener('DOMContentLoaded', function () {
     window.renderOrdersDashboard = (metrics, listData, chartData, topStats) => {
         const formatCurrency = (val) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
         
-        document.getElementById('metricGrossRevenue').innerText = formatCurrency(metrics.total_gross_income);
-        document.getElementById('metricNetRevenue').innerText = formatCurrency(metrics.total_net_income);
-        document.getElementById('metricOrdersCount').innerText = metrics.total_sales_count.toLocaleString();
-        document.getElementById('metricUnitsSold').innerText = Math.round(metrics.total_units_sold).toLocaleString();
+        if (document.getElementById('metricGrossRevenue')) document.getElementById('metricGrossRevenue').innerText = formatCurrency(metrics.total_gross_income);
+        if (document.getElementById('metricNetRevenue')) document.getElementById('metricNetRevenue').innerText = formatCurrency(metrics.total_net_income);
+        if (document.getElementById('metricAOV')) document.getElementById('metricAOV').innerText = formatCurrency(metrics.average_order_value || 0);
+        if (document.getElementById('metricOrdersCount')) document.getElementById('metricOrdersCount').innerText = metrics.total_sales_count.toLocaleString();
+        if (document.getElementById('metricUnitsSold')) document.getElementById('metricUnitsSold').innerText = Math.round(metrics.total_units_sold).toLocaleString();
         
+        // Render Top Products
         const topProdList = document.getElementById('topProductsList');
         if (topProdList) {
             if (topStats.top_products && topStats.top_products.length > 0) {
@@ -6352,6 +6443,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // Render Top Categories
+        const topCatList = document.getElementById('topCategoriesList');
+        if (topCatList) {
+            if (topStats.top_categories && topStats.top_categories.length > 0) {
+                topCatList.innerHTML = topStats.top_categories.map((c, idx) => `
+                    <div class="flex items-center justify-between p-2 rounded bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700/50">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="font-black text-gray-400 w-4">${idx + 1}</span>
+                            <div class="min-w-0">
+                                <p class="font-bold text-gray-800 dark:text-white truncate" title="${c.category_id}">Cat: ${c.category_id}</p>
+                            </div>
+                        </div>
+                        <span class="font-extrabold text-indigo-600 dark:text-indigo-400 whitespace-nowrap ml-2">${formatCurrency(c.revenue)}</span>
+                    </div>
+                `).join('');
+            } else {
+                topCatList.innerHTML = `<div class="text-gray-400 italic text-center py-6">No hay datos de categorías</div>`;
+            }
+        }
+
+        // Render Orders Table
         const tbody = document.getElementById('ordersTableBody');
         if (tbody) {
             if (listData.orders && listData.orders.length > 0) {
@@ -6363,15 +6475,37 @@ document.addEventListener('DOMContentLoaded', function () {
                     const conditionBadge = o.condition_item === 'new' 
                         ? `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">Nuevo</span>` 
                         : `<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">Usado</span>`;
+
+                    let statusBadge = '';
+                    const st = String(o.status || '').toLowerCase();
+                    if (st === 'paid') {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">Pagada</span>`;
+                    } else if (st === 'confirmed') {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">Confirmada</span>`;
+                    } else if (st === 'delivered') {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">Entregada</span>`;
+                    } else if (st === 'cancelled') {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">Cancelada</span>`;
+                    } else if (st) {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">${o.status}</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-gray-100 text-gray-500">-</span>`;
+                    }
                     
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-gray-750/30 transition-colors">
-                            <td class="py-3 px-5 font-mono text-xs font-bold text-gray-500">${o.venta_id}</td>
+                            <td class="py-3 px-5 font-mono text-xs">
+                                <div class="font-bold text-gray-800 dark:text-gray-200">${o.venta_id}</div>
+                                ${o.pack_id ? `<span class="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/50 mt-0.5"><i data-lucide="layers" class="h-2.5 w-2.5"></i> Pack: ${o.pack_id}</span>` : ''}
+                            </td>
                             <td class="py-3 px-5 text-xs text-gray-500 whitespace-nowrap">${formattedDate}</td>
+                            <td class="py-3 px-5 whitespace-nowrap">${statusBadge}</td>
                             <td class="py-3 px-5 min-w-[200px]">
                                 <div class="font-bold text-gray-800 dark:text-white">${o.title}</div>
-                                <div class="text-[10px] text-gray-400 flex items-center gap-1.5 mt-0.5">
-                                    ID: ${o.item_id} • ${conditionBadge}
+                                <div class="text-[10px] text-gray-400 flex flex-wrap items-center gap-1.5 mt-0.5">
+                                    <span>ID: ${o.item_id}</span>
+                                    ${o.category_id ? `<span>• Cat: ${o.category_id}</span>` : ''}
+                                    <span>•</span> ${conditionBadge}
                                 </div>
                             </td>
                             <td class="py-3 px-5 text-center font-bold">${Math.round(o.quantity)}</td>
@@ -6383,7 +6517,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
                 }).join('');
             } else {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-gray-400 italic">No hay órdenes para mostrar</td></tr>`;
             }
         }
 
