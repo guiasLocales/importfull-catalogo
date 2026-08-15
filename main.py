@@ -1,5 +1,6 @@
 import sys
 import os
+from typing import Optional, List, Dict, Any
 
 print("DEBUG: Starting main.py", file=sys.stderr)
 
