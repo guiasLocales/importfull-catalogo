@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Force rebuild (change this value to bust cache)
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
