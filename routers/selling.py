@@ -18,10 +18,16 @@ WEBHOOK_SECRET = "mati-gordo"
 
 from typing import Optional
 
+@router.get("/by-code/", response_model=Optional[SellingCalculationResponse])
+def get_selling_calculation_empty():
+    return None
+
 @router.get("/by-code/{product_code}", response_model=Optional[SellingCalculationResponse])
 def get_selling_calculation_by_code(product_code: str, db: Session = Depends(get_db)):
     """Get selling cost calculation using the product_code (used by Competence modal)"""
     try:
+        if not product_code:
+            return None
         product = db.query(Product).filter(Product.product_code == product_code).first()
         if not product:
             return None

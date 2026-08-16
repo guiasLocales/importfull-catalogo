@@ -1148,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-blue-600"></i>';
             if (window.lucide) lucide.createIcons();
             
-            const response = await authFetch(`/api/selling/by-code/${productCode}/calculate`, {
+            const response = await authFetch(`/api/selling/by-code/${encodeURIComponent(productCode)}/calculate`, {
                 method: 'POST'
             });
             
@@ -1307,9 +1307,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Try to fetch automated ML costs
             let meliCosts = null;
-            if (product.product_code) {
+            if (product.product_code && product.product_code.trim() !== '') {
                 try {
-                    const resCosts = await authFetch(`/api/selling/by-code/${product.product_code}`);
+                    const resCosts = await authFetch(`/api/selling/by-code/${encodeURIComponent(product.product_code.trim())}`);
                     if (resCosts.ok) {
                         meliCosts = await resCosts.json();
                     }
