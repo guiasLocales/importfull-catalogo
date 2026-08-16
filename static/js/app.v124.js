@@ -6252,8 +6252,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- MercadoLibre Orders Dashboard ---
     let ordersDebounceTimer = null;
-    state.ordersPageLimit = 10;
+    state.ordersPageLimit = 50;
     state.ordersPageOffset = 0;
+
+    window.onOrderLimitChange = (limitVal) => {
+        state.ordersPageLimit = parseInt(limitVal) || 50;
+        state.ordersPageOffset = 0;
+        fetchOrdersDashboardData(true);
+    };
 
     window.triggerOrderFilterChange = () => {
         if (ordersDebounceTimer) clearTimeout(ordersDebounceTimer);
@@ -6304,25 +6310,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let cachedChartData = null;
     let cachedTopStats = null;
 
-    async function loadOrderCategories() {
-        const catSelect = document.getElementById('orderCategoryFilter');
-        if (!catSelect || catSelect.children.length > 1) return;
-        try {
-            const res = await authFetch('/api/orders/categories');
-            if (res.ok) {
-                const cats = await res.json();
-                cats.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = `Cat: ${c}`;
-                    catSelect.appendChild(opt);
-                });
-            }
-        } catch (e) {
-            console.error("Error loading order categories:", e);
-        }
-    }
-
     window.switchOrdersTopTab = (tab) => {
         const prodTab = document.getElementById('topProductsList');
         const catTab = document.getElementById('topCategoriesList');
@@ -6350,7 +6337,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const dateFilter = document.getElementById('orderDateFilter')?.value || 'all_time';
         const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
         const conditionFilter = document.getElementById('orderConditionFilter')?.value || '';
-        const categoryFilter = document.getElementById('orderCategoryFilter')?.value || '';
         const { start, end } = getFilterDates(dateFilter);
         
         let exportUrl = `/api/orders/export-csv?`;
@@ -6358,7 +6344,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (end) exportUrl += `&end_date=${end}`;
         if (statusFilter) exportUrl += `&status=${encodeURIComponent(statusFilter)}`;
         if (conditionFilter) exportUrl += `&condition_item=${encodeURIComponent(conditionFilter)}`;
-        if (categoryFilter) exportUrl += `&category_id=${encodeURIComponent(categoryFilter)}`;
         if (searchVal) exportUrl += `&search=${encodeURIComponent(searchVal)}`;
         
         const token = localStorage.getItem('token');
@@ -6387,12 +6372,15 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.fetchOrdersDashboardData = async (paginationOnly = false) => {
-        loadOrderCategories();
+        const limitSelect = document.getElementById('orderLimitFilter');
+        if (limitSelect && limitSelect.value) {
+            state.ordersPageLimit = parseInt(limitSelect.value) || 50;
+        }
+
         const searchVal = document.getElementById('orderSearchInput')?.value || '';
         const dateFilter = document.getElementById('orderDateFilter')?.value || 'all_time';
         const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
         const conditionFilter = document.getElementById('orderConditionFilter')?.value || '';
-        const categoryFilter = document.getElementById('orderCategoryFilter')?.value || '';
         
         const { start, end } = getFilterDates(dateFilter);
         
@@ -6401,7 +6389,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (end) queryParams += `&end_date=${end}`;
         if (statusFilter) queryParams += `&status=${encodeURIComponent(statusFilter)}`;
         if (conditionFilter) queryParams += `&condition_item=${conditionFilter}`;
-        if (categoryFilter) queryParams += `&category_id=${encodeURIComponent(categoryFilter)}`;
         if (searchVal) queryParams += `&search=${encodeURIComponent(searchVal)}`;
         
         try {
@@ -6423,7 +6410,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (end) metricsParams += `&end_date=${end}`;
                 if (statusFilter) metricsParams += `&status=${encodeURIComponent(statusFilter)}`;
                 if (conditionFilter) metricsParams += `&condition_item=${conditionFilter}`;
-                if (categoryFilter) metricsParams += `&category_id=${encodeURIComponent(categoryFilter)}`;
                 if (searchVal) metricsParams += `&search=${encodeURIComponent(searchVal)}`;
                 if (metricsParams) metricsParams = '?' + metricsParams.substring(1);
                 
