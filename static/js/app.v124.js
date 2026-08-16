@@ -1241,8 +1241,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function openProductDetail(productId) {
+    async function openProductDetail(productId, initialTab = null) {
         setLoading(true);
+
+        const targetTab = initialTab || window._currentDetailActiveTab || 'general';
+        window._currentDetailActiveTab = targetTab;
 
         // Find current index in products list
         currentDetailIndex = state.products.findIndex(p => p.id === productId);
@@ -1981,6 +1984,9 @@ document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
             renderMeliAttributes(meliAttrs.settings, product.id);
             renderMeliVariants(currentMeliStatus, product.id);
+            if (targetTab === 'attributes') {
+                window.switchDetailTab('attributes');
+            }
 
             // Remove any existing keyboard handler first (prevents stacking)
             if (window._productDetailKeyHandler) {
@@ -2364,6 +2370,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.switchDetailTab = function(tabName) {
+        window._currentDetailActiveTab = tabName;
         const generalTab = document.getElementById('detailTab-general');
         const attrsTab = document.getElementById('detailTab-attributes');
         const generalBtn = document.getElementById('tabBtn-general');
@@ -3367,6 +3374,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.openProductDetail = openProductDetail;
 
     window.onCategoryOptionChange = async function(selectEl, productId) {
+        window._currentDetailActiveTab = 'attributes';
         const categoryId = selectEl.value;
         const inputEl = document.getElementById('attr_category_id');
         if (!categoryId) return;
@@ -3400,58 +3408,69 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             });
 
-            if (!saveRes.ok) {
-                if (saveRes.status !== 404) {
-                    const text = await saveRes.text();
-                    let errorMsg = 'Error al guardar la categoría';
-                    try {
-                        const errData = JSON.parse(text);
-                        if (errData.detail) errorMsg = errData.detail;
-                    } catch (e) {}
-                    throw new Error(errorMsg);
-                }
-            } else {
-                const updatedMeliAttrs = await saveRes.json();
-                currentMeliAttrs = updatedMeliAttrs;
-                if (currentMeliAttrs && typeof currentMeliAttrs.settings === 'string') {
-                    try { currentMeliAttrs.settings = JSON.parse(currentMeliAttrs.settings); } catch(e) {}
-                }
-                renderMeliAttributes(currentMeliAttrs.settings, productId);
-            }
-
-            // 2. Disparar evento de pre-publish sin data (webhook simplificado)
-            const prePubRes = await authFetch(`/api/products/${productId}/pre-publish`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
-            });
-            
-            if (!prePubRes.ok) {
-                const text = await prePubRes.text();
-                let errorMsg = 'Error al disparar Pre-Publish';
+            if (!saveRes.ok && saveRes.status !== 404) {
+                const text = await saveRes.text();
+                let errorMsg = 'Error al guardar la categoría';
                 try {
                     const errData = JSON.parse(text);
                     if (errData.detail) errorMsg = errData.detail;
                 } catch (e) {}
                 throw new Error(errorMsg);
             }
+
+            // Disparar evento de pre-publish
+            await authFetch(`/api/products/${productId}/pre-publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
             
-            showAlert('Categoría Aplicada', 'Categoría guardada y evento de Pre-Publish ejecutado con éxito.', 'success');
+            // Poll for generated attributes
+            let attempts = 0;
+            const maxAttempts = 6;
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                try {
+                    const res = await authFetch(`/api/products/${productId}/mercadolibre-attributes`);
+                    if (res.ok) {
+                        const updatedMeliAttrs = await res.json();
+                        let settings = updatedMeliAttrs.settings;
+                        if (typeof settings === 'string') {
+                            try { settings = JSON.parse(settings); } catch(e) {}
+                        }
+                        if ((settings && Array.isArray(settings) && settings.length > 0) || attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                            currentMeliAttrs = updatedMeliAttrs;
+                            currentMeliAttrs.settings = settings;
+                            renderMeliAttributes(currentMeliAttrs.settings, productId);
+                            if (window.renderMeliSizeGridWidget) window.renderMeliSizeGridWidget(productId);
+                            if (loader) loader.classList.add('hidden');
+                            selectEl.disabled = false;
+                        }
+                    }
+                } catch (err) {
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        if (loader) loader.classList.add('hidden');
+                        selectEl.disabled = false;
+                    }
+                }
+            }, 1500);
             
         } catch(error) {
             console.error('Error changing category options:', error);
             showAlert('Error', error.message, 'error');
-        } finally {
             if (loader) loader.classList.add('hidden');
             selectEl.disabled = false;
         }
     };
 
     window.triggerPrePublishMatch = async function(productId, btnEl) {
+        window._currentDetailActiveTab = 'attributes';
         const btn = btnEl || document.getElementById('btn-meli-pre-publish');
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
-            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin text-purple-650"></i> Cargando...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin text-purple-600"></i> Obteniendo...';
             btn.disabled = true;
             if (window.lucide) lucide.createIcons();
         }
@@ -3490,41 +3509,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMsg);
             }
 
-            showAlert('Sincronización Iniciada', 'Buscando especificaciones de MercadoLibre... Espere un momento.', 'success');
-            
-            // Wait 2.5 seconds and reload product details dynamically to fetch the updated settings
-            setTimeout(async () => {
+            // Poll for attributes settings update
+            let attempts = 0;
+            const maxAttempts = 6;
+            const pollInterval = setInterval(async () => {
+                attempts++;
                 try {
                     const res = await authFetch(`/api/products/${productId}/mercadolibre-attributes`);
                     if (res.ok) {
                         const updatedMeliAttrs = await res.json();
-                        currentMeliAttrs = updatedMeliAttrs;
-                        if (currentMeliAttrs && typeof currentMeliAttrs.settings === 'string') {
-                            try { currentMeliAttrs.settings = JSON.parse(currentMeliAttrs.settings); } catch(e) {}
+                        let settings = updatedMeliAttrs.settings;
+                        if (typeof settings === 'string') {
+                            try { settings = JSON.parse(settings); } catch(e) {}
                         }
-                        
-                        const categorySelectNew = document.getElementById('attr_category_options_select');
-                        const categoryInputNew = document.getElementById('attr_category_id');
-                        if (categorySelectNew && updatedMeliAttrs.category_id) {
-                            categorySelectNew.value = updatedMeliAttrs.category_id;
+                        if ((settings && Array.isArray(settings) && settings.length > 0) || attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                            currentMeliAttrs = updatedMeliAttrs;
+                            currentMeliAttrs.settings = settings;
+                            renderMeliAttributes(currentMeliAttrs.settings, productId);
+                            if (window.renderMeliSizeGridWidget) window.renderMeliSizeGridWidget(productId);
+                            showAlert('Atributos Cargados', 'Se cargaron las especificaciones y atributos de MercadoLibre.', 'success');
+                            if (btn) {
+                                btn.innerHTML = originalHTML;
+                                btn.disabled = false;
+                                if (window.lucide) lucide.createIcons();
+                            }
                         }
-                        if (categoryInputNew) {
-                            categoryInputNew.value = updatedMeliAttrs.category_id || '';
-                        }
-                        
-                        renderMeliAttributes(currentMeliAttrs.settings, productId);
-                        showAlert('Especificaciones Cargadas', 'Atributos actualizados para la categoría especificada.', 'success');
                     }
-                } catch(e) {
-                    console.error("Error refreshing after pre-publish:", e);
-                } finally {
-                    if (btn) {
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                        if (window.lucide) lucide.createIcons();
+                } catch (err) {
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        if (btn) {
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                            if (window.lucide) lucide.createIcons();
+                        }
                     }
                 }
-            }, 2500);
+            }, 1500);
 
         } catch (error) {
             console.error('Error in pre-publish trigger:', error);
@@ -3539,6 +3561,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     window.triggerGenerateCategories = async function(productId, btnEl) {
+        window._currentDetailActiveTab = 'attributes';
         const btn = btnEl || document.getElementById('btn-meli-generate-categories');
         const originalHTML = btn ? btn.innerHTML : '';
         if (btn) {
@@ -3548,8 +3571,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            // Fire a clean pre-publish event — no field, no prompt — so the webhook
-            // runs its category-matching logic and populates category_options in the DB.
+            // Fire a clean pre-publish event
             const response = await authFetch(`/api/products/${productId}/pre-publish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3566,26 +3588,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMsg);
             }
 
-            showAlert(
-                'Categorías en Proceso',
-                'El webhook fue notificado. Las categorías sugeridas aparecerán en unos segundos — el modal se va a recargar automáticamente.',
-                'success'
-            );
-
-            // Wait 4 seconds and do a full modal reload to pick up the new category_options
-            setTimeout(async () => {
+            // Poll for category options update
+            let attempts = 0;
+            const maxAttempts = 6;
+            const pollInterval = setInterval(async () => {
+                attempts++;
                 try {
-                    openProductDetail(productId);
-                } catch(e) {
-                    console.error('Error reloading product after generate categories:', e);
-                } finally {
-                    if (btn) {
-                        btn.innerHTML = originalHTML;
-                        btn.disabled = false;
-                        if (window.lucide) lucide.createIcons();
+                    const res = await authFetch(`/api/products/${productId}/mercadolibre-attributes`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        let opts = null;
+                        if (data && data.category_options) {
+                            opts = typeof data.category_options === 'string' ? JSON.parse(data.category_options) : data.category_options;
+                        }
+                        if ((opts && Array.isArray(opts) && opts.length > 0) || attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                            await openProductDetail(productId, 'attributes');
+                            showAlert('Categorías Generadas', 'Se actualizaron las opciones de categorías de MercadoLibre.', 'success');
+                            if (btn) {
+                                btn.innerHTML = originalHTML;
+                                btn.disabled = false;
+                                if (window.lucide) lucide.createIcons();
+                            }
+                        }
+                    }
+                } catch (err) {
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        await openProductDetail(productId, 'attributes');
+                        if (btn) {
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+                            if (window.lucide) lucide.createIcons();
+                        }
                     }
                 }
-            }, 4000);
+            }, 1500);
 
         } catch (error) {
             console.error('Error in triggerGenerateCategories:', error);
