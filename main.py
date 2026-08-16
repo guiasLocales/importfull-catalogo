@@ -51,6 +51,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
+from fastapi.middleware.gzip import GZipMiddleware
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -59,6 +61,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enable Gzip compression for all responses > 1KB (reduces bundle size by ~85%)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+@app.middleware("http")
+async def add_performance_headers(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/static/"):
+        # Cache static assets (CSS, JS, Images)
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    elif path == "/" or path.endswith(".html"):
+        # Never cache HTML to ensure fresh script updates
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 # Include routers
 app.include_router(products.router)
@@ -84,7 +103,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static_dir")
 
 @app.get("/")
 def read_root():
-    return FileResponse("static/index.html")
+    return FileResponse("static/index.html", headers={
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    })
 
 from db_conn import connection_errors
 

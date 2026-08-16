@@ -18,11 +18,30 @@ from schemas import (
     TopCategoryItem
 )
 
+import time
+
 router = APIRouter(
     prefix="/api/orders",
     tags=["orders"],
     dependencies=[Depends(get_current_user)]
 )
+
+_ORDERS_CACHE = {}
+_CACHE_TTL_SECONDS = 45
+
+def get_from_cache(cache_key: str):
+    if cache_key in _ORDERS_CACHE:
+        val, expire_at = _ORDERS_CACHE[cache_key]
+        if time.time() < expire_at:
+            return val
+        else:
+            del _ORDERS_CACHE[cache_key]
+    return None
+
+def set_in_cache(cache_key: str, value: any, ttl: int = _CACHE_TTL_SECONDS):
+    if len(_ORDERS_CACHE) > 500:
+        _ORDERS_CACHE.clear()
+    _ORDERS_CACHE[cache_key] = (value, time.time() + ttl)
 
 def build_filter_clause_and_params(
     start_date: Optional[str] = None,
@@ -71,6 +90,11 @@ def get_order_metrics(
     db: Session = Depends(get_db)
 ):
     """Get summarized KPIs (Revenue, Fees, Units, Count, AOV) for MercadoLibre sales."""
+    cache_key = f"metrics:{start_date}:{end_date}:{condition_item}:{status}:{category_id}:{search}"
+    cached = get_from_cache(cache_key)
+    if cached is not None:
+        return cached
+
     filter_clause, params = build_filter_clause_and_params(start_date, end_date, condition_item, status, category_id, search)
     
     sql = text(f"""
@@ -86,7 +110,7 @@ def get_order_metrics(
     try:
         row = db.execute(sql, params).first()
         if not row:
-            return OrderMetricResponse(
+            res = OrderMetricResponse(
                 total_sales_count=0,
                 total_units_sold=0.0,
                 total_gross_income=0.0,
@@ -94,6 +118,8 @@ def get_order_metrics(
                 total_net_income=0.0,
                 average_order_value=0.0
             )
+            set_in_cache(cache_key, res)
+            return res
         
         sales_count = int(row.total_sales_count or 0)
         units_sold = float(row.total_units_sold or 0.0)
@@ -102,7 +128,7 @@ def get_order_metrics(
         net_income = gross_income - fee
         aov = (gross_income / sales_count) if sales_count > 0 else 0.0
         
-        return OrderMetricResponse(
+        res = OrderMetricResponse(
             total_sales_count=sales_count,
             total_units_sold=units_sold,
             total_gross_income=gross_income,
@@ -110,12 +136,14 @@ def get_order_metrics(
             total_net_income=net_income,
             average_order_value=aov
         )
+        set_in_cache(cache_key, res)
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/list", response_model=OrderListResponse)
 def get_orders_list(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(20, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
@@ -178,6 +206,11 @@ def get_chart_data(
     db: Session = Depends(get_db)
 ):
     """Get aggregated daily statistics for Chart.js sales graph."""
+    cache_key = f"chart:{start_date}:{end_date}:{condition_item}:{status}:{category_id}:{search}"
+    cached = get_from_cache(cache_key)
+    if cached is not None:
+        return cached
+
     filter_clause, params = build_filter_clause_and_params(start_date, end_date, condition_item, status, category_id, search)
     
     sql = text(f"""
@@ -204,6 +237,7 @@ def get_chart_data(
                 quantity=float(r.quantity or 0.0)
             ))
             
+        set_in_cache(cache_key, chart_data)
         return chart_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -219,6 +253,11 @@ def get_top_stats(
     db: Session = Depends(get_db)
 ):
     """Get top 5 products and top 5 categories."""
+    cache_key = f"top:{start_date}:{end_date}:{condition_item}:{status}:{category_id}:{search}"
+    cached = get_from_cache(cache_key)
+    if cached is not None:
+        return cached
+
     filter_clause, params = build_filter_clause_and_params(start_date, end_date, condition_item, status, category_id, search)
     
     products_sql = text(f"""
@@ -265,17 +304,39 @@ def get_top_stats(
             ) for r in cat_rows
         ]
         
-        return TopStatsResponse(top_products=top_products, top_categories=top_categories)
+        res = TopStatsResponse(top_products=top_products, top_categories=top_categories)
+        set_in_cache(cache_key, res)
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/categories", response_model=List[str])
 def get_order_categories(db: Session = Depends(get_db)):
     """Get list of distinct categories that have sales orders."""
+    cached = get_from_cache("order_categories")
+    if cached is not None:
+        return cached
     try:
         sql = text("SELECT DISTINCT category_id FROM mercadolibre.v_orders_for_metrics WHERE category_id IS NOT NULL AND category_id != '' ORDER BY category_id ASC")
         rows = db.execute(sql).fetchall()
-        return [r[0] for r in rows if r[0]]
+        res = [r[0] for r in rows if r[0]]
+        set_in_cache("order_categories", res, ttl=300)
+        return res
+    except Exception as e:
+        return []
+
+@router.get("/statuses", response_model=List[str])
+def get_order_statuses(db: Session = Depends(get_db)):
+    """Get list of distinct order statuses."""
+    cached = get_from_cache("order_statuses")
+    if cached is not None:
+        return cached
+    try:
+        sql = text("SELECT DISTINCT status FROM mercadolibre.v_orders_for_metrics WHERE status IS NOT NULL AND status != '' ORDER BY status ASC")
+        rows = db.execute(sql).fetchall()
+        res = [r[0] for r in rows if r[0]]
+        set_in_cache("order_statuses", res, ttl=300)
+        return res
     except Exception as e:
         return []
 
