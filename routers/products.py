@@ -543,9 +543,13 @@ def update_mercadolibre_status(
 
 @router.get("/{product_id}/mercadolibre-size-grid", response_model=Optional[SizeGridSchema])
 def get_mercadolibre_size_grid(product_id: int, db: Session = Depends(get_db)):
-    """Fetch size grid configuration/status for MercadoLibre"""
-    grid = crud.get_size_grid(db, product_id)
-    return grid
+    """Fetch size grid configuration for MercadoLibre"""
+    try:
+        grid = crud.get_size_grid(db, product_id)
+        return grid
+    except Exception as e:
+        print(f"Error in get_mercadolibre_size_grid: {e}")
+        return None
 
 
 @router.put("/{product_id}/mercadolibre-size-grid", response_model=SizeGridSchema)

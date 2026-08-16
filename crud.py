@@ -516,21 +516,25 @@ def update_meli_product_status(db: Session, item_id: int, updates: dict):
 
 
 def get_size_grid(db: Session, item_id: int):
-    import json
-    from models import SizeGrid
-    grid = db.query(SizeGrid).filter(SizeGrid.item_id == item_id).first()
-    if not grid:
+    try:
+        import json
+        from models import SizeGrid
+        grid = db.query(SizeGrid).filter(SizeGrid.item_id == item_id).first()
+        if not grid:
+            return None
+        
+        existing_settings = grid.settings
+        if existing_settings and isinstance(existing_settings, str):
+            try:
+                existing_settings = json.loads(existing_settings)
+            except Exception:
+                pass
+        db.expunge(grid)
+        grid.settings = existing_settings
+        return grid
+    except Exception as e:
+        print(f"Error querying size_grid: {e}")
         return None
-    
-    existing_settings = grid.settings
-    if existing_settings and isinstance(existing_settings, str):
-        try:
-            existing_settings = json.loads(existing_settings)
-        except Exception:
-            pass
-    db.expunge(grid)
-    grid.settings = existing_settings
-    return grid
 
 
 def update_size_grid_settings(db: Session, item_id: int, settings: any):

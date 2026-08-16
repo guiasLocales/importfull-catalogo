@@ -152,10 +152,32 @@ def run_migrations():
         db.commit()
         db.close()
         print("[OK] mercadolibre.product_status table verified/created")
-        return True
     except Exception as e:
         print(f"Product status table migration error: {e}")
+
+    # 5. Create mercadolibre.size_grid table
+    try:
+        db = SessionLocal()
+        print("Checking if mercadolibre.size_grid table exists...")
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS mercadolibre.size_grid (
+                id VARCHAR(36) PRIMARY KEY,
+                item_id INT,
+                size_grid_id INT,
+                settings JSON,
+                response VARCHAR(1000),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_size_grid_item_id (item_id)
+            )
+        """))
+        db.commit()
+        db.close()
+        print("[OK] mercadolibre.size_grid table verified/created")
+        return True
+    except Exception as e:
+        print(f"Size grid table migration error: {e}")
         return False
 
 if __name__ == "__main__":
     run_migrations()
+
