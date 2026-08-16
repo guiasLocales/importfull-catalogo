@@ -3,6 +3,11 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV PORT=8080
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
@@ -12,18 +17,14 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Force rebuild (change this value to bust cache)
-ARG CACHEBUST=3
+ARG CACHEBUST=4
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Explicitly copy critical files to fail build if missing
-COPY main.py /app/
-COPY db_conn.py /app/
+# Copy application files
 COPY . /app/
 
-# DEBUG: List files to confirm main.py exists
-RUN echo "=== FINAL FILE LISTING ===" && ls -la /app && echo "========================"
-
 # Run the application
-CMD ["python", "/app/main.py"]
+CMD ["python", "main.py"]
+

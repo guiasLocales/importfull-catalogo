@@ -25,9 +25,12 @@ engine = None
 connection_errors = []
 
 def create_mysql_engine(url, connect_args=None):
+    args = {"connect_timeout": 5}
+    if connect_args:
+        args.update(connect_args)
     return create_engine(
         url,
-        connect_args=connect_args or {},
+        connect_args=args,
         pool_pre_ping=True,
         pool_recycle=300
     )
