@@ -16,24 +16,24 @@ router = APIRouter(
 SELLING_WEBHOOK_URL = "https://import-gestion-inventario-402745694567.us-central1.run.app/webhooks/selling_calculation"
 WEBHOOK_SECRET = "mati-gordo"
 
-@router.get("/by-code/{product_code}", response_model=SellingCalculationResponse)
+from typing import Optional
+
+@router.get("/by-code/{product_code}", response_model=Optional[SellingCalculationResponse])
 def get_selling_calculation_by_code(product_code: str, db: Session = Depends(get_db)):
     """Get selling cost calculation using the product_code (used by Competence modal)"""
-    product = db.query(Product).filter(Product.product_code == product_code).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado en el catálogo")
-        
-    result = db.query(SellingCalculation).filter(
-        SellingCalculation.item_id == str(product.id)
-    ).first()
+    try:
+        product = db.query(Product).filter(Product.product_code == product_code).first()
+        if not product:
+            return None
+            
+        result = db.query(SellingCalculation).filter(
+            SellingCalculation.item_id == str(product.id)
+        ).first()
 
-    if not result:
-        raise HTTPException(
-            status_code=404,
-            detail="No hay cálculo de venta automático para este producto."
-        )
-
-    return result
+        return result
+    except Exception as e:
+        print(f"Error getting selling calculation for {product_code}: {e}")
+        return None
 
 @router.post("/by-code/{product_code}/calculate")
 def trigger_selling_calculation_by_code(product_code: str, db: Session = Depends(get_db)):

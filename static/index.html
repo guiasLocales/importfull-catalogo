@@ -951,18 +951,6 @@
                                 <option value="used">Usados</option>
                             </select>
 
-                            <!-- Limit (Cantidad de Órdenes a ver) -->
-                            <select id="orderLimitFilter" onchange="window.onOrderLimitChange(this.value)"
-                                class="pl-3 pr-8 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke-width%3D%221.5%22%20stroke%3D%22currentColor%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20d%3D%22M19.5%208.25l-7.5%207.5-7.5-7.5%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-no-repeat bg-[right_0.5rem_center]"
-                                title="Cantidad de órdenes por página">
-                                <option value="10">10 por pág.</option>
-                                <option value="25">25 por pág.</option>
-                                <option value="50" selected>50 por pág.</option>
-                                <option value="100">100 por pág.</option>
-                                <option value="250">250 por pág.</option>
-                                <option value="1000">1000 por pág.</option>
-                            </select>
-
                             <!-- Export CSV Button -->
                             <button id="btnExportOrdersCSV" onclick="window.exportOrdersToCSV()"
                                 class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-semibold shadow-sm transition-all"
@@ -1104,14 +1092,28 @@
 
                         <!-- Table pagination (flex-none) -->
                         <div class="px-5 py-3 border-t border-gray-150 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 flex items-center justify-between flex-none">
-                            <span id="ordersPaginationText" class="text-xs text-gray-500">Mostrando 0-0 de 0 órdenes</span>
+                            <div class="flex items-center gap-4">
+                                <span id="ordersPaginationText" class="text-xs text-gray-500 font-medium">Mostrando 0-0 de 0 órdenes</span>
+                                <div class="flex items-center gap-1.5 border-l border-gray-300 dark:border-gray-600 pl-4">
+                                    <span class="text-xs text-gray-400 font-medium">Mostrar:</span>
+                                    <select id="orderLimitFilter" onchange="window.onOrderLimitChange(this.value)"
+                                        class="px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-xs font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-xs">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="100">100</option>
+                                        <option value="250">250</option>
+                                        <option value="1000">1000</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="flex items-center gap-2">
                                 <button id="btnOrdersPrev" onclick="window.changeOrdersPage(-1)" disabled
-                                    class="p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    class="p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors">
                                     <i data-lucide="chevron-left" class="h-4 w-4 text-gray-600"></i>
                                 </button>
                                 <button id="btnOrdersNext" onclick="window.changeOrdersPage(1)" disabled
-                                    class="p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                    class="p-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors">
                                     <i data-lucide="chevron-right" class="h-4 w-4 text-gray-600"></i>
                                 </button>
                             </div>
@@ -1658,8 +1660,8 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=182"></script>
-    <script src="/static/js/app.v124.js?v=182"></script>
+    <script src="/static/js/tienda-nube.js?v=183"></script>
+    <script src="/static/js/app.v124.js?v=183"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 

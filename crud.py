@@ -489,8 +489,12 @@ def update_meli_attributes(db: Session, item_id: int, updates: dict):
 
 
 def get_meli_product_status(db: Session, item_id: int):
-    from models import MercadoLibreProductStatus
-    return db.query(MercadoLibreProductStatus).filter(MercadoLibreProductStatus.item_id == item_id).first()
+    try:
+        from models import MercadoLibreProductStatus
+        return db.query(MercadoLibreProductStatus).filter(MercadoLibreProductStatus.item_id == item_id).first()
+    except Exception as e:
+        print(f"Error querying product_status: {e}")
+        return None
 
 
 def update_meli_product_status(db: Session, item_id: int, updates: dict):

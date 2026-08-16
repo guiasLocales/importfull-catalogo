@@ -517,8 +517,12 @@ def update_mercadolibre_attributes(
 @router.get("/{product_id}/mercadolibre-status", response_model=Optional[MercadoLibreProductStatusSchema])
 def get_mercadolibre_status(product_id: int, db: Session = Depends(get_db)):
     """Fetch variants status for MercadoLibre"""
-    status = crud.get_meli_product_status(db, product_id)
-    return status
+    try:
+        status = crud.get_meli_product_status(db, product_id)
+        return status
+    except Exception as e:
+        print(f"Error in get_mercadolibre_status: {e}")
+        return None
 
 
 @router.put("/{product_id}/mercadolibre-status", response_model=MercadoLibreProductStatusSchema)
