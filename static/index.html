@@ -237,6 +237,59 @@
                 overlay.classList.add('hidden');
             }
         };
+
+        window.handleLoginSubmit = async (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername');
+            const passwordInput = document.getElementById('loginPassword');
+            const username = usernameInput ? usernameInput.value : '';
+            const password = passwordInput ? passwordInput.value : '';
+            const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+            const loginError = document.getElementById('loginError');
+            const loginView = document.getElementById('loginView');
+
+            if (!username || !password) return false;
+
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Ingresando...';
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Credenciales inválidas');
+
+                const data = await response.json();
+                localStorage.setItem('token', data.access_token);
+
+                if (loginView) loginView.classList.add('hidden');
+                if (loginError) loginError.classList.add('hidden');
+
+                if (window.location.search) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                if (typeof fetchProducts === 'function') fetchProducts();
+                if (typeof fetchUserMe === 'function') fetchUserMe();
+            } catch (err) {
+                if (loginError) loginError.classList.remove('hidden');
+            } finally {
+                if (loginBtn) {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Ingresar';
+                }
+            }
+            return false;
+        };
     </script>
 </head>
 
@@ -1698,7 +1751,7 @@
                 <h1 id="loginTitle" class="text-2xl font-bold text-gray-900">Iniciar Sesión</h1>
             </div>
 
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" onsubmit="return handleLoginSubmit(event)" class="space-y-6">
                 <div>
                     <label for="loginUsername" class="block text-sm font-medium text-gray-700">Usuario</label>
                     <div class="mt-1 relative">
