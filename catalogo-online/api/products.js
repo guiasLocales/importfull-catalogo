@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
 
   const { category, search } = req.query;
 
-  let sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock, description, brand, meli_id FROM product_catalog_sync WHERE price IS NOT NULL AND price > 0 AND stock IS NOT NULL AND stock > 0";
+  let sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock, description, brand, meli_id, COALESCE(status, 'active') AS status FROM product_catalog_sync WHERE price IS NOT NULL AND price > 0 AND stock IS NOT NULL AND stock > 0 AND (status IS NULL OR status != 'paused') AND product_code != 'STORE_CONFIG_SYNC'";
 
   if (category) {
     const cleanCat = category.replace(/'/g, "''").toLowerCase();

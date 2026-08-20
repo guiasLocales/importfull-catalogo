@@ -155,6 +155,61 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem;" id="categoryDropzonesContainer"></div>
         </div>
 
+        <!-- SECTION 5: PAUSAR Y ACTIVAR PRODUCTOS DEL CATÁLOGO -->
+        <div style="background: var(--bg-secondary); padding: 1.75rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3 style="color: #f97316; font-size: 1.1rem; font-weight: 800; margin: 0;">5. Pausar y Activar Productos del Catálogo</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Los productos que marques como "Pausado" dejarán de mostrarse en la tienda pública en tiempo real.</p>
+            </div>
+            <a href="/catalog" target="_blank" class="btn-add" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); font-size: 0.85rem; padding: 0.4rem 0.85rem;">Ver Catálogo Público ↗</a>
+          </div>
+
+          <!-- Filtros del catálogo -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+            <input type="text" id="adminSearchInput" placeholder="Buscar por nombre o código..." class="search-input" style="margin: 0; font-size: 0.85rem;" oninput="debounceLoadAdminProducts()">
+            <select id="adminCategorySelect" class="search-input" style="margin: 0; font-size: 0.85rem;" onchange="loadAdminCatalogProducts()">
+              <option value="">Todas las Categorías</option>
+              <option value="BAZAR">BAZAR</option>
+              <option value="BELLEZA">BELLEZA</option>
+              <option value="JUGUETERIA">JUGUETERIA</option>
+              <option value="BIJOUTERIE">BIJOUTERIE</option>
+              <option value="ELECTRONICA">ELECTRONICA</option>
+              <option value="LIBRERIA">LIBRERIA</option>
+              <option value="COTILLON">COTILLON</option>
+              <option value="FERRETERIA">FERRETERIA</option>
+              <option value="INDUMENTARIA">INDUMENTARIA</option>
+              <option value="NAVIDAD">NAVIDAD</option>
+              <option value="TELEFONIA">TELEFONIA</option>
+              <option value="DESCARTABLE">DESCARTABLE</option>
+            </select>
+            <select id="adminStatusSelect" class="search-input" style="margin: 0; font-size: 0.85rem;" onchange="loadAdminCatalogProducts()">
+              <option value="all">Todos los Estados</option>
+              <option value="active">Solo Activos (Visibles)</option>
+              <option value="paused">Solo Pausados (Ocultos)</option>
+            </select>
+          </div>
+
+          <!-- Tabla de productos -->
+          <div style="max-height: 420px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 0.75rem; background: var(--bg-primary);">
+            <table class="catalog-table" style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: var(--bg-card); text-align: left; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color);">
+                  <th style="padding: 0.75rem;">PRODUCTO</th>
+                  <th style="padding: 0.75rem;">CÓDIGO</th>
+                  <th style="padding: 0.75rem;">PRECIO</th>
+                  <th style="padding: 0.75rem;">STOCK</th>
+                  <th style="padding: 0.75rem; text-align: center;">ESTADO EN TIENDA</th>
+                  <th style="padding: 0.75rem; text-align: right;">ACCIÓN</th>
+                </tr>
+              </thead>
+              <tbody id="adminCatalogTableBody">
+                <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando productos...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <button type="submit" id="btnSaveConfig" class="btn-add" style="width: 100%; height: 50px; justify-content: center; font-size: 1.1rem; border-radius: 0.75rem;">Guardar Todos los Cambios</button>
       </form>
     </div>
@@ -377,6 +432,108 @@
           fillFormFields(merged, false);
         }
       } catch (err) {}
+
+      loadAdminCatalogProducts();
+    }
+
+    let adminDebounceTimer = null;
+    function debounceLoadAdminProducts() {
+      clearTimeout(adminDebounceTimer);
+      adminDebounceTimer = setTimeout(loadAdminCatalogProducts, 300);
+    }
+
+    async function loadAdminCatalogProducts() {
+      const tbody = document.getElementById('adminCatalogTableBody');
+      if (!tbody) return;
+
+      const search = (document.getElementById('adminSearchInput')?.value || '').trim();
+      const category = document.getElementById('adminCategorySelect')?.value || '';
+      const statusFilter = document.getElementById('adminStatusSelect')?.value || 'all';
+
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando productos del catálogo...</td></tr>`;
+
+      try {
+        let sql = "SELECT id, product_code, product_name, price AS local_price, product_image_b_format_url, product_type_path, stock, brand, COALESCE(status, 'active') AS status FROM product_catalog_sync WHERE price IS NOT NULL AND price > 0 AND stock IS NOT NULL AND stock > 0 AND product_code != 'STORE_CONFIG_SYNC'";
+
+        if (category) {
+          const cleanCat = category.replace(/'/g, "''").toLowerCase();
+          sql += ` AND LOWER(product_type_path) LIKE '%${cleanCat}%'`;
+        }
+        if (search) {
+          const cleanSearch = search.replace(/'/g, "''").toLowerCase();
+          sql += ` AND (LOWER(product_name) LIKE '%${cleanSearch}%' OR LOWER(product_code) LIKE '%${cleanSearch}%')`;
+        }
+        if (statusFilter === 'active') {
+          sql += " AND (status IS NULL OR status != 'paused')";
+        } else if (statusFilter === 'paused') {
+          sql += " AND status = 'paused'";
+        }
+
+        sql += " ORDER BY product_name ASC LIMIT 500";
+
+        const targetUrl = `https://inventory-app-418609185384.us-central1.run.app/api/test-db-query?query=${encodeURIComponent(sql)}`;
+        const res = await fetch(targetUrl);
+        if (!res.ok) throw new Error('Error de conexión');
+
+        const json = await res.json();
+        const products = (json.status === 'success' && Array.isArray(json.rows)) ? json.rows : [];
+
+        if (products.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No se encontraron productos.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = products.map(p => {
+          const isPaused = p.status === 'paused';
+          const price = parseFloat(p.local_price || 0);
+          const imgUrl = p.product_image_b_format_url || 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=150&q=80';
+
+          return `
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 0.75rem; display: flex; align-items: center; gap: 0.75rem;">
+                <img src="${imgUrl}" style="width: 38px; height: 38px; object-fit: cover; border-radius: 0.4rem; border: 1px solid var(--border-color);">
+                <div>
+                  <div style="font-weight: 700; color: var(--text-primary); font-size: 0.85rem;">${p.product_name || 'Sin Nombre'}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">${p.brand || 'IMPORT FULL'}</div>
+                </div>
+              </td>
+              <td style="padding: 0.75rem; font-size: 0.8rem; font-family: monospace; font-weight: 700; color: var(--text-secondary);">${p.product_code || '-'}</td>
+              <td style="padding: 0.75rem; font-weight: 800; color: #f97316; font-size: 0.85rem;">$${price.toLocaleString('es-AR')}</td>
+              <td style="padding: 0.75rem; font-weight: 700; color: #4ade80; font-size: 0.85rem;">${p.stock || 0} u</td>
+              <td style="padding: 0.75rem; text-align: center;">
+                ${isPaused ? 
+                  `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; font-weight: 800; border: 1px solid rgba(245, 158, 11, 0.3);">⏸ PAUSADO</span>` : 
+                  `<span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-size: 0.75rem; font-weight: 800; border: 1px solid rgba(34, 197, 94, 0.3);">▶ ACTIVO</span>`
+                }
+              </td>
+              <td style="padding: 0.75rem; text-align: right;">
+                <button type="button" onclick="toggleAdminProductStatus(${p.id}, '${p.status || 'active'}')" class="btn-add" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; background: ${isPaused ? '#22c55e' : '#f59e0b'};">
+                  ${isPaused ? '▶ Activar' : '⏸ Pausar'}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">Error al cargar productos del catálogo.</td></tr>`;
+      }
+    }
+
+    async function toggleAdminProductStatus(productId, currentStatus) {
+      const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+      const updateSql = `UPDATE product_catalog_sync SET status = '${newStatus}' WHERE id = ${productId}`;
+      const targetUrl = `https://inventory-app-418609185384.us-central1.run.app/api/test-db-query?query=${encodeURIComponent(updateSql)}`;
+
+      try {
+        const res = await fetch(targetUrl);
+        if (res.ok) {
+          loadAdminCatalogProducts();
+        } else {
+          alert('Error al actualizar estado');
+        }
+      } catch (e) {
+        alert('Error al actualizar estado del producto');
+      }
     }
 
     function logout() {

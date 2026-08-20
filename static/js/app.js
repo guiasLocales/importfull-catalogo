@@ -186,12 +186,14 @@ document.addEventListener('DOMContentLoaded', function () {
             inventory: document.getElementById('inventoryView'),
             mercadolibre: document.getElementById('meliView'),
             competence: document.getElementById('competenceView'),
+            catalog: document.getElementById('catalogView'),
             settings: document.getElementById('settingsView')
         };
         const navButtons = {
             inventory: document.getElementById('navInventory'),
             mercadolibre: document.getElementById('navMeli'),
             competence: document.getElementById('navCompetence'),
+            catalog: document.getElementById('navCatalog'),
             settings: document.getElementById('navSettings')
         };
 
@@ -199,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.values(views).forEach(v => { if (v) v.classList.add('hidden'); });
         Object.values(navButtons).forEach(b => {
             if (b) {
-                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700');
+                b.classList.remove('bg-blue-50', 'text-blue-700', 'bg-yellow-50', 'text-yellow-700', 'bg-purple-50', 'text-purple-700', 'bg-orange-50', 'text-orange-700');
                 b.classList.add('text-gray-700', 'hover:bg-gray-50');
             }
         });
@@ -214,6 +216,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 navButtons[viewName].classList.add('bg-yellow-50', 'text-yellow-700');
             } else if (viewName === 'competence') {
                 navButtons[viewName].classList.add('bg-purple-50', 'text-purple-700');
+            } else if (viewName === 'catalog') {
+                navButtons[viewName].classList.add('bg-orange-50', 'text-orange-700');
             } else {
                 navButtons[viewName].classList.add('bg-blue-50', 'text-blue-700');
             }
@@ -225,6 +229,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (viewName === 'competence') {
             loadCompetenceData();
+        }
+        if (viewName === 'catalog') {
+            if (typeof window.loadPanelCatalogProducts === 'function') {
+                window.loadPanelCatalogProducts();
+            }
         }
 
         // Refresh icons
