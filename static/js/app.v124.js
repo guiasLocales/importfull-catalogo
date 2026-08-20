@@ -293,59 +293,64 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         state.products.forEach(product => {
+            const isSelected = state.selectedIds.has((product.id || '').toString());
+            const price = parseFloat(product.price || 0);
+            const cost = parseFloat(product.cost || 0);
+            const priceML = parseFloat(product.price_mercadolibre || 0);
+            const priceTN = parseFloat(product.price_tienda_nube || 0);
+            const isMeli = !!product.meli_id;
+
             // Desktop Row
-            const isSelected = state.selectedIds.has(product.id.toString());
             const rowHtml = `
-            <div class="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-blue-50/50 transition-colors items-center group relative bg-white">
+            <div class="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-100 hover:bg-blue-50/50 transition-colors items-center group relative bg-white dark:bg-gray-800 dark:border-gray-700">
                 <div class="col-span-1 flex items-center justify-center">
                     <input type="checkbox" value="${product.id}" 
                         class="row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
                         ${isSelected ? 'checked' : ''}>
                 </div>
-                <div class="col-span-2 text-sm font-medium text-gray-900 truncate" title="${product.id}">
-                    ${product.id}
+                <div class="col-span-1 text-sm font-bold font-mono text-gray-900 dark:text-white truncate" title="${product.product_code || ''}">
+                    ${product.product_code || '-'}
                 </div>
-                <div class="col-span-4 flex items-center space-x-3 cursor-pointer" onclick="openProductDetail(${product.id})">
-                    <div class="h-10 w-10 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                <div class="col-span-2 flex items-center space-x-3 cursor-pointer min-w-0" onclick="openProductDetail(${product.id})">
+                    <div class="h-10 w-10 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
                         <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/40'}" 
                              alt="" class="h-full w-full object-cover">
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors" title="${product.product_name}">${product.product_name}</p>
-                        <p class="text-xs truncate mt-0.5"><span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'Sin categoría'}</span></p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 transition-colors" title="${product.product_name || ''}">${product.product_name || 'Sin nombre'}</p>
+                        <p class="text-xs truncate mt-0.5"><span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'General'}</span></p>
                     </div>
                 </div>
 
-                <div class="col-span-1 text-sm text-gray-600 truncate" title="${product.brand}">${product.brand || '-'}</div>
-                <div class="col-span-1 text-sm text-gray-600">${product.stock || 0}</div>
-                <div class="col-span-1">
-                    <span class="text-sm font-semibold text-gray-900">${formatCurrency(product.price)}</span>
-                </div>
-                <div class="col-span-1 flex items-center justify-center text-center">
-                    ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-12 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-12 object-contain hidden dark:block" title="Activo en MercadoLibre">'
-                    : ''}
+                <div class="col-span-1 text-sm text-gray-600 dark:text-gray-300 font-semibold">${product.stock || 0}</div>
+                <div class="col-span-1 text-sm text-gray-500 dark:text-gray-400 font-mono">${formatCurrency(cost)}</div>
+                <div class="col-span-1 text-sm text-yellow-600 dark:text-yellow-400 font-semibold font-mono">${formatCurrency(priceML)}</div>
+                <div class="col-span-1 text-sm text-indigo-600 dark:text-indigo-400 font-semibold font-mono">${formatCurrency(priceTN)}</div>
+                <div class="col-span-1 text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">${formatCurrency(price)}</div>
+                <div class="col-span-2 flex items-center justify-center text-center">
+                    ${isMeli 
+                    ? '<img src="/static/img/meli-logo-light.png" alt="MercadoLibre" class="h-8 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="MercadoLibre" class="h-8 object-contain hidden dark:block" title="Activo en MercadoLibre">'
+                    : '<span class="text-xs text-gray-400">-</span>'}
                 </div>
                 <div class="col-span-1 flex items-center justify-end">
-                    ${product.status && product.status.toLowerCase() === 'active'
-                    ? `<button onclick="togglePublish(${product.id}, false, this)" class="px-2 py-1 text-[10px] font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap" title="Pausar">
+                    ${isMeli 
+                    ? `<button onclick="togglePublish(${product.id}, false, this)" class="px-2 py-1 text-[10px] font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded transition-colors whitespace-nowrap" title="Pausar">
                             Pausar
                        </button>`
-                    : `<button onclick="togglePublish(${product.id}, true, this)" class="px-2 py-1 text-[10px] font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap" title="Publicar">
+                    : `<button onclick="togglePublish(${product.id}, true, this)" class="px-2 py-1 text-[10px] font-bold text-green-600 bg-green-50 hover:bg-green-100 rounded transition-colors whitespace-nowrap" title="Publicar">
                             Publicar
                        </button>`}
                 </div>
             </div>
-        `;
-
+            `;
 
             // Mobile Card
             const cardHtml = `
-            <div class="md:hidden bg-white p-4 mb-3 rounded-lg shadow-sm border border-gray-200 relative">
+            <div class="md:hidden bg-white dark:bg-gray-800 p-4 mb-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative">
                 <div class="absolute top-4 right-4">
-                    ${product.status && product.status.toLowerCase() === 'active'
-                    ? `<button onclick="togglePublish(${product.id}, false, this)" class="px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded">Pausar</button>`
-                    : `<button onclick="togglePublish(${product.id}, true, this)" class="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 rounded">Publicar</button>`}
+                    ${isMeli 
+                    ? `<button onclick="togglePublish(${product.id}, false, this)" class="px-2 py-1 text-xs font-bold text-red-600 bg-red-50 rounded">Pausar</button>`
+                    : `<button onclick="togglePublish(${product.id}, true, this)" class="px-2 py-1 text-xs font-bold text-green-600 bg-green-50 rounded">Publicar</button>`}
                 </div>
                 <div class="flex items-start space-x-3 mb-3">
                     <div class="flex items-center h-5">
@@ -353,30 +358,31 @@ document.addEventListener('DOMContentLoaded', function () {
                         class="row-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                         ${isSelected ? 'checked' : ''}>
                     </div>
-                    <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/80'}" class="h-16 w-16 mobile-img rounded-lg border border-gray-200" onclick="openProductDetail(${product.id})">
+                    <img src="${product.product_image_b_format_url || 'https://via.placeholder.com/80'}" class="h-16 w-16 mobile-img rounded-lg border border-gray-200 object-cover" onclick="openProductDetail(${product.id})">
                     <div>
-                        <h4 class="font-medium text-gray-900 text-sm line-clamp-1" onclick="openProductDetail(${product.id})">${product.product_name}</h4>
-                        <p class="text-xs text-gray-500 mb-1">${product.product_code}</p>
-                        <span class="text-sm font-bold text-blue-600">${formatCurrency(product.price)}</span>
+                        <h4 class="font-medium text-gray-900 dark:text-white text-sm line-clamp-1" onclick="openProductDetail(${product.id})">${product.product_name || 'Sin nombre'}</h4>
+                        <p class="text-xs text-gray-500 mb-1">${product.product_code || ''}</p>
+                        <span class="text-sm font-bold text-blue-600">${formatCurrency(price)}</span>
                     </div>
                 </div>
-                <div class="flex items-center justify-between border-t border-gray-100 pt-3 mt-2">
+                <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-2">
                     <div class="text-xs">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'Sin Cat'}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide inline-block ${getCategoryColor(product.product_type_path)}">${product.product_type_path || 'General'}</span>
                     </div>
-                    ${product.status && product.status.toLowerCase() === 'active'
-                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-8 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-8 object-contain hidden dark:block" title="Activo en MercadoLibre">'
+                    ${isMeli 
+                    ? '<img src="/static/img/meli-logo-light.png" alt="ML" class="h-6 object-contain dark:hidden" title="Activo en MercadoLibre"><img src="/static/img/meli-logo-dark.png" alt="ML" class="h-6 object-contain hidden dark:block" title="Activo en MercadoLibre">'
                     : ''}
                 </div>
             </div>
-        `;
-
+            `;
 
             elements.container.insertAdjacentHTML('beforeend', rowHtml);
             elements.container.insertAdjacentHTML('beforeend', cardHtml);
         });
 
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
         attachCheckboxListeners();
     }
 
