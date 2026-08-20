@@ -1,6 +1,24 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Helper for category colors (inlined to avoid cache issues with utils.js)
+    // Helpers (inlined to avoid cache issues with utils.js)
+    function formatCurrency(value) {
+        if (value === null || value === undefined || value === '') return '$0';
+        const num = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]+/g, "")) : value;
+        if (isNaN(num)) return '$0';
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(num);
+    }
+
+    function formatNumber(value) {
+        if (value === null || value === undefined || value === '') return '0';
+        const num = Number(value);
+        return isNaN(num) ? '0' : new Intl.NumberFormat('es-AR').format(num);
+    }
+
     function getCategoryColor(category) {
         if (!category) return 'bg-gray-100 text-gray-800';
         const colors = [
