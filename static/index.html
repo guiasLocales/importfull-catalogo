@@ -208,6 +208,17 @@
         }
     </style>
     <script>
+        // Check token immediately on head load
+        (function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    const lv = document.getElementById('loginView');
+                    if (lv) lv.classList.add('hidden');
+                });
+            }
+        })();
+
         // Inline Mobile Menu Logic to ensure availability
         window.toggleMobileMenu = () => {
             const sidebar = document.getElementById('mainSidebar');
@@ -1701,9 +1712,9 @@
 
 
     <!-- Modules -->
-    <script src="/static/js/tienda-nube.js?v=185"></script>
-    <script src="/static/js/app.v124.js?v=185"></script>
-    <script src="/static/js/catalog-online.js?v=185"></script>
+    <script src="/static/js/tienda-nube.js?v=186"></script>
+    <script src="/static/js/app.v124.js?v=186"></script>
+    <script src="/static/js/catalog-online.js?v=186"></script>
     <script src="/static/js/logo-drive.js"></script>
 </body>
 
