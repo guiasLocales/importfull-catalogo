@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setLoading(false);
         }
     }
+    window.fetchProducts = fetchProducts;
 
     async function deleteProductApi(id) {
         const response = await authFetch(`/api/products/${id}`, { method: 'DELETE' });
@@ -224,6 +225,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Load data for the view
+        if (viewName === 'inventory') {
+            fetchProducts();
+        }
+        if (viewName === 'tiendanube') {
+            if (typeof window.loadTiendaNubeProducts === 'function') {
+                window.loadTiendaNubeProducts();
+            }
+        }
         if (viewName === 'mercadolibre') {
             loadMeliProducts();
         }
@@ -1644,6 +1653,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (error.status === 401) logout();
         }
     }
+    window.fetchUserMe = fetchUserMe;
 
     function updateAppLogo(url) {
         const appLogoIcon = document.getElementById('appLogoIcon');
